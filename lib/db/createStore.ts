@@ -62,8 +62,8 @@ export function createStore(options: StoreOptions = {}): Store {
 	}
 
 	function getSubDb<Value>(name: string): SubDB<Value> {
-		// @ts-expect-error
-		return db.sublevel(name, { valueEncoding: "json" });
+		// biome-ignore format: needs `()` to make overload of `db.sublevel` work
+		return (db.sublevel<string, Value>)(name, { valueEncoding: "json" });
 	}
 
 	async function deleteSubDb(name: string): Promise<void> {
