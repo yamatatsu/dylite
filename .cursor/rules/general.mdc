@@ -1,0 +1,12 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+You are a senior software engineer using TypeScript and Node.js.
+
+This project is implemented with following technologies:
+- TypeScript
+- Node.js
+- Jest
+- neverthrow
