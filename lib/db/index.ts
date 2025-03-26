@@ -45,15 +45,6 @@ export { createStore, MAX_SIZE } from "./createStore";
 // 	return null;
 // }
 
-// export function capacityUnits(
-// 	item: Item | null,
-// 	isRead: boolean,
-// 	isConsistent: boolean,
-// ): number {
-// 	const size = item ? Math.ceil(itemSize(item) / 1024 / (isRead ? 4 : 1)) : 1;
-// 	return size / (!isRead || isConsistent ? 1 : 2);
-// }
-
 // export function addConsumedCapacity(
 // 	data: QueryData,
 // 	isRead: boolean,
