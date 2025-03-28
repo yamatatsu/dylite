@@ -45,23 +45,6 @@ export { createStore, MAX_SIZE } from "./createStore";
 // 	return null;
 // }
 
-// export function addConsumedCapacity(
-// 	data: QueryData,
-// 	isRead: boolean,
-// 	newItem: Item | null,
-// 	oldItem: Item | null,
-// ): QueryResult["ConsumedCapacity"] | undefined {
-// 	if (!["TOTAL", "INDEXES"].includes(data.ReturnConsumedCapacity || ""))
-// 		return undefined;
-
-// 	let capacity = capacityUnits(newItem, isRead, data.ConsistentRead || false);
-// 	if (oldItem != null) {
-// 		capacity = Math.max(
-// 			capacity,
-// 			capacityUnits(oldItem, isRead, data.ConsistentRead || false),
-// 		);
-// 	}
-
 // 	return {
 // 		CapacityUnits: capacity,
 // 		TableName: data.TableName,
