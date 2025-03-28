@@ -61,7 +61,7 @@ const simpleItem = {
 	s_key: { S: "s_key_val" },
 	foo: { S: "foo_val" },
 	bar: { S: "bar_val" },
-	buz: { S: "buz_val" },
+	baz: { S: "baz_val" },
 };
 const fullItem = {
 	p_key: { S: "p_key_val" },
@@ -74,7 +74,7 @@ const fullItem = {
 	lsi2_s_key: { S: "lsi2_s_key_val" },
 	foo: { S: "foo_val" },
 	bar: { S: "bar_val" },
-	buz: { S: "buz_val" },
+	baz: { S: "baz_val" },
 };
 
 let store: Store;
@@ -121,7 +121,7 @@ test("from no item to fullItem", async () => {
 				lsi2_s_key: { S: "lsi2_s_key_val" },
 				foo: { S: "foo_val" },
 				bar: { S: "bar_val" },
-				buz: { S: "buz_val" },
+				baz: { S: "baz_val" },
 			},
 		],
 	]);
@@ -151,7 +151,7 @@ test("from no item to fullItem", async () => {
 				lsi2_s_key: { S: "lsi2_s_key_val" },
 				foo: { S: "foo_val" },
 				bar: { S: "bar_val" },
-				buz: { S: "buz_val" },
+				baz: { S: "baz_val" },
 			},
 		],
 	]);
@@ -206,7 +206,7 @@ test("from fullItem to fullItem", async () => {
 				lsi2_s_key: { S: "lsi2_s_key_val" },
 				foo: { S: "foo_val" },
 				bar: { S: "bar_val" },
-				buz: { S: "buz_val" },
+				baz: { S: "baz_val" },
 			},
 		],
 	]);
@@ -236,7 +236,7 @@ test("from fullItem to fullItem", async () => {
 				lsi2_s_key: { S: "lsi2_s_key_val" },
 				foo: { S: "foo_val" },
 				bar: { S: "bar_val" },
-				buz: { S: "buz_val" },
+				baz: { S: "baz_val" },
 			},
 		],
 	]);

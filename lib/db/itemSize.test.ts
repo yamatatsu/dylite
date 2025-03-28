@@ -24,10 +24,10 @@ test.each`
 	${{ foo: { B: base64("bar") } }}                                 | ${true}  | ${false}    | ${undefined} | ${5}
 	${{ foo: { N: "1234" } }}                                        | ${false} | ${false}    | ${undefined} | ${6}
 	${{ foo: { N: "1234" } }}                                        | ${true}  | ${false}    | ${undefined} | ${5}
-	${{ foo: { SS: ["bar", "buz"] } }}                               | ${false} | ${false}    | ${undefined} | ${9}
-	${{ foo: { SS: ["bar", "buz"] } }}                               | ${true}  | ${false}    | ${undefined} | ${10}
-	${{ foo: { BS: [base64("bar"), base64("buz")] } }}               | ${false} | ${false}    | ${undefined} | ${9}
-	${{ foo: { BS: [base64("bar"), base64("buz")] } }}               | ${true}  | ${false}    | ${undefined} | ${10}
+	${{ foo: { SS: ["bar", "baz"] } }}                               | ${false} | ${false}    | ${undefined} | ${9}
+	${{ foo: { SS: ["bar", "baz"] } }}                               | ${true}  | ${false}    | ${undefined} | ${10}
+	${{ foo: { BS: [base64("bar"), base64("baz")] } }}               | ${false} | ${false}    | ${undefined} | ${9}
+	${{ foo: { BS: [base64("bar"), base64("baz")] } }}               | ${true}  | ${false}    | ${undefined} | ${10}
 	${{ foo: { NS: ["1234", "5678"] } }}                             | ${false} | ${false}    | ${undefined} | ${9}
 	${{ foo: { NS: ["1234", "5678"] } }}                             | ${true}  | ${false}    | ${undefined} | ${10}
 	${{ foo: { NULL: true } }}                                       | ${false} | ${false}    | ${undefined} | ${4}
@@ -36,8 +36,8 @@ test.each`
 	${{ foo: { BOOL: false } }}                                      | ${true}  | ${false}    | ${undefined} | ${2}
 	${{ foo: { L: [{ S: "bar" }, { N: "1234" }] } }}                 | ${false} | ${false}    | ${undefined} | ${14}
 	${{ foo: { L: [{ S: "bar" }, { N: "1234" }] } }}                 | ${true}  | ${false}    | ${undefined} | ${14}
-	${{ foo: { M: { bar: { S: "bar_val" }, buz: { N: "1234" } } } }} | ${false} | ${false}    | ${undefined} | ${24}
-	${{ foo: { M: { bar: { S: "bar_val" }, buz: { N: "1234" } } } }} | ${true}  | ${false}    | ${undefined} | ${20}
+	${{ foo: { M: { bar: { S: "bar_val" }, baz: { N: "1234" } } } }} | ${false} | ${false}    | ${undefined} | ${24}
+	${{ foo: { M: { bar: { S: "bar_val" }, baz: { N: "1234" } } } }} | ${true}  | ${false}    | ${undefined} | ${20}
 `("$#", ({ item, compress, addMetaSize, rangeKey, expected }) => {
 	const size = itemSize(item, compress, addMetaSize, rangeKey);
 	expect(size).toBe(expected);
