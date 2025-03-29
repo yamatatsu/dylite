@@ -1,19 +1,26 @@
 import { Level } from "level";
 import { MemoryLevel } from "memory-level";
 import { notFoundError } from "./errors";
-import type { Item, Store, StoreOptions, SubDB, Table } from "./types";
+import type {
+	Item,
+	Store,
+	StoreOptions,
+	StoreOptionsInput,
+	SubDB,
+	Table,
+} from "./types";
 
 export const MAX_SIZE = 409600; // TODO: get rid of this? or leave for backwards compat?
 
-export function createStore(options: StoreOptions = {}): Store {
+export function createStore(options: StoreOptionsInput = {}): Store {
 	const defaultOptions = {
-		createTableMs: 500,
-		deleteTableMs: 500,
-		updateTableMs: 500,
-		maxItemSizeKb: MAX_SIZE / 1024,
-		...options,
+		path: options.path ?? null,
+		createTableMs: options.createTableMs ?? 500,
+		deleteTableMs: options.deleteTableMs ?? 500,
+		updateTableMs: options.updateTableMs ?? 500,
+		maxItemSizeKb: options.maxItemSizeKb ?? MAX_SIZE / 1024,
+		maxItemSize: (options.maxItemSizeKb ?? MAX_SIZE / 1024) * 1024,
 	} satisfies StoreOptions;
-	defaultOptions.maxItemSize = defaultOptions.maxItemSizeKb * 1024;
 
 	const db = defaultOptions.path
 		? new Level(defaultOptions.path)

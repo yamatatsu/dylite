@@ -43,6 +43,7 @@
 		"memory-level": "^2.0.0",
 		"neverthrow": "^8.2.0",
 		"once": "^1.4.0",
-		"subleveldown": "^6.0.1"
+		"subleveldown": "^6.0.1",
+		"valibot": "^1.0.0"
 	}
 }

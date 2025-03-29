@@ -145,14 +145,15 @@ export interface Store {
 	getTable: (name: string, checkStatus?: boolean) => Promise<Table | null>;
 }
 
-export interface StoreOptions {
-	path?: string;
-	createTableMs?: number;
-	deleteTableMs?: number;
-	updateTableMs?: number;
-	maxItemSizeKb?: number;
-	maxItemSize?: number;
-}
+export type StoreOptionsInput = Partial<StoreOptions>;
+export type StoreOptions = {
+	path: string | null;
+	createTableMs: number;
+	deleteTableMs: number;
+	updateTableMs: number;
+	maxItemSizeKb: number;
+	maxItemSize: number;
+};
 
 export interface QueryResult {
 	Count: number;
