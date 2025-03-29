@@ -17,33 +17,19 @@
 	"devDependencies": {
 		"@aws-sdk/client-dynamodb": "^3.767.0",
 		"@biomejs/biome": "^1.9.4",
-		"@types/async": "^3.2.24",
 		"@types/big.js": "^6.2.2",
 		"@types/jest": "^29.5.14",
-		"@types/leveldown": "^4.0.6",
-		"@types/levelup": "^5.1.5",
-		"@types/memdown": "^3.0.5",
 		"@types/node": "^22.13.10",
-		"@types/once": "^1.4.5",
-		"@types/subleveldown": "^4.1.4",
 		"jest": "^29.7.0",
 		"ts-jest": "^29.2.6",
 		"typescript": "^5.8.2"
 	},
 	"dependencies": {
 		"abstract-level": "^2.0.1",
-		"async": "^3.2.6",
 		"big.js": "^6.2.2",
-		"lazy": "^1.0.11",
 		"level": "^9.0.0",
-		"leveldown": "^6.1.1",
-		"levelup": "^5.1.1",
 		"lock": "^1.1.0",
-		"memdown": "^6.1.1",
 		"memory-level": "^2.0.0",
-		"neverthrow": "^8.2.0",
-		"once": "^1.4.0",
-		"subleveldown": "^6.0.1",
 		"valibot": "^1.0.0"
 	}
 }

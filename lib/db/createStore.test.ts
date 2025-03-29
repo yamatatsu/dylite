@@ -17,6 +17,7 @@ describe("createStore", () => {
 				awsAccountId: "000000000000",
 				awsRegion: "us-east-1",
 				options: {
+					path: null,
 					createTableMs: 500,
 					deleteTableMs: 500,
 					updateTableMs: 500,
