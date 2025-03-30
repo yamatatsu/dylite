@@ -1,10 +1,13 @@
 import * as v from "valibot";
-import { itemSize } from "../db/itemSize";
-import type { Store } from "../db/types";
-import { attributeValueSchema } from "./attributeValueSchema";
-import { expectedSchema, validateAttributeConditions } from "./expectedSchema";
-import { validateExpressionParams } from "./validateExpressionParams";
-import { validateExpressions } from "./validateExpressions";
+import { itemSize } from "../../db/itemSize";
+import type { Store } from "../../db/types";
+import { attributeValueSchema } from "../../validations/attributeValueSchema";
+import {
+	expectedSchema,
+	validateAttributeConditions,
+} from "../../validations/expectedSchema";
+import { validateExpressionParams } from "../../validations/validateExpressionParams";
+import { validateExpressions } from "../../validations/validateExpressions";
 
 export const schema = v.object({
 	ReturnConsumedCapacity: v.nullish(v.picklist(["INDEXES", "TOTAL", "NONE"])),

@@ -1,8 +1,11 @@
 import * as v from "valibot";
-import { attributeValueSchema } from "./attributeValueSchema";
-import { expectedSchema, validateAttributeConditions } from "./expectedSchema";
-import { validateExpressionParams } from "./validateExpressionParams";
-import { validateExpressions } from "./validateExpressions";
+import { attributeValueSchema } from "../../validations/attributeValueSchema";
+import {
+	expectedSchema,
+	validateAttributeConditions,
+} from "../../validations/expectedSchema";
+import { validateExpressionParams } from "../../validations/validateExpressionParams";
+import { validateExpressions } from "../../validations/validateExpressions";
 
 export const schema = v.object({
 	ReturnConsumedCapacity: v.nullish(v.picklist(["INDEXES", "TOTAL", "NONE"])),
