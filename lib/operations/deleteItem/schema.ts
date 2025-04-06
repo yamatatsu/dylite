@@ -1,20 +1,16 @@
 import * as v from "valibot";
 import { attributeValueSchema } from "../../validations/attributeValueSchema";
+import { validateExpressionParams } from "../../validations/validateExpressionParams";
+import { validateExpressions } from "../../validations/validateExpressions";
+import { tableNameSchema } from "../common-schema";
 import {
 	expectedSchema,
 	validateAttributeConditions,
-} from "../../validations/expectedSchema";
-import { validateExpressionParams } from "../../validations/validateExpressionParams";
-import { validateExpressions } from "../../validations/validateExpressions";
+} from "../common-schema/expectedSchema";
 
 export const schema = v.object({
 	ReturnConsumedCapacity: v.nullish(v.picklist(["INDEXES", "TOTAL", "NONE"])),
-	TableName: v.pipe(
-		v.string(),
-		v.regex(/^[a-zA-Z0-9_.-]+$/),
-		v.minLength(3),
-		v.maxLength(255),
-	),
+	TableName: tableNameSchema,
 	ReturnValues: v.nullish(
 		v.picklist(["ALL_NEW", "UPDATED_OLD", "ALL_OLD", "NONE", "UPDATED_NEW"]),
 	),

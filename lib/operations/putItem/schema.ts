@@ -2,21 +2,17 @@ import * as v from "valibot";
 import { itemSize } from "../../db/itemSize";
 import type { Store } from "../../db/types";
 import { attributeValueSchema } from "../../validations/attributeValueSchema";
+import { validateExpressionParams } from "../../validations/validateExpressionParams";
+import { validateExpressions } from "../../validations/validateExpressions";
+import { tableNameSchema } from "../common-schema";
 import {
 	expectedSchema,
 	validateAttributeConditions,
-} from "../../validations/expectedSchema";
-import { validateExpressionParams } from "../../validations/validateExpressionParams";
-import { validateExpressions } from "../../validations/validateExpressions";
+} from "../common-schema/expectedSchema";
 
 export const schema = v.object({
 	ReturnConsumedCapacity: v.nullish(v.picklist(["INDEXES", "TOTAL", "NONE"])),
-	TableName: v.pipe(
-		v.string(),
-		v.regex(/^[a-zA-Z0-9_.-]+$/),
-		v.minLength(3),
-		v.maxLength(255),
-	),
+	TableName: tableNameSchema,
 	Item: v.record(v.string(), attributeValueSchema),
 	ConditionalOperator: v.nullish(v.picklist(["OR", "AND"])),
 	Expected: expectedSchema,

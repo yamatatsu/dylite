@@ -3,6 +3,7 @@ import { attributeValueSchema } from "../../validations/attributeValueSchema";
 import { atLeastOneItem, unique } from "../../validations/util-validations";
 import { validateExpressionParams } from "../../validations/validateExpressionParams";
 import { validateExpressions } from "../../validations/validateExpressions";
+import { tableNameSchema } from "../common-schema";
 
 export const schema = v.object({
 	ReturnConsumedCapacity: v.nullish(v.picklist(["INDEXES", "TOTAL", "NONE"])),
@@ -12,12 +13,7 @@ export const schema = v.object({
 			unique,
 		),
 	),
-	TableName: v.pipe(
-		v.string(),
-		v.regex(/^[a-zA-Z0-9_.-]+$/),
-		v.minLength(3),
-		v.maxLength(255),
-	),
+	TableName: tableNameSchema,
 	Key: v.record(v.string(), attributeValueSchema),
 	ConsistentRead: v.nullish(v.boolean()),
 	ProjectionExpression: v.nullish(v.string()),
