@@ -24,6 +24,7 @@ export type AttributeValue =
 	| NULLMember
 	| SMember
 	| SSMember;
+export type KeyAttributeValue = BMember | NMember | SMember;
 type SMember = { S: string };
 type NMember = { N: string };
 type BMember = { B: string };
@@ -50,6 +51,10 @@ export const attributeValueSchema: v.GenericSchema<AttributeValue> = v.lazy(
 			boolMemberSchema,
 		]),
 );
+export const keyAttributeValueSchema = v.object({
+	AttributeName: v.string(),
+	AttributeType: v.picklist(["S", "N", "B"]),
+});
 
 const sMemberSchema = v.object({ S: v.string() });
 const nMemberSchema = v.object({ N: v.string() });

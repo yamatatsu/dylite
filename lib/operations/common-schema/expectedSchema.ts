@@ -1,6 +1,6 @@
 import * as v from "valibot";
-import { compare } from "../db/compare";
-import { attributeValueSchema } from "./attributeValueSchema";
+import { compare } from "../../db/compare";
+import { attributeValueSchema } from "../../validations/attributeValueSchema";
 
 export const expectedSchema = v.nullish(
 	v.record(
