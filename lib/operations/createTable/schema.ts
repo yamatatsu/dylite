@@ -2,10 +2,12 @@ import * as v from "valibot";
 import { keyAttributeValueSchema } from "../../validations/attributeValueSchema";
 import { tableNameSchema } from "../common-schema";
 
-const provisionedThroughputSchema = v.object({
-	ReadCapacityUnits: v.pipe(v.number(), v.minValue(1)),
-	WriteCapacityUnits: v.pipe(v.number(), v.minValue(1)),
-});
+const provisionedThroughputSchema = v.nullish(
+	v.object({
+		ReadCapacityUnits: v.pipe(v.number(), v.minValue(1)),
+		WriteCapacityUnits: v.pipe(v.number(), v.minValue(1)),
+	}),
+);
 
 const keySchemaSchema = v.pipe(
 	v.array(
@@ -21,11 +23,11 @@ const keySchemaSchema = v.pipe(
 		"Invalid KeySchema: The first KeySchemaElement is not a HASH key type",
 	),
 	v.check(
-		([_, range]) => range.KeyType === "RANGE",
+		([_, range]) => range == null || range.KeyType === "RANGE",
 		"Invalid KeySchema: The second KeySchemaElement is not a RANGE key type",
 	),
 	v.check(
-		([hash, range]) => hash.AttributeName !== range.AttributeName,
+		([hash, range]) => hash.AttributeName !== range?.AttributeName,
 		"Both the Hash Key and the Range Key element in the KeySchema have the same name",
 	),
 );
@@ -130,33 +132,34 @@ export const schema = v.pipe(
 			),
 		),
 	}),
-
 	v.check(
 		(input) =>
-			input.BillingMode === "PAY_PER_REQUEST" && !!input.ProvisionedThroughput,
+			input.BillingMode !== "PAY_PER_REQUEST" || !input.ProvisionedThroughput,
 		"One or more parameter values were invalid: Neither ReadCapacityUnits nor WriteCapacityUnits can be specified when BillingMode is PAY_PER_REQUEST",
 	),
 	v.check(
 		(input) =>
-			input.BillingMode !== "PAY_PER_REQUEST" &&
-			(!input.ProvisionedThroughput ||
-				!input.ProvisionedThroughput.ReadCapacityUnits ||
-				!input.ProvisionedThroughput.WriteCapacityUnits),
+			input.BillingMode === "PAY_PER_REQUEST" ||
+			(!!input.ProvisionedThroughput &&
+				!!input.ProvisionedThroughput.ReadCapacityUnits &&
+				!!input.ProvisionedThroughput.WriteCapacityUnits),
 		"One or more parameter values were invalid: ReadCapacityUnits and WriteCapacityUnits must both be specified when BillingMode is PROVISIONED",
 	),
 	v.check(
 		(input) =>
-			input.BillingMode !== "PAY_PER_REQUEST" &&
-			input.ProvisionedThroughput.ReadCapacityUnits > 1000000000000,
+			input.BillingMode === "PAY_PER_REQUEST" ||
+			input.ProvisionedThroughput == null ||
+			input.ProvisionedThroughput.ReadCapacityUnits <= 1000000000000,
 		(issue) =>
-			`Given value ${issue.input.ProvisionedThroughput.ReadCapacityUnits} for ReadCapacityUnits is out of bounds`,
+			`Given value ${issue.input.ProvisionedThroughput?.ReadCapacityUnits} for ReadCapacityUnits is out of bounds`,
 	),
 	v.check(
 		(input) =>
-			input.BillingMode !== "PAY_PER_REQUEST" &&
-			input.ProvisionedThroughput.WriteCapacityUnits > 1000000000000,
+			input.BillingMode === "PAY_PER_REQUEST" ||
+			input.ProvisionedThroughput == null ||
+			input.ProvisionedThroughput.WriteCapacityUnits <= 1000000000000,
 		(issue) =>
-			`Given value ${issue.input.ProvisionedThroughput.WriteCapacityUnits} for WriteCapacityUnits is out of bounds`,
+			`Given value ${issue.input.ProvisionedThroughput?.WriteCapacityUnits} for WriteCapacityUnits is out of bounds`,
 	),
 	v.check(
 		(input) => input.KeySchema.length <= input.AttributeDefinitions.length,
@@ -188,7 +191,7 @@ export const schema = v.pipe(
 	),
 	v.check(
 		(input) =>
-			input.LocalSecondaryIndexes != null && input.KeySchema.length !== 2,
+			input.LocalSecondaryIndexes == null || input.KeySchema.length === 2,
 		"One or more parameter values were invalid: Table KeySchema does not have a range key, which is required when specifying a LocalSecondaryIndex",
 	),
 	v.rawCheck(({ dataset, addIssue }) => {
@@ -242,3 +245,5 @@ export const schema = v.pipe(
 		}
 	}),
 );
+
+export type Schema = v.InferOutput<typeof schema>;

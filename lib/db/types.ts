@@ -1,5 +1,6 @@
 import type { ConditionalOperator } from "@aws-sdk/client-dynamodb";
 import type { AbstractLevel, AbstractSublevel } from "abstract-level";
+import type AsyncLock from "async-lock";
 
 export type Format = string | Buffer | Uint8Array;
 export type DB = AbstractLevel<Format, string, string>;
@@ -45,7 +46,7 @@ export interface Index {
 	KeySchema: KeySchema[];
 	Projection: {
 		ProjectionType: "ALL" | "INCLUDE" | "KEYS_ONLY";
-		NonKeyAttributes?: string[];
+		NonKeyAttributes?: string[] | null;
 	};
 }
 
@@ -128,6 +129,7 @@ export interface Store {
 	options: StoreOptions;
 	db: DB;
 	tableDb: SubDB<Table>;
+	tableLock: AsyncLock;
 	getItemDb: (name: string) => SubDB<Item>;
 	deleteItemDb: (name: string) => Promise<void>;
 	getIndexDb: (

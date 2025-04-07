@@ -1,3 +1,4 @@
+import AsyncLock from "async-lock";
 import { Level } from "level";
 import { MemoryLevel } from "memory-level";
 import { notFoundError } from "./errors";
@@ -99,6 +100,7 @@ export function createStore(options: StoreOptionsInput = {}): Store {
 		options: defaultOptions,
 		db,
 		tableDb,
+		tableLock: new AsyncLock(),
 		getItemDb,
 		deleteItemDb,
 		getIndexDb,

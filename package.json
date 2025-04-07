@@ -18,6 +18,7 @@
 	"devDependencies": {
 		"@aws-sdk/client-dynamodb": "^3.767.0",
 		"@biomejs/biome": "^1.9.4",
+		"@types/async-lock": "^1.4.2",
 		"@types/big.js": "^6.2.2",
 		"@types/debug": "^4.1.12",
 		"@types/jest": "^29.5.14",
@@ -32,6 +33,7 @@
 		"@hono/node-server": "^1.14.0",
 		"@hono/valibot-validator": "^0.5.2",
 		"abstract-level": "^2.0.1",
+		"async-lock": "^1.4.1",
 		"big.js": "^6.2.2",
 		"hono": "^4.7.5",
 		"level": "^9.0.0",

@@ -1,5 +1,6 @@
 import * as v from "valibot";
 import type { Store } from "../../db/types";
+import { action } from "./action";
 import { schema } from "./schema";
 
 export async function execute(json: unknown, store: Store) {
@@ -8,5 +9,5 @@ export async function execute(json: unknown, store: Store) {
 		return res.issues[0].message;
 	}
 
-	return "Hello Hono!";
+	return action(store, res.output);
 }

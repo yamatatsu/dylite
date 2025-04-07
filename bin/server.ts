@@ -5,6 +5,7 @@ import * as v from "valibot";
 import { createStore } from "../lib/db";
 import type { Store } from "../lib/db/types";
 import { baseLogger } from "../lib/logger";
+import * as createTable from "../lib/operations/createTable";
 import * as deleteItem from "../lib/operations/deleteItem";
 import * as getItem from "../lib/operations/getItem";
 import * as putItem from "../lib/operations/putItem";
@@ -14,6 +15,12 @@ const app = new Hono();
 
 const validApis = ["DynamoDB_20111205", "DynamoDB_20120810"] as const;
 const validOperations = [
+	"CreateTable",
+	// "DeleteTable",
+	// "DescribeTable",
+	// "UpdateTable",
+	// "ListTables",
+
 	"PutItem",
 	"GetItem",
 	// "UpdateItem",
@@ -23,18 +30,18 @@ const validOperations = [
 	// "BatchGetItem",
 	// "BatchWriteItem",
 
-	// "CreateTable",
-	// "DeleteTable",
-	// "DescribeTable",
-	// "UpdateTable",
-	// "ListTables",
-
 	// "TagResource",
 	// "UntagResource",
 	// "ListTagsOfResource",
 	// "DescribeTimeToLive",
 ] as const;
 const operations = {
+	CreateTable: createTable,
+	// DescribeTable: {},
+	// UpdateTable: {},
+	// DeleteTable: {},
+	// ListTables: {},
+
 	PutItem: putItem,
 	GetItem: getItem,
 	// UpdateItem: {},
@@ -43,12 +50,6 @@ const operations = {
 	// Scan: {},
 	// BatchGetItem: {},
 	// BatchWriteItem: {},
-
-	// CreateTable: {},
-	// DescribeTable: {},
-	// UpdateTable: {},
-	// DeleteTable: {},
-	// ListTables: {},
 
 	// TagResource: {},
 	// UntagResource: {},
@@ -93,11 +94,11 @@ app.post(
 
 		return operation.execute(json, store).then(
 			(data) => {
-				logger({ data });
-				return c.text(data);
+				logger("response", { data });
+				return typeof data === "string" ? c.text(data) : c.json(data);
 			},
 			(err) => {
-				logger({ err });
+				logger("err", { err });
 				return c.text(err.message, 400);
 			},
 		);
