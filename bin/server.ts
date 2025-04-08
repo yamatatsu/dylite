@@ -57,14 +57,24 @@ const operations = {
 	// DescribeTimeToLive: {},
 };
 
-const headerSchema = v.object({
-	"x-amz-target": v.pipe(
-		v.string(),
-		v.transform((input) => input.split(".")),
-		v.strictTuple([v.picklist(validApis), v.picklist(validOperations)]),
-	),
-	authorization: v.optional(v.string()),
-});
+const headerSchema = v.object(
+	{
+		"x-amz-target": v.pipe(
+			v.string(),
+			v.transform((input) => input.split(".")),
+			v.strictTuple([v.picklist(validApis), v.picklist(validOperations)]),
+		),
+		authorization: v.string(),
+	},
+	(issue) => {
+		switch (issue.expected) {
+			case '"authorization"':
+				return "com.amazon.coral.service#MissingAuthenticationTokenException|Request is missing Authentication Token";
+			default:
+				return issue.message;
+		}
+	},
+);
 const querySchema = v.object({
 	"X-Amz-Algorithm": v.optional(v.string()),
 });
@@ -74,7 +84,12 @@ const store = createStore();
 
 app.post(
 	"/",
-	vValidator("header", headerSchema),
+	vValidator("header", headerSchema, (result, c) => {
+		if (result.success) return;
+
+		const [type, message] = result.issues[0].message.split("|");
+		return c.json({ __type: type, message }, 400);
+	}),
 	vValidator("query", querySchema),
 	vValidator("json", jsonSchema),
 	async (c) => {
