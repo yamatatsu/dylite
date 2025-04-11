@@ -1,3 +1,3 @@
 import debug from "debug";
 
-export const baseLogger = debug("dynamodb-for-test");
+export const baseLogger = debug("dynamodb-lite");
