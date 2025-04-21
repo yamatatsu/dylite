@@ -112,7 +112,7 @@ describe("getTable", () => {
 		expect(table).toEqual(testTable);
 	});
 
-	it.each(["CREATING", "DELETING"])(
+	it.each(["CREATING", "DELETING"] as const)(
 		"should get a Table if %s",
 		async (status) => {
 			const testTable = {
@@ -139,7 +139,7 @@ describe("getTable", () => {
 		},
 	);
 
-	it.each(["CREATING", "DELETING"])(
+	it.each(["CREATING", "DELETING"] as const)(
 		"should get a Table if %s",
 		async (status) => {
 			const testTable = {

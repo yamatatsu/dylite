@@ -15,7 +15,7 @@ export interface Table {
 	TableName: string;
 	KeySchema: KeySchema[];
 	AttributeDefinitions: AttributeDefinition[];
-	TableStatus?: string;
+	TableStatus?: "ACTIVE" | "CREATING" | "DELETING" | "UPDATING";
 	GlobalSecondaryIndexes?: Index[];
 	LocalSecondaryIndexes?: Index[];
 }
@@ -144,7 +144,7 @@ export interface Store {
 	) => Promise<void>;
 	getTagDb: (name: string) => SubDB<Item>;
 	deleteTagDb: (name: string) => Promise<void>;
-	getTable: (name: string, checkStatus?: boolean) => Promise<Table | null>;
+	getTable: (name: string, checkStatus?: boolean) => Promise<Table>;
 }
 
 export type StoreOptionsInput = Partial<StoreOptions>;

@@ -80,18 +80,17 @@ export function createStore(options: StoreOptionsInput = {}): Store {
 		delete subDbs[name];
 	}
 
-	async function getTable(
-		name: string,
-		checkStatus = true,
-	): Promise<Table | null> {
+	async function getTable(name: string, checkStatus = true): Promise<Table> {
 		const table = await tableDb.get(name);
 		if (
-			checkStatus &&
-			(table?.TableStatus === "CREATING" || table?.TableStatus === "DELETING")
+			(checkStatus &&
+				(table?.TableStatus === "CREATING" ||
+					table?.TableStatus === "DELETING")) ||
+			!table
 		) {
 			throw notFoundError(checkStatus);
 		}
-		return table ?? null;
+		return table;
 	}
 
 	return {

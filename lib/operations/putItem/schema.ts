@@ -12,7 +12,7 @@ import {
 
 export const schema = v.object({
 	ReturnConsumedCapacity: v.nullish(v.picklist(["INDEXES", "TOTAL", "NONE"])),
-	TableName: tableNameSchema,
+	TableName: tableNameSchema("TableName"),
 	Item: v.record(v.string(), attributeValueSchema),
 	ConditionalOperator: v.nullish(v.picklist(["OR", "AND"])),
 	Expected: expectedSchema,

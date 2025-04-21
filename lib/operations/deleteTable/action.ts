@@ -22,7 +22,7 @@ export async function action(store: Store, data: Schema) {
 		...table,
 		TableStatus: "DELETING",
 		GlobalSecondaryIndexes: undefined,
-	};
+	} as const;
 	await tableDb.put(key, _table);
 
 	await Promise.all([

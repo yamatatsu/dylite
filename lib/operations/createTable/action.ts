@@ -73,7 +73,7 @@ export async function action(store: Store, data: Schema) {
 							NumberOfDecreasesToday: 0,
 						},
 			})),
-		};
+		} as const;
 
 		await tableDb.put(key, _data);
 
