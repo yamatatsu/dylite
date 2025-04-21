@@ -5,8 +5,12 @@
 	"main": "index.js",
 	"scripts": {
 		"dev": "DEBUG='*' tsx watch bin/server.ts",
+		"type-check": "tsc --noEmit",
+		"lint": "pnpm biome check .",
 		"test": "jest --watch",
-		"test:ci": "jest"
+		"test:ci": "jest",
+		"check": "pnpm run '/(lint|type-check)/'",
+		"prepare": "husky"
 	},
 	"keywords": [],
 	"author": "",
@@ -15,6 +19,17 @@
 		"node": ">=22.14.0"
 	},
 	"packageManager": "pnpm@10.6.5",
+	"dependencies": {
+		"@hono/node-server": "^1.14.0",
+		"@hono/valibot-validator": "^0.5.2",
+		"abstract-level": "^2.0.1",
+		"async-lock": "^1.4.1",
+		"big.js": "^6.2.2",
+		"hono": "^4.7.5",
+		"level": "^9.0.0",
+		"memory-level": "^2.0.0",
+		"valibot": "^1.0.0"
+	},
 	"devDependencies": {
 		"@aws-sdk/client-dynamodb": "^3.767.0",
 		"@biomejs/biome": "^1.9.4",
@@ -26,21 +41,11 @@
 		"@types/supertest": "^6.0.3",
 		"debug": "^4.4.0",
 		"dynalite": "^3.2.2",
+		"husky": "^9.1.7",
 		"jest": "^29.7.0",
 		"supertest": "^7.1.0",
 		"ts-jest": "^29.2.6",
 		"tsx": "^4.19.3",
 		"typescript": "^5.8.2"
-	},
-	"dependencies": {
-		"@hono/node-server": "^1.14.0",
-		"@hono/valibot-validator": "^0.5.2",
-		"abstract-level": "^2.0.1",
-		"async-lock": "^1.4.1",
-		"big.js": "^6.2.2",
-		"hono": "^4.7.5",
-		"level": "^9.0.0",
-		"memory-level": "^2.0.0",
-		"valibot": "^1.0.0"
 	}
 }
