@@ -415,12 +415,6 @@ import Big from "big.js";
 //   errors.push('Value ' + value + ' at \'' + parent + toLowerFirst(key) + '\' failed to satisfy constraint: ' + msg)
 // }
 
-// function validateTableName (key, val) {
-//   if (val == null) return null
-//   if (val.length < 3 || val.length > 255)
-//     return key + ' must be at least 3 characters long and at most 255 characters long'
-// }
-
 // function toLowerFirst (str) {
 //   return str[0].toLowerCase() + str.slice(1)
 // }

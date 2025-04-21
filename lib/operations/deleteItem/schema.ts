@@ -10,7 +10,7 @@ import {
 
 export const schema = v.object({
 	ReturnConsumedCapacity: v.nullish(v.picklist(["INDEXES", "TOTAL", "NONE"])),
-	TableName: tableNameSchema,
+	TableName: tableNameSchema("TableName"),
 	ReturnValues: v.nullish(
 		v.picklist(["ALL_NEW", "UPDATED_OLD", "ALL_OLD", "NONE", "UPDATED_NEW"]),
 	),

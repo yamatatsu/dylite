@@ -13,7 +13,7 @@ export const schema = v.object({
 			unique,
 		),
 	),
-	TableName: tableNameSchema,
+	TableName: tableNameSchema("TableName"),
 	Key: v.record(v.string(), attributeValueSchema),
 	ConsistentRead: v.nullish(v.boolean()),
 	ProjectionExpression: v.nullish(v.string()),

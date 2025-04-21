@@ -51,7 +51,7 @@ const projectionSchema = v.pipe(
 export const schema = v.pipe(
 	v.object({
 		AttributeDefinitions: v.array(keyAttributeValueSchema),
-		TableName: tableNameSchema,
+		TableName: v.pipe(tableNameSchema("TableName")),
 		BillingMode: v.nullish(v.picklist(["PROVISIONED", "PAY_PER_REQUEST"])),
 		ProvisionedThroughput: provisionedThroughputSchema,
 		KeySchema: keySchemaSchema,
@@ -60,7 +60,7 @@ export const schema = v.pipe(
 				v.array(
 					v.pipe(
 						v.object({
-							IndexName: tableNameSchema,
+							IndexName: tableNameSchema("IndexName"),
 							KeySchema: keySchemaSchema,
 							Projection: projectionSchema,
 						}),
@@ -100,7 +100,7 @@ export const schema = v.pipe(
 			v.pipe(
 				v.array(
 					v.object({
-						IndexName: tableNameSchema,
+						IndexName: tableNameSchema("IndexName"),
 						KeySchema: keySchemaSchema,
 						Projection: projectionSchema,
 						ProvisionedThroughput: provisionedThroughputSchema,
