@@ -12,6 +12,9 @@ module.exports = {
 			transform: { "^.+.tsx?$": ["ts-jest", {}] },
 			testMatch: ["<rootDir>/tests/http/**/*.test.ts"],
 			preset: "@shelf/jest-dynamodb",
+			globals: {
+				__TEST__: { ddbEndpoint: "http://localhost:8000" },
+			},
 		},
 	],
 };

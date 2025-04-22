@@ -1,15 +1,18 @@
 import { randomUUID } from "node:crypto";
-import type { CreateTableOutput } from "@aws-sdk/client-dynamodb";
+import type { DeleteTableOutput } from "@aws-sdk/client-dynamodb";
 import deepMerge from "lodash.merge";
 import { ddb, expectUuid } from "./_test-helper";
 
 test("happy path", async () => {
 	const tableName = `test-table-${randomUUID()}`;
-	const res = await ddb.createTable({
+	await ddb.createTable({
 		TableName: tableName,
 		AttributeDefinitions: [{ AttributeName: "pk", AttributeType: "S" }],
 		KeySchema: [{ AttributeName: "pk", KeyType: "HASH" }],
 		BillingMode: "PAY_PER_REQUEST",
+	});
+	const res = await ddb.deleteTable({
+		TableName: tableName,
 	});
 	expect(res).toEqual(resTemplate(tableName));
 });
@@ -23,7 +26,7 @@ type DeepPartial<T> = {
 
 const resTemplate = (
 	tableName: string,
-	overrides?: DeepPartial<CreateTableOutput>,
+	overrides?: DeepPartial<DeleteTableOutput>,
 ) =>
 	deepMerge(
 		{
