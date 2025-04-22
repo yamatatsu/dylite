@@ -1,65 +1,57 @@
-import request from "supertest";
+import { randomUUID } from "node:crypto";
+import { DynamoDB } from "@aws-sdk/client-dynamodb";
 
-const post = request("http://localhost:4567")
-	.post("/")
-	.set("x-amz-target", "DynamoDB_20120810.CreateTable");
+const expectUuid = expect.stringMatching(
+	/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+);
 
-test("missing Authentication Token", async () => {
-	const actual = await post.send({
-		TableName: "test-table",
-		AttributeDefinitions: [{ AttributeName: "id", AttributeType: "S" }],
-		KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
-		ProvisionedThroughput: { ReadCapacityUnits: 5, WriteCapacityUnits: 5 },
-	});
-	expect(actual.status).toBe(400);
-	expect(actual.body).toEqual({
-		__type: "com.amazon.coral.service#MissingAuthenticationTokenException",
-		message: "Request is missing Authentication Token",
-	});
+const ddb = new DynamoDB({
+	endpoint: "http://localhost:8000",
+	region: "local-env",
+	credentials: {
+		accessKeyId: "fakeMyKeyId",
+		secretAccessKey: "fakeSecretAccessKey",
+	},
 });
 
-test.skip("happy path", async () => {
-	const actual = await post.send({
-		TableName: "test-table",
-		AttributeDefinitions: [{ AttributeName: "id", AttributeType: "S" }],
-		KeySchema: [{ AttributeName: "id", KeyType: "HASH" }],
-		ProvisionedThroughput: { ReadCapacityUnits: 5, WriteCapacityUnits: 5 },
+test("happy path", async () => {
+	const tableName = `test-table-${randomUUID()}`;
+	const res = await ddb.createTable({
+		TableName: tableName,
+		AttributeDefinitions: [{ AttributeName: "pk", AttributeType: "S" }],
+		KeySchema: [{ AttributeName: "pk", KeyType: "HASH" }],
+		BillingMode: "PAY_PER_REQUEST",
 	});
-	expect(actual.status).toBe(200);
-	expect(actual.body).toEqual({
+	expect(res).toEqual({
 		TableDescription: {
-			TableName: "test-table",
-			TableId: expect.stringMatching(
-				/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
-			),
-			TableArn: "arn:aws:dynamodb:us-east-1:000000000000:table/test-table",
-			AttributeDefinitions: [
-				{
-					AttributeName: "id",
-					AttributeType: "S",
-				},
-			],
+			AttributeDefinitions: [{ AttributeName: "pk", AttributeType: "S" }],
 			BillingModeSummary: {
 				BillingMode: "PAY_PER_REQUEST",
+				LastUpdateToPayPerRequestDateTime: expect.any(Date),
 			},
-			CreationDateTime: expect.any(Number),
+			CreationDateTime: expect.any(Date),
+			DeletionProtectionEnabled: false,
 			ItemCount: 0,
-			KeySchema: [
-				{
-					AttributeName: "id",
-					KeyType: "HASH",
-				},
-			],
+			KeySchema: [{ AttributeName: "pk", KeyType: "HASH" }],
 			ProvisionedThroughput: {
+				LastDecreaseDateTime: new Date(0),
+				LastIncreaseDateTime: new Date(0),
 				NumberOfDecreasesToday: 0,
-				ReadCapacityUnits: 5,
-				WriteCapacityUnits: 5,
+				ReadCapacityUnits: 0,
+				WriteCapacityUnits: 0,
 			},
+			TableArn: `arn:aws:dynamodb:ddblocal:000000000000:table/${tableName}`,
+			TableName: tableName,
 			TableSizeBytes: 0,
-			TableStatus: "CREATING",
-			TableThroughputModeSummary: {
-				TableThroughputMode: "PAY_PER_REQUEST",
-			},
+			TableStatus: "ACTIVE",
+		},
+		$metadata: {
+			attempts: 1,
+			cfId: undefined,
+			extendedRequestId: undefined,
+			httpStatusCode: 200,
+			requestId: expectUuid,
+			totalRetryDelay: 0,
 		},
 	});
 });
