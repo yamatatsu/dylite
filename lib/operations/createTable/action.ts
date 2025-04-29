@@ -19,49 +19,34 @@ export async function action(store: Store, data: Schema) {
 			};
 		}
 
+		const creationDateTime = Date.now() / 1000;
+
 		const _data = {
 			...data,
-			TableArn: `arn:aws:dynamodb:${store.awsRegion}:${store.awsAccountId}:table/${data.TableName}`,
-			TableId: randomUUID(),
-			CreationDateTime: Date.now() / 1000,
-			ItemCount: 0,
-			ProvisionedThroughput: data.ProvisionedThroughput
-				? {
-						...data.ProvisionedThroughput,
-						NumberOfDecreasesToday: 0,
-					}
-				: {
-						ReadCapacityUnits: 0,
-						WriteCapacityUnits: 0,
-						NumberOfDecreasesToday: 0,
-					},
-			TableSizeBytes: 0,
-			TableStatus: "CREATING",
-			BillingModeSummary: { BillingMode: "PAY_PER_REQUEST" },
-			TableThroughputModeSummary: {
-				TableThroughputMode: "PAY_PER_REQUEST",
-			},
 			...(data.BillingMode === "PAY_PER_REQUEST"
 				? {
-						BillingModeSummary: { BillingMode: "PAY_PER_REQUEST" },
+						BillingModeSummary: {
+							BillingMode: "PAY_PER_REQUEST",
+							LastUpdateToPayPerRequestDateTime: creationDateTime,
+						},
 						TableThroughputModeSummary: {
 							TableThroughputMode: "PAY_PER_REQUEST",
 						},
 						BillingMode: undefined,
 					}
-				: {}),
-			LocalSecondaryIndexes: data.LocalSecondaryIndexes?.map((index) => ({
-				...index,
-				IndexArn: `arn:aws:dynamodb:${store.awsRegion}:${store.awsAccountId}:table/${data.TableName}/index/${index.IndexName}`,
-				IndexSizeBytes: 0,
-				ItemCount: 0,
-			})),
+				: {
+						BillingModeSummary: {
+							BillingMode: "PAY_PER_REQUEST",
+						},
+					}),
+			CreationDateTime: creationDateTime,
+			DeletionProtectionEnabled: false,
 			GlobalSecondaryIndexes: data.GlobalSecondaryIndexes?.map((index) => ({
 				...index,
 				IndexArn: `arn:aws:dynamodb:${store.awsRegion}:${store.awsAccountId}:table/${data.TableName}/index/${index.IndexName}`,
 				IndexSizeBytes: 0,
 				ItemCount: 0,
-				IndexStatus: "CREATING",
+				IndexStatus: "ACTIVE",
 				ProvisionedThroughput: index.ProvisionedThroughput
 					? {
 							...index.ProvisionedThroughput,
@@ -73,6 +58,31 @@ export async function action(store: Store, data: Schema) {
 							NumberOfDecreasesToday: 0,
 						},
 			})),
+			ItemCount: 0,
+			LocalSecondaryIndexes: data.LocalSecondaryIndexes?.map((index) => ({
+				...index,
+				IndexArn: `arn:aws:dynamodb:${store.awsRegion}:${store.awsAccountId}:table/${data.TableName}/index/${index.IndexName}`,
+				IndexSizeBytes: 0,
+				ItemCount: 0,
+			})),
+			ProvisionedThroughput: data.ProvisionedThroughput
+				? {
+						...data.ProvisionedThroughput,
+						NumberOfDecreasesToday: 0,
+					}
+				: {
+						LastDecreaseDateTime: new Date(0).getTime(),
+						LastIncreaseDateTime: new Date(0).getTime(),
+						ReadCapacityUnits: 0,
+						WriteCapacityUnits: 0,
+						NumberOfDecreasesToday: 0,
+					},
+			TableArn: `arn:aws:dynamodb:ddblocal:${store.awsAccountId}:table/${data.TableName}`,
+			TableSizeBytes: 0,
+			TableStatus: "ACTIVE",
+			TableThroughputModeSummary: {
+				TableThroughputMode: "PAY_PER_REQUEST",
+			},
 		} as const;
 
 		await tableDb.put(key, _data);
