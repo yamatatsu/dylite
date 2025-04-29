@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@hono/node-server':
-        specifier: ^1.14.0
-        version: 1.14.0(hono@4.7.5)
+        specifier: ^1.14.1
+        version: 1.14.1(hono@4.7.8)
       '@hono/valibot-validator':
         specifier: ^0.5.2
-        version: 0.5.2(hono@4.7.5)(valibot@1.0.0(typescript@5.8.2))
+        version: 0.5.2(hono@4.7.8)(valibot@1.0.0(typescript@5.8.2))
       abstract-level:
         specifier: ^2.0.1
         version: 2.0.2
@@ -24,8 +24,8 @@ importers:
         specifier: ^6.2.2
         version: 6.2.2
       hono:
-        specifier: ^4.7.5
-        version: 4.7.5
+        specifier: ^4.7.8
+        version: 4.7.8
       level:
         specifier: ^9.0.0
         version: 9.0.0
@@ -702,8 +702,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@hono/node-server@1.14.0':
-    resolution: {integrity: sha512-YUCxJwgHRKSqjrdTk9e4VMGKN27MK5r4+MGPyZTgKH+IYbK+KtYbHeOcPGJ91KGGD6RIQiz2dAHxvjauNhOS8g==}
+  '@hono/node-server@1.14.1':
+    resolution: {integrity: sha512-vmbuM+HPinjWzPe7FFPWMMQMsbKE9gDPhaH0FFdqbGpkT5lp++tcWDTxwBl5EgS5y6JVgIaCdjeHRfQ4XRBRjQ==}
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
@@ -1653,8 +1653,8 @@ packages:
     resolution: {integrity: sha512-eSmmWE5bZTK2Nou4g0AI3zZ9rswp7GRKoKXS1BLUkvPviOqs4YTN1djQIqrXy9k5gEtdLPy86JjRwsNM9tnDcA==}
     engines: {node: '>=0.10.0'}
 
-  hono@4.7.5:
-    resolution: {integrity: sha512-fDOK5W2C1vZACsgLONigdZTRZxuBqFtcKh7bUQ5cVSbwI2RWjloJDcgFOVzbQrlI6pCmhlTsVYZ7zpLj4m4qMQ==}
+  hono@4.7.8:
+    resolution: {integrity: sha512-PCibtFdxa7/Ldud9yddl1G81GjYaeMYYTq4ywSaNsYbB1Lug4mwtOMJf2WXykL0pntYwmpRJeOI3NmoDgD+Jxw==}
     engines: {node: '>=16.9.0'}
 
   html-escaper@2.0.2:
@@ -3480,13 +3480,13 @@ snapshots:
   '@esbuild/win32-x64@0.25.1':
     optional: true
 
-  '@hono/node-server@1.14.0(hono@4.7.5)':
+  '@hono/node-server@1.14.1(hono@4.7.8)':
     dependencies:
-      hono: 4.7.5
+      hono: 4.7.8
 
-  '@hono/valibot-validator@0.5.2(hono@4.7.5)(valibot@1.0.0(typescript@5.8.2))':
+  '@hono/valibot-validator@0.5.2(hono@4.7.8)(valibot@1.0.0(typescript@5.8.2))':
     dependencies:
-      hono: 4.7.5
+      hono: 4.7.8
       valibot: 1.0.0(typescript@5.8.2)
 
   '@istanbuljs/load-nyc-config@1.1.0':
@@ -4461,7 +4461,7 @@ snapshots:
   buffer@4.9.2:
     dependencies:
       base64-js: 1.5.1
-      ieee754: 1.2.1
+      ieee754: 1.1.13
       isarray: 1.0.0
 
   buffer@6.0.3:
@@ -4809,7 +4809,7 @@ snapshots:
     dependencies:
       parse-passwd: 1.0.0
 
-  hono@4.7.5: {}
+  hono@4.7.8: {}
 
   html-escaper@2.0.2: {}
 
