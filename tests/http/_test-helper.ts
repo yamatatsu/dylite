@@ -5,7 +5,7 @@ export const expectUuid = expect.stringMatching(
 );
 
 export const ddb = new DynamoDB({
-	endpoint: __TEST__.ddbEndpoint,
+	endpoint: process.env.MOCK_DYNAMODB_ENDPOINT ?? __TEST__.ddbEndpoint,
 	region: "local-env",
 	credentials: {
 		accessKeyId: "fakeMyKeyId",

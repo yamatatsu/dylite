@@ -11,6 +11,7 @@
 		"test:ci": "jest",
 		"test:unit": "jest --selectProjects unit --watch",
 		"test:dynamodb-local": "jest --selectProjects dynamodb-local --watch",
+		"test:dylite": "jest --selectProjects dylite --watch",
 		"check": "pnpm run '/(lint|type-check)/'",
 		"prepare": "husky"
 	},
@@ -34,7 +35,9 @@
 	},
 	"devDependencies": {
 		"@aws-sdk/client-dynamodb": "^3.767.0",
+		"@aws/dynamodb-auto-marshaller": "^0.7.1",
 		"@biomejs/biome": "^1.9.4",
+		"@jest/environment": "^29.7.0",
 		"@shelf/jest-dynamodb": "^3.5.0",
 		"@types/async-lock": "^1.4.2",
 		"@types/big.js": "^6.2.2",
@@ -45,6 +48,7 @@
 		"debug": "^4.4.0",
 		"husky": "^9.1.7",
 		"jest": "^29.7.0",
+		"jest-environment-node": "^29.7.0",
 		"lodash.merge": "^4.6.2",
 		"ts-jest": "^29.2.6",
 		"tsx": "^4.19.3",

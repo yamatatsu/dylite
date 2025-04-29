@@ -4,5 +4,6 @@
 const config = {
 	tables: [],
 	port: 8000,
+	basePort: 8000,
 };
 module.exports = config;

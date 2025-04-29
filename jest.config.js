@@ -16,5 +16,11 @@ module.exports = {
 				__TEST__: { ddbEndpoint: "http://localhost:8000" },
 			},
 		},
+		{
+			displayName: "dylite",
+			transform: { "^.+.tsx?$": ["ts-jest", {}] },
+			testMatch: ["<rootDir>/tests/http/**/*.test.ts"],
+			preset: "./jest-dylite/preset.ts",
+		},
 	],
 };
