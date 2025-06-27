@@ -1,6 +1,7 @@
 # Dylite
 
 Dylite is a mock of DynamoDB for testing.
+This project aims to be compatible with DynamoDB Local.
 
 ## Features
 
