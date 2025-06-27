@@ -63,7 +63,12 @@ const waitForDeleted = async (
 		// eslint-disable-next-line no-await-in-loop
 		const details = await client
 			.describeTable({ TableName: tableName })
-			.catch((e) => e.name === "ResourceInUseException");
+			.catch((e) => {
+				if (e.name === "ResourceNotFoundException") {
+					return undefined;
+				}
+				throw e;
+			});
 
 		// eslint-disable-next-line no-await-in-loop
 		await sleep(100);
