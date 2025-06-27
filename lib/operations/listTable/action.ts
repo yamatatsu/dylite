@@ -2,7 +2,7 @@ import type { Store } from "../../db/types";
 import type { Schema } from "./schema";
 
 export async function action(store: Store, data: Schema) {
-	const { Limit = 100, ExclusiveStartTableName } = data;
+	const { Limit = 100, ExclusiveStartTableName = "" } = data;
 
 	const names: string[] = [];
 	let lastEvaluatedTableName: string | undefined;
