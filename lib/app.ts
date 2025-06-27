@@ -7,16 +7,19 @@ import type { Store } from "./db/types";
 import { baseLogger } from "./logger";
 import * as createTable from "./operations/createTable";
 import * as deleteItem from "./operations/deleteItem";
+import * as deleteTable from "./operations/deleteTable";
+import * as describeTable from "./operations/describeTable";
 import * as getItem from "./operations/getItem";
+import * as listTable from "./operations/listTable";
 import * as putItem from "./operations/putItem";
 
 const validApis = ["DynamoDB_20111205", "DynamoDB_20120810"] as const;
 const validOperations = [
 	"CreateTable",
-	// "DeleteTable",
-	// "DescribeTable",
+	"DeleteTable",
+	"DescribeTable",
 	// "UpdateTable",
-	// "ListTables",
+	"ListTables",
 
 	"PutItem",
 	"GetItem",
@@ -34,10 +37,10 @@ const validOperations = [
 ] as const;
 const operations = {
 	CreateTable: createTable,
-	// DescribeTable: {},
+	DeleteTable: deleteTable,
+	DescribeTable: describeTable,
 	// UpdateTable: {},
-	// DeleteTable: {},
-	// ListTables: {},
+	ListTables: listTable,
 
 	PutItem: putItem,
 	GetItem: getItem,
