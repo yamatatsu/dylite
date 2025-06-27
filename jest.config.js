@@ -8,7 +8,7 @@ module.exports = {
 			testMatch: ["<rootDir>/lib/**/*.test.ts"],
 		},
 		{
-			displayName: "dynamodb-local",
+			displayName: "ddblocal",
 			transform: { "^.+.tsx?$": ["ts-jest", {}] },
 			testMatch: ["<rootDir>/tests/http/**/*.test.ts"],
 			preset: "@shelf/jest-dynamodb",

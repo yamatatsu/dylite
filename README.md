@@ -17,7 +17,7 @@ This project uses three different testing environments:
   - Tests each function in isolation.
 - `dylite`: 
   - Tests each API works as same as DynamoDB Local.
-- `dynamodb-local`:
+- `ddblocal`:
   - Ensures `dylite` tests are compatible with DynamoDB Local.
 
 To run the tests, use the following command:
@@ -27,5 +27,5 @@ pnpm test:unit
 
 pnpm test:dylite
 
-pnpm test:dynamodb-local
+pnpm test:ddblocal
 ```
