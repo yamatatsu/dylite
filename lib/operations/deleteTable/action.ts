@@ -20,7 +20,7 @@ export async function action(store: Store, data: Schema) {
 
 	const _table = {
 		...table,
-		TableStatus: "DELETING",
+		TableStatus: "ACTIVE",
 		GlobalSecondaryIndexes: undefined,
 	} as const;
 	await tableDb.put(key, _table);
