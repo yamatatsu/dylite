@@ -3,7 +3,7 @@ import type { CreateTableOutput } from "@aws-sdk/client-dynamodb";
 import deepMerge from "lodash.merge";
 import { ddb, expectUuid } from "./_test-helper";
 
-test("happy path", async () => {
+test("create table with only PK", async () => {
 	const tableName = `test-table-${randomUUID()}`;
 	const res = await ddb.createTable({
 		TableName: tableName,
@@ -12,6 +12,36 @@ test("happy path", async () => {
 		BillingMode: "PAY_PER_REQUEST",
 	});
 	expect(res).toEqual(resTemplate(tableName));
+});
+
+test("create table with PK and SK", async () => {
+	const tableName = `test-table-${randomUUID()}`;
+	const res = await ddb.createTable({
+		TableName: tableName,
+		AttributeDefinitions: [
+			{ AttributeName: "pk", AttributeType: "N" },
+			{ AttributeName: "sk", AttributeType: "B" },
+		],
+		KeySchema: [
+			{ AttributeName: "pk", KeyType: "HASH" },
+			{ AttributeName: "sk", KeyType: "RANGE" },
+		],
+		BillingMode: "PAY_PER_REQUEST",
+	});
+	expect(res).toEqual(
+		resTemplate(tableName, {
+			TableDescription: {
+				AttributeDefinitions: [
+					{ AttributeName: "pk", AttributeType: "N" },
+					{ AttributeName: "sk", AttributeType: "B" },
+				],
+				KeySchema: [
+					{ AttributeName: "pk", KeyType: "HASH" },
+					{ AttributeName: "sk", KeyType: "RANGE" },
+				],
+			},
+		}),
+	);
 });
 
 ////////////////////////////////////////////////////////////
