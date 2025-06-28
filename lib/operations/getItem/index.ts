@@ -1,4 +1,6 @@
+import { randomUUID } from "node:crypto";
 import * as v from "valibot";
+import { createKey } from "../../db/createKey";
 import type { Store } from "../../db/types";
 import { custom, schema } from "./schema";
 
@@ -11,5 +13,23 @@ export async function execute(json: unknown, store: Store) {
 	const msg = custom(res.output);
 	if (msg) return msg;
 
-	return "Hello Hono!";
+	const data = res.output;
+	const table = await store.getTable(data.TableName);
+	const itemDb = store.getItemDb(data.TableName);
+	const key = createKey(data.Key, table.AttributeDefinitions, table.KeySchema);
+	const item = await itemDb.get(key);
+
+	const $metadata = {
+		attempts: 1,
+		cfId: undefined,
+		extendedRequestId: undefined,
+		httpStatusCode: 200,
+		requestId: randomUUID(),
+		totalRetryDelay: 0,
+	};
+
+	if (item) {
+		return { Item: item, $metadata };
+	}
+	return { $metadata };
 }

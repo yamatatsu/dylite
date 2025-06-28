@@ -10,3 +10,5 @@ This project is implemented with following technologies:
 - Node.js
 - Jest
 - valibot
+
+After writing any code, ensure that it passes tests with appropriate test commands.
