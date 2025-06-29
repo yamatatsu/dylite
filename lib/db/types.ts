@@ -144,7 +144,7 @@ export interface Store {
 	) => Promise<void>;
 	getTagDb: (name: string) => SubDB<Item>;
 	deleteTagDb: (name: string) => Promise<void>;
-	getTable: (name: string, checkStatus?: boolean) => Promise<Table>;
+	getTable: (name: string, checkStatus?: boolean) => Promise<Table | null>;
 }
 
 export type StoreOptionsInput = Partial<StoreOptions>;

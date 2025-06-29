@@ -3,7 +3,6 @@ import { vValidator } from "@hono/valibot-validator";
 import { Hono } from "hono";
 import * as v from "valibot";
 import { createStore } from "./db";
-import type { Store } from "./db/types";
 import { baseLogger } from "./logger";
 import * as createTable from "./operations/createTable";
 import * as deleteItem from "./operations/deleteItem";
@@ -82,6 +81,8 @@ const jsonSchema = v.object({});
 
 export default async function createApp() {
 	const logger = baseLogger.extend("server");
+	const errorLogger = baseLogger.extend("error");
+	errorLogger.color = "red";
 	const app = new Hono();
 	const store = createStore();
 
@@ -112,16 +113,39 @@ export default async function createApp() {
 
 			c.res.headers.set("x-amzn-RequestId", randomUUID());
 
-			return operation.execute(json, store).then(
-				(data) => {
-					logger("response", { data });
-					return typeof data === "string" ? c.text(data) : c.json(data);
-				},
-				(err) => {
-					logger("err", { err });
-					return c.text(err.message, 400);
-				},
-			);
+			try {
+				const result = await operation.execute(json, store);
+				logger("response", { result });
+				return typeof result === "string" ? c.text(result) : c.json(result);
+			} catch (err) {
+				logger("err", { err });
+
+				// just type guard, expected not to be reached
+				if (!(err instanceof Error)) {
+					errorLogger("Unexpected error", { err });
+					return c.text("Internal Server Error", 500);
+				}
+
+				////////////////////
+				// handle errors
+
+				if (err.name === "com.amazon.coral.validate#ValidationException") {
+					return c.json(
+						{
+							__type: "com.amazon.coral.validate#ValidationException",
+							message: err.message,
+						},
+						400,
+					);
+				}
+
+				// fallback, expected not to be reached
+				errorLogger("Unknown error", { err });
+				return c.json(
+					{ __type: "com.amazon.coral.service#SerializationException" },
+					400,
+				);
+			}
 		},
 	);
 

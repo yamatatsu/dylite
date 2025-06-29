@@ -1,3 +1,4 @@
+import { validationException } from "../../db/errors";
 import type { Store } from "../../db/types";
 import type { Schema } from "./schema";
 
@@ -6,6 +7,9 @@ export async function action(store: Store, data: Schema) {
 	const tableDb = store.tableDb;
 
 	const table = await store.getTable(key, false);
+	if (!table) {
+		throw validationException("Cannot do operations on a non-existent table");
+	}
 
 	// Check if table is ACTIVE or not?
 	if (table.TableStatus === "CREATING") {

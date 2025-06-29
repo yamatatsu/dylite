@@ -1,7 +1,6 @@
 import AsyncLock from "async-lock";
 import { Level } from "level";
 import { MemoryLevel } from "memory-level";
-import { notFoundError } from "./errors";
 import type {
 	Item,
 	Store,
@@ -80,7 +79,10 @@ export function createStore(options: StoreOptionsInput = {}): Store {
 		delete subDbs[name];
 	}
 
-	async function getTable(name: string, checkStatus = true): Promise<Table> {
+	async function getTable(
+		name: string,
+		checkStatus = true,
+	): Promise<Table | null> {
 		const table = await tableDb.get(name);
 		if (
 			(checkStatus &&
@@ -88,7 +90,7 @@ export function createStore(options: StoreOptionsInput = {}): Store {
 					table?.TableStatus === "DELETING")) ||
 			!table
 		) {
-			throw notFoundError(checkStatus);
+			return null;
 		}
 		return table;
 	}
