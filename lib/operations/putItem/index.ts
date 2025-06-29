@@ -1,9 +1,9 @@
-import { randomUUID } from "node:crypto";
 import * as v from "valibot";
 import { createKey } from "../../db/createKey";
 import { conditionalError, validationException } from "../../db/errors";
 import type { Store } from "../../db/types";
 import { updateIndexes } from "../../db/updateIndexes";
+import { getMetadata } from "../common";
 import { custom, schema } from "./schema";
 
 export async function execute(json: unknown, store: Store) {
@@ -54,19 +54,11 @@ export async function execute(json: unknown, store: Store) {
 		// Update indexes
 		await updateIndexes(store, table, oldItem ?? null, data.Item);
 
-		const $metadata = {
-			attempts: 1,
-			cfId: undefined,
-			extendedRequestId: undefined,
-			httpStatusCode: 200,
-			requestId: randomUUID(),
-			totalRetryDelay: 0,
-		};
-
 		if (data.ReturnValues === "ALL_OLD" && oldItem) {
-			return { Attributes: oldItem, $metadata };
+			return { Attributes: oldItem, $metadata: getMetadata() };
 		}
-		return { $metadata };
+
+		return { $metadata: getMetadata() };
 	} catch (err: unknown) {
 		const error = err as { body?: unknown; statusCode?: number };
 		if (error?.body && error?.statusCode) {
