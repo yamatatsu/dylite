@@ -1,64 +1,128 @@
-import { randomUUID } from "node:crypto";
-import { ddb } from "./_test-helper";
+import { PkTable, ddb, expectUuid } from "./_test-helper";
 
-describe("put-item", () => {
+describe("put-item (API spec)", () => {
 	let tableName: string;
 
 	beforeAll(async () => {
-		tableName = `test-table-${randomUUID()}`;
-		await ddb.createTable({
-			TableName: tableName,
-			AttributeDefinitions: [{ AttributeName: "pk", AttributeType: "S" }],
-			KeySchema: [{ AttributeName: "pk", KeyType: "HASH" }],
-			BillingMode: "PAY_PER_REQUEST",
-		});
+		const table = await PkTable.create();
+		tableName = table.tableName;
 	});
 
-	test("successfully puts an item", async () => {
-		const pk = `item1-${randomUUID()}`;
-		const item = { pk: { S: pk }, data: { S: "value" } };
-		const res = await ddb.putItem({
-			TableName: tableName,
-			Item: item,
-		});
+	test("puts a new item", async () => {
+		// GIVEN
+		const item1 = PkTable.getItem1();
+
+		// WHEN
+		const res = await ddb.putItem({ TableName: tableName, Item: item1 });
+
+		// THEN
 		expect(res).toEqual({
 			$metadata: expect.any(Object),
 		});
+		expect(res.$metadata.httpStatusCode).toBe(200);
 	});
 
-	test("response has Attributes", async () => {
-		const pk = `item1-${randomUUID()}`;
-		const item_old = { pk: { S: pk }, data: { S: "value-old" } };
-		const item_new = { pk: { S: pk }, data: { S: "value-new" } };
-		await ddb.putItem({
-			TableName: tableName,
-			Item: item_old,
-		});
+	test("overwrites and returns ALL_OLD", async () => {
+		// GIVEN
+		const item1 = PkTable.getItem1();
+		const item2 = { ...item1, key1: { S: "bar" } };
+		await ddb.putItem({ TableName: tableName, Item: item1 });
+
+		// WHEN
 		const res = await ddb.putItem({
 			TableName: tableName,
-			Item: item_new,
+			Item: item2,
 			ReturnValues: "ALL_OLD",
 		});
+
+		// THEN
 		expect(res).toEqual({
-			Attributes: item_old,
+			Attributes: item1,
 			$metadata: expect.any(Object),
+		});
+		expect(res.$metadata.httpStatusCode).toBe(200);
+	});
+
+	test("returns nothing with ReturnValues NONE", async () => {
+		// GIVEN
+		const item1 = PkTable.getItem1();
+		const item2 = { ...item1, key1: { S: "bar" } };
+		await ddb.putItem({ TableName: tableName, Item: item1 });
+
+		// WHEN
+		const res = await ddb.putItem({
+			TableName: tableName,
+			Item: item2,
+			ReturnValues: "NONE",
+		});
+
+		// THEN
+		expect(res).toEqual({
+			$metadata: expect.any(Object),
+		});
+		expect(res.$metadata.httpStatusCode).toBe(200);
+	});
+
+	test("returns $metadata", async () => {
+		// GIVEN
+		const item1 = PkTable.getItem1();
+
+		// WHEN
+		const res = await ddb.putItem({ TableName: tableName, Item: item1 });
+
+		// THEN
+		expect(res).toEqual({
+			$metadata: {
+				httpStatusCode: 200,
+				requestId: expectUuid,
+				attempts: 1,
+				totalRetryDelay: 0,
+				cfId: undefined,
+				extendedRequestId: undefined,
+			},
 		});
 	});
 
-	test("response has $metadata", async () => {
-		const pk = `item1-${randomUUID()}`;
-		const item = { pk: { S: pk }, data: { S: "value" } };
-		const res = await ddb.putItem({
+	test("conditional put fails with error", async () => {
+		// GIVEN
+		const item1 = PkTable.getItem1();
+		const item2 = { ...item1, key1: { S: "bar" } };
+		await ddb.putItem({ TableName: tableName, Item: item1 });
+
+		// WHEN
+		const promise = ddb.putItem({
 			TableName: tableName,
-			Item: item,
+			Item: item2,
+			ConditionExpression: "attribute_not_exists(pk)",
 		});
-		expect(res.$metadata).toMatchObject({
-			attempts: 1,
-			cfId: undefined,
-			extendedRequestId: undefined,
-			httpStatusCode: 200,
-			requestId: expect.any(String),
-			totalRetryDelay: 0,
-		});
+
+		// THEN
+		await expect(promise).rejects.toThrow("The conditional request failed");
+	});
+
+	test("returns error if key is missing", async () => {
+		// GIVEN
+		const item1 = PkTable.getItem1();
+
+		// WHEN
+		const promise = ddb.putItem({ TableName: tableName, Item: {} });
+
+		// THEN
+		await expect(promise).rejects.toThrow(
+			"One of the required keys was not given a value",
+		);
+	});
+
+	test("returns error if table does not exist", async () => {
+		// GIVEN
+		const item1 = PkTable.getItem1();
+
+		// WHEN
+		const promise = ddb.putItem({ TableName: "not-exist", Item: item1 });
+
+		// THEN
+		await expect(promise).rejects.toThrow(
+			"Cannot do operations on a non-existent table",
+		);
 	});
 });
