@@ -3,7 +3,7 @@ import { attributeValueSchema } from "../../validations/attributeValueSchema";
 import { atLeastOneItem, unique } from "../../validations/util-validations";
 import { validateExpressionParams } from "../../validations/validateExpressionParams";
 import { validateExpressions } from "../../validations/validateExpressions";
-import { tableNameSchema } from "../common-schema";
+import { tableNameSchema } from "../common";
 
 export const schema = v.object({
 	ReturnConsumedCapacity: v.nullish(v.picklist(["INDEXES", "TOTAL", "NONE"])),

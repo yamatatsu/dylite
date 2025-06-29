@@ -1,5 +1,5 @@
 import * as v from "valibot";
-import { tableNameSchema } from "../common-schema";
+import { tableNameSchema } from "../common";
 
 export const schema = v.object({
 	Limit: v.optional(

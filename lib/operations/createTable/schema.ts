@@ -1,6 +1,6 @@
 import * as v from "valibot";
 import { keyAttributeValueSchema } from "../../validations/attributeValueSchema";
-import { tableNameSchema } from "../common-schema";
+import { tableNameSchema } from "../common";
 
 const provisionedThroughputSchema = v.nullish(
 	v.object({

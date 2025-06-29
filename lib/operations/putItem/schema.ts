@@ -4,11 +4,11 @@ import type { Store } from "../../db/types";
 import { attributeValueSchema } from "../../validations/attributeValueSchema";
 import { validateExpressionParams } from "../../validations/validateExpressionParams";
 import { validateExpressions } from "../../validations/validateExpressions";
-import { tableNameSchema } from "../common-schema";
 import {
 	expectedSchema,
+	tableNameSchema,
 	validateAttributeConditions,
-} from "../common-schema/expectedSchema";
+} from "../common";
 
 export const schema = v.object({
 	ReturnConsumedCapacity: v.nullish(v.picklist(["INDEXES", "TOTAL", "NONE"])),
