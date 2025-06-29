@@ -20,9 +20,3 @@ export function conditionalError(
 	err.name = "ConditionalCheckFailedException";
 	return err;
 }
-
-export function limitError(msg: string): Error {
-	const err = new Error(msg);
-	err.name = "LimitExceededException";
-	return err;
-}
