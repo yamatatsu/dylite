@@ -14,13 +14,13 @@ export async function execute(json: unknown, store: Store) {
 	const msg = custom(res.output);
 	if (msg) throw validationException(msg);
 
-	const data = res.output;
-	const table = await store.getTable(data.TableName);
+	const cmd = res.output;
+	const table = await store.getTable(cmd.TableName);
 	if (!table) {
 		throw validationException("Cannot do operations on a non-existent table");
 	}
-	const itemDb = store.getItemDb(data.TableName);
-	const key = createKey(data.Key, table.AttributeDefinitions, table.KeySchema);
+	const itemDb = store.getItemDb(cmd.TableName);
+	const key = createKey(cmd.Key, table.AttributeDefinitions, table.KeySchema);
 	const item = await itemDb.get(key);
 
 	if (item) {

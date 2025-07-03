@@ -20,23 +20,23 @@ export async function execute(json: unknown, store: Store) {
 		throw validationException(msg);
 	}
 
-	const data = res.output;
-	const table = await store.getTable(data.TableName);
+	const cmd = res.output;
+	const table = await store.getTable(cmd.TableName);
 	if (!table) {
 		throw validationException("Cannot do operations on a non-existent table");
 	}
-	const itemDb = store.getItemDb(data.TableName);
+	const itemDb = store.getItemDb(cmd.TableName);
 
 	// Validate item has all key attributes
 	for (const keyDef of table.KeySchema) {
-		if (!data.Item[keyDef.AttributeName]) {
+		if (!cmd.Item[keyDef.AttributeName]) {
 			throw validationException(
 				"One of the required keys was not given a value",
 			);
 		}
 	}
 
-	const key = createKey(data.Item, table.AttributeDefinitions, table.KeySchema);
+	const key = createKey(cmd.Item, table.AttributeDefinitions, table.KeySchema);
 
 	// Fetch old item (if any)
 	const oldItem = await itemDb.get(key);
@@ -44,12 +44,12 @@ export async function execute(json: unknown, store: Store) {
 	// If ConditionExpression is present and fails, throw conditionalError
 	// (custom already checks this, but double-check for clarity)
 	// Put new item
-	await itemDb.put(key, data.Item);
+	await itemDb.put(key, cmd.Item);
 
 	// Update indexes
-	await updateIndexes(store, table, oldItem ?? null, data.Item);
+	await updateIndexes(store, table, oldItem ?? null, cmd.Item);
 
-	if (data.ReturnValues === "ALL_OLD" && oldItem) {
+	if (cmd.ReturnValues === "ALL_OLD" && oldItem) {
 		return { Attributes: oldItem, $metadata: getMetadata() };
 	}
 

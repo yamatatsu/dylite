@@ -20,13 +20,13 @@ export async function execute(json: unknown, store: Store) {
 		throw validationException(msg);
 	}
 
-	const data = res.output;
-	const table = await store.getTable(data.TableName);
+	const cmd = res.output;
+	const table = await store.getTable(cmd.TableName);
 	if (!table) {
 		throw validationException("Cannot do operations on a non-existent table");
 	}
-	const itemDb = store.getItemDb(data.TableName);
-	const key = createKey(data.Key, table.AttributeDefinitions, table.KeySchema);
+	const itemDb = store.getItemDb(cmd.TableName);
+	const key = createKey(cmd.Key, table.AttributeDefinitions, table.KeySchema);
 	const oldItem = await itemDb.get(key);
 
 	if (!oldItem) {
@@ -36,7 +36,7 @@ export async function execute(json: unknown, store: Store) {
 	await itemDb.del(key);
 	await updateIndexes(store, table, oldItem, null);
 
-	if (data.ReturnValues === "ALL_OLD") {
+	if (cmd.ReturnValues === "ALL_OLD") {
 		return { Attributes: oldItem, $metadata: getMetadata() };
 	}
 
