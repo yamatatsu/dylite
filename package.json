@@ -9,7 +9,7 @@
 		"lint": "pnpm biome check .",
 		"test:unit": "jest --selectProjects unit",
 		"test:ddblocal": "jest --selectProjects ddblocal",
-		"test:dylite": "jest --selectProjects dylite",
+		"test:dylite": "DEBUG='dylite:error' jest --selectProjects dylite",
 		"check": "pnpm run '/(lint|type-check)/'",
 		"prepare": "husky"
 	},

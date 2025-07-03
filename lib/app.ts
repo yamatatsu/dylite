@@ -79,14 +79,13 @@ const querySchema = v.object({
 });
 const jsonSchema = v.object({});
 
-export default async function createApp() {
+export default function createApp() {
 	const logger = baseLogger.extend("server");
 	const errorLogger = baseLogger.extend("error");
-	errorLogger.color = "red";
-	const app = new Hono();
+
 	const store = createStore();
 
-	app.post(
+	return new Hono().post(
 		"/",
 		vValidator("header", headerSchema, (result, c) => {
 			if (result.success) return;
@@ -148,6 +147,4 @@ export default async function createApp() {
 			}
 		},
 	);
-
-	return app;
 }

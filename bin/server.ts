@@ -5,7 +5,8 @@ export class NodeServer {
 	private server: ServerType | undefined;
 
 	async listen(opts: { port?: number | string }) {
-		const app = await createApp();
+		const app = createApp();
+
 		await new Promise((resolve) => {
 			this.server = serve(
 				{
