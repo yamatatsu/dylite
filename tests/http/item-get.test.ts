@@ -1,4 +1,4 @@
-import { PkTable, ddb } from "./_test-helper";
+import { PkTable, ddb, expectUuid } from "./_test-helper";
 
 describe("get-item (API spec)", () => {
 	let tableName: string;
@@ -73,6 +73,27 @@ describe("get-item (API spec)", () => {
 			$metadata: expect.any(Object),
 		});
 		expect(res.$metadata.httpStatusCode).toBe(200);
+	});
+
+	test("returns $metadata", async () => {
+		// WHEN
+		const res = await ddb.getItem({
+			TableName: tableName,
+			Key: { pk: item.pk },
+		});
+
+		// THEN
+		expect(res).toEqual({
+			Item: expect.any(Object),
+			$metadata: {
+				httpStatusCode: 200,
+				requestId: expectUuid,
+				attempts: 1,
+				totalRetryDelay: 0,
+				cfId: undefined,
+				extendedRequestId: undefined,
+			},
+		});
 	});
 
 	test("returns error if key is missing", async () => {
