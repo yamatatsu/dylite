@@ -1,4 +1,5 @@
 import * as v from "valibot";
+import { validationException } from "../../db/errors";
 import { attributeValueSchema } from "../../validations/attributeValueSchema";
 import { validateExpressionParams } from "../../validations/validateExpressionParams";
 import { validateExpressions } from "../../validations/validateExpressions";
@@ -8,7 +9,7 @@ import {
 	validateAttributeConditions,
 } from "../common";
 
-export const schema = v.object({
+const schema = v.object({
 	ReturnConsumedCapacity: v.nullish(v.picklist(["INDEXES", "TOTAL", "NONE"])),
 	TableName: tableNameSchema("TableName"),
 	ReturnValues: v.nullish(
@@ -26,17 +27,17 @@ export const schema = v.object({
 });
 type DeleteItemInput = v.InferOutput<typeof schema>;
 
-export const custom = (data: DeleteItemInput) => {
-	let msg = validateExpressionParams(
-		data,
-		["ConditionExpression"],
-		["Expected"],
-	);
-	if (msg) return msg;
+export const validateInput = (data: unknown): DeleteItemInput => {
+	const result = v.safeParse(schema, data);
+	if (!result.success) {
+		throw validationException(result.issues[0].message);
+	}
 
-	msg = validateAttributeConditions(data);
-	if (msg) return msg;
+	const validInput = result.output;
 
-	msg = validateExpressions(data);
-	if (msg) return msg;
+	validateExpressionParams(validInput, ["ConditionExpression"], ["Expected"]);
+	validateAttributeConditions(validInput);
+	validateExpressions(validInput);
+
+	return validInput;
 };

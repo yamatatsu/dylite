@@ -1,4 +1,5 @@
 import * as v from "valibot";
+import { validationException } from "../../db/errors";
 import { itemSize } from "../../db/itemSize";
 import type { Store } from "../../db/types";
 import { attributeValueSchema } from "../../validations/attributeValueSchema";
@@ -10,7 +11,7 @@ import {
 	validateAttributeConditions,
 } from "../common";
 
-export const schema = v.object({
+const schema = v.object({
 	ReturnConsumedCapacity: v.nullish(v.picklist(["INDEXES", "TOTAL", "NONE"])),
 	TableName: tableNameSchema("TableName"),
 	Item: v.record(v.string(), attributeValueSchema),
@@ -28,27 +29,30 @@ export const schema = v.object({
 });
 type PutItemInput = v.InferOutput<typeof schema>;
 
-export const custom = (data: PutItemInput, store: Store) => {
-	let msg = validateExpressionParams(
-		data,
-		["ConditionExpression"],
-		["Expected"],
-	);
-	if (msg) return msg;
+export const validateInput = (data: unknown, store: Store): PutItemInput => {
+	const result = v.safeParse(schema, data);
+	if (!result.success) {
+		throw validationException(result.issues[0].message);
+	}
+
+	const validInput = result.output;
+	validateExpressionParams(validInput, ["ConditionExpression"], ["Expected"]);
 
 	if (
-		data.ReturnValues &&
-		data.ReturnValues !== "ALL_OLD" &&
-		data.ReturnValues !== "NONE"
+		validInput.ReturnValues &&
+		validInput.ReturnValues !== "ALL_OLD" &&
+		validInput.ReturnValues !== "NONE"
 	)
-		return "ReturnValues can only be ALL_OLD or NONE";
+		throw validationException("ReturnValues can only be ALL_OLD or NONE");
 
-	if (itemSize(data.Item) > store.options.maxItemSize)
-		return "Item size has exceeded the maximum allowed size";
+	if (itemSize(validInput.Item) > store.options.maxItemSize)
+		throw validationException(
+			"Item size has exceeded the maximum allowed size",
+		);
 
-	msg = validateAttributeConditions(data);
-	if (msg) return msg;
+	validateAttributeConditions(validInput);
 
-	msg = validateExpressions(data);
-	if (msg) return msg;
+	validateExpressions(validInput);
+
+	return validInput;
 };

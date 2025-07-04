@@ -1,7 +1,8 @@
 import * as v from "valibot";
+import { validationException } from "../db/errors";
 import { attributeValueSchema } from "./attributeValueSchema";
 
-export function validateExpressions(data: Record<string, unknown>) {
+export function validateExpressions(data: Record<string, unknown>): void {
 	let key: string;
 	let msg: string | undefined;
 	let result: string;
@@ -14,10 +15,12 @@ export function validateExpressions(data: Record<string, unknown>) {
 
 	if (data.ExpressionAttributeNames != null) {
 		if (!Object.keys(data.ExpressionAttributeNames).length)
-			return "ExpressionAttributeNames must not be empty";
+			throw validationException("ExpressionAttributeNames must not be empty");
 		for (key in data.ExpressionAttributeNames) {
 			if (!/^#[0-9a-zA-Z_]+$/.test(key)) {
-				return `ExpressionAttributeNames contains invalid key: Syntax error; key: "${key}"`;
+				throw validationException(
+					`ExpressionAttributeNames contains invalid key: Syntax error; key: "${key}"`,
+				);
 			}
 			context.unusedAttrNames[key] = true;
 		}
@@ -85,10 +88,14 @@ export function validateExpressions(data: Record<string, unknown>) {
 	// }
 
 	if (Object.keys(context.unusedAttrNames).length) {
-		return `Value provided in ExpressionAttributeNames unused in expressions: keys: {${Object.keys(context.unusedAttrNames).join(", ")}}`;
+		throw validationException(
+			`Value provided in ExpressionAttributeNames unused in expressions: keys: {${Object.keys(context.unusedAttrNames).join(", ")}}`,
+		);
 	}
 
 	if (Object.keys(context.unusedAttrVals).length) {
-		return `Value provided in ExpressionAttributeValues unused in expressions: keys: {${Object.keys(context.unusedAttrVals).join(", ")}}`;
+		throw validationException(
+			`Value provided in ExpressionAttributeValues unused in expressions: keys: {${Object.keys(context.unusedAttrVals).join(", ")}}`,
+		);
 	}
 }

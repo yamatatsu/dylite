@@ -1,11 +1,12 @@
 import * as v from "valibot";
+import { validationException } from "../../db/errors";
 import { attributeValueSchema } from "../../validations/attributeValueSchema";
 import { atLeastOneItem, unique } from "../../validations/util-validations";
 import { validateExpressionParams } from "../../validations/validateExpressionParams";
 import { validateExpressions } from "../../validations/validateExpressions";
 import { tableNameSchema } from "../common";
 
-export const schema = v.object({
+const schema = v.object({
 	ReturnConsumedCapacity: v.nullish(v.picklist(["INDEXES", "TOTAL", "NONE"])),
 	AttributesToGet: v.nullish(
 		v.pipe(
@@ -26,16 +27,19 @@ export const schema = v.object({
 });
 type GetItemInput = v.InferOutput<typeof schema>;
 
-export const custom = (data: GetItemInput) => {
-	let msg: string | undefined;
+export const validateInput = (data: unknown): GetItemInput => {
+	const result = v.safeParse(schema, data);
+	if (!result.success) {
+		throw validationException(result.issues[0].message);
+	}
 
-	msg = validateExpressionParams(
-		data,
+	const validInput = result.output;
+	validateExpressionParams(
+		validInput,
 		["ProjectionExpression"],
 		["AttributesToGet"],
 	);
-	if (msg) return msg;
+	validateExpressions(validInput);
 
-	msg = validateExpressions(data);
-	if (msg) return msg;
+	return validInput;
 };

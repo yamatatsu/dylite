@@ -1,5 +1,6 @@
 import * as v from "valibot";
 import { compare } from "../../db/compare";
+import { validationException } from "../../db/errors";
 import { attributeValueSchema } from "../../validations/attributeValueSchema";
 
 export const expectedSchema = v.nullish(
@@ -32,16 +33,22 @@ export const expectedSchema = v.nullish(
 
 export type Expected = v.InferOutput<typeof expectedSchema>;
 
-export function validateAttributeConditions(data: { Expected?: Expected }) {
+export function validateAttributeConditions(data: {
+	Expected?: Expected;
+}): void {
 	for (const key in data.Expected) {
 		const condition = data.Expected[key];
 
 		if ("AttributeValueList" in condition && "Value" in condition)
-			return `One or more parameter values were invalid: Value and AttributeValueList cannot be used together for Attribute: ${key}`;
+			throw validationException(
+				`One or more parameter values were invalid: Value and AttributeValueList cannot be used together for Attribute: ${key}`,
+			);
 
 		if ("ComparisonOperator" in condition) {
 			if ("Exists" in condition)
-				return `One or more parameter values were invalid: Exists and ComparisonOperator cannot be used together for Attribute: ${key}`;
+				throw validationException(
+					`One or more parameter values were invalid: Exists and ComparisonOperator cannot be used together for Attribute: ${key}`,
+				);
 
 			if (
 				condition.ComparisonOperator !== "NULL" &&
@@ -49,7 +56,9 @@ export function validateAttributeConditions(data: { Expected?: Expected }) {
 				!("AttributeValueList" in condition) &&
 				!("Value" in condition)
 			)
-				return `One or more parameter values were invalid: Value or AttributeValueList must be used with ComparisonOperator: ${condition.ComparisonOperator} for Attribute: ${key}`;
+				throw validationException(
+					`One or more parameter values were invalid: Value or AttributeValueList must be used with ComparisonOperator: ${condition.ComparisonOperator} for Attribute: ${key}`,
+				);
 
 			const values = condition.AttributeValueList
 				? condition.AttributeValueList.length
@@ -82,7 +91,9 @@ export function validateAttributeConditions(data: { Expected?: Expected }) {
 					break;
 			}
 			if (!validAttrCount)
-				return `One or more parameter values were invalid: Invalid number of argument(s) for the ${condition.ComparisonOperator} ComparisonOperator`;
+				throw validationException(
+					`One or more parameter values were invalid: Invalid number of argument(s) for the ${condition.ComparisonOperator} ComparisonOperator`,
+				);
 
 			if (condition.AttributeValueList?.length) {
 				const type = Object.keys(condition.AttributeValueList[0])[0];
@@ -91,7 +102,9 @@ export function validateAttributeConditions(data: { Expected?: Expected }) {
 						(attr) => Object.keys(attr)[0] !== type,
 					)
 				) {
-					return "One or more parameter values were invalid: AttributeValues inside AttributeValueList must be of same type";
+					throw validationException(
+						"One or more parameter values were invalid: AttributeValues inside AttributeValueList must be of same type",
+					);
 				}
 				if (
 					condition.ComparisonOperator === "BETWEEN" &&
@@ -102,20 +115,29 @@ export function validateAttributeConditions(data: { Expected?: Expected }) {
 						condition.AttributeValueList[1],
 					)
 				) {
-					return "The BETWEEN condition was provided a range where the lower bound is greater than the upper bound";
+					throw validationException(
+						"The BETWEEN condition was provided a range where the lower bound is greater than the upper bound",
+					);
 				}
 			}
 		} else if ("AttributeValueList" in condition) {
-			return `One or more parameter values were invalid: AttributeValueList can only be used with a ComparisonOperator for Attribute: ${key}`;
+			throw validationException(
+				`One or more parameter values were invalid: AttributeValueList can only be used with a ComparisonOperator for Attribute: ${key}`,
+			);
 		} else {
 			const exists = condition.Exists == null || condition.Exists;
 			if (exists && condition.Value == null)
-				return `One or more parameter values were invalid: Value must be provided when Exists is ${condition.Exists == null ? "null" : condition.Exists} for Attribute: ${key}`;
+				throw validationException(
+					`One or more parameter values were invalid: Value must be provided when Exists is ${condition.Exists == null ? "null" : condition.Exists} for Attribute: ${key}`,
+				);
 			if (!exists && condition.Value != null)
-				return `One or more parameter values were invalid: Value cannot be used when Exists is false for Attribute: ${key}`;
+				throw validationException(
+					`One or more parameter values were invalid: Value cannot be used when Exists is false for Attribute: ${key}`,
+				);
 			if (condition.Value != null) {
 				const result = v.safeParse(attributeValueSchema, condition.Value);
-				if (!result.success) return result.issues[0].message;
+				if (!result.success)
+					throw validationException(result.issues[0].message);
 			}
 		}
 	}
