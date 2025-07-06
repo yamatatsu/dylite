@@ -10,7 +10,15 @@ const schema = v.object({
 	ReturnConsumedCapacity: v.nullish(v.picklist(["INDEXES", "TOTAL", "NONE"])),
 	AttributesToGet: v.nullish(
 		v.pipe(
-			v.array(v.pipe(v.string(), v.minLength(1), v.maxLength(255))),
+			v.array(
+				v.pipe(
+					v.string(),
+					v.minLength(1),
+					// DynamoDB Local have no limit for AttributesToGet.
+					// I've not determined which or not to enforce the limit yet.
+					v.maxLength(255),
+				),
+			),
 			unique,
 		),
 	),

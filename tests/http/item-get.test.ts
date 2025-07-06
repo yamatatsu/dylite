@@ -114,4 +114,130 @@ describe("get-item (API spec)", () => {
 		// THEN
 		await expect(promise).rejects.toThrow();
 	});
+
+	describe("custom validation tests", () => {
+		test("returns error for duplicate AttributesToGet", async () => {
+			// WHEN
+			const promise = ddb.getItem({
+				TableName: tableName,
+				Key: { pk: item.pk },
+				AttributesToGet: ["pk", "key1", "pk"], // duplicate "pk"
+			});
+
+			// THEN
+			await expect(promise).rejects.toThrow();
+		});
+
+		test("returns error for AttributesToGet with ProjectionExpression", async () => {
+			// WHEN
+			const promise = ddb.getItem({
+				TableName: tableName,
+				Key: { pk: item.pk },
+				AttributesToGet: ["pk", "key1"],
+				ProjectionExpression: "pk,key1",
+			});
+
+			// THEN
+			await expect(promise).rejects.toThrow();
+		});
+
+		test("returns error for empty AttributesToGet item", async () => {
+			// WHEN
+			const promise = ddb.getItem({
+				TableName: tableName,
+				Key: { pk: item.pk },
+				AttributesToGet: ["pk", "", "key1"], // empty string
+			});
+
+			// THEN
+			await expect(promise).rejects.toThrow();
+		});
+
+		test.skip("returns error for too long AttributesToGet item", async () => {
+			// WHEN
+			const longAttributeName = "a".repeat(256); // exceed 255 char limit
+			const promise = ddb.getItem({
+				TableName: tableName,
+				Key: { pk: item.pk },
+				AttributesToGet: ["pk", longAttributeName],
+			});
+
+			// THEN
+			// Note: DynamoDB Local doesn't enforce the 255 character limit
+			await expect(promise).rejects.toThrow();
+		});
+
+		test("returns error for invalid ExpressionAttributeNames format", async () => {
+			// WHEN
+			const promise = ddb.getItem({
+				TableName: tableName,
+				Key: { pk: item.pk },
+				ProjectionExpression: "#k1",
+				ExpressionAttributeNames: { k1: "key1" }, // missing # prefix
+			});
+
+			// THEN
+			await expect(promise).rejects.toThrow();
+		});
+
+		test("returns error for empty ExpressionAttributeNames", async () => {
+			// WHEN
+			const promise = ddb.getItem({
+				TableName: tableName,
+				Key: { pk: item.pk },
+				ProjectionExpression: "#k1",
+				ExpressionAttributeNames: {}, // empty object
+			});
+
+			// THEN
+			await expect(promise).rejects.toThrow();
+		});
+
+		test("accepts valid AttributesToGet", async () => {
+			// WHEN
+			const res = await ddb.getItem({
+				TableName: tableName,
+				Key: { pk: item.pk },
+				AttributesToGet: ["pk", "key1"],
+			});
+
+			// THEN
+			expect(res).toEqual({
+				Item: expect.any(Object),
+				$metadata: expect.any(Object),
+			});
+		});
+
+		test.skip("accepts valid ExpressionAttributeNames", async () => {
+			// WHEN
+			const res = await ddb.getItem({
+				TableName: tableName,
+				Key: { pk: item.pk },
+				ProjectionExpression: "#pk",
+				ExpressionAttributeNames: { "#pk": "pk" },
+			});
+
+			// THEN
+			// Note: ProjectionExpression is not implemented in Dylite yet
+			expect(res).toEqual({
+				Item: expect.any(Object),
+				$metadata: expect.any(Object),
+			});
+		});
+
+		test("accepts ConsistentRead parameter", async () => {
+			// WHEN
+			const res = await ddb.getItem({
+				TableName: tableName,
+				Key: { pk: item.pk },
+				ConsistentRead: true,
+			});
+
+			// THEN
+			expect(res).toEqual({
+				Item: item,
+				$metadata: expect.any(Object),
+			});
+		});
+	});
 });
