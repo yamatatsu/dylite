@@ -43,7 +43,7 @@ export const validateInput = (data: unknown, store: Store): PutItemInput => {
 		validInput.ReturnValues !== "ALL_OLD" &&
 		validInput.ReturnValues !== "NONE"
 	)
-		throw validationException("ReturnValues can only be ALL_OLD or NONE");
+		throw validationException("Return values set to invalid value");
 
 	if (itemSize(validInput.Item) > store.options.maxItemSize)
 		throw validationException(
