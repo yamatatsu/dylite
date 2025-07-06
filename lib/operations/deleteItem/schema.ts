@@ -39,5 +39,18 @@ export const validateInput = (data: unknown): DeleteItemInput => {
 	validateAttributeConditions(validInput);
 	validateExpressions(validInput);
 
+	if (
+		validInput.ReturnValues &&
+		validInput.ReturnValues !== "ALL_OLD" &&
+		validInput.ReturnValues !== "NONE"
+	)
+		throw validationException("Return values set to invalid value");
+
+	if (!validInput.Key || Object.keys(validInput.Key).length === 0) {
+		throw validationException(
+			"The number of conditions on the keys is invalid",
+		);
+	}
+
 	return validInput;
 };
