@@ -7,13 +7,13 @@ import type {
 	Index,
 	Item,
 	KeySchema,
-	Table,
+	TableDefinition,
 } from "./types";
 
 export function validateKey(
 	dataKey: Record<string, AttributeValue>,
-	table: Table,
-	keySchema: KeySchema[] = table.KeySchema,
+	def: TableDefinition,
+	keySchema: KeySchema[] = def.KeySchema,
 ): Error | undefined {
 	if (keySchema.length !== Object.keys(dataKey).length) {
 		return validationError(
@@ -21,15 +21,18 @@ export function validateKey(
 		);
 	}
 	return traverseKey(
-		table.AttributeDefinitions,
+		def.AttributeDefinitions,
 		keySchema,
 		(attr, type, isHash) => validateKeyPiece(dataKey, attr, type, isHash),
 	);
 }
 
-export function validateItem(dataItem: Item, table: Table): Error | undefined {
+export function validateItem(
+	dataItem: Item,
+	def: TableDefinition,
+): Error | undefined {
 	return (
-		traverseTableKey(table, (attr, type, isHash) => {
+		traverseTableKey(def, (attr, type, isHash) => {
 			if (dataItem[attr] == null) {
 				return validationError(
 					`One or more parameter values were invalid: Missing the key ${attr} in the item`,
@@ -51,7 +54,7 @@ export function validateItem(dataItem: Item, table: Table): Error | undefined {
 				isHash,
 			);
 		}) ||
-		traverseIndexes(table, (attr, type, index) => {
+		traverseIndexes(def, (attr, type, index) => {
 			if (dataItem[attr] != null && dataItem[attr][type] == null) {
 				return validationError(
 					`One or more parameter values were invalid: Type mismatch for Index Key ${attr} Expected: ${type} Actual: ${Object.keys(dataItem[attr])[0]} IndexName: ${index.IndexName}`,
@@ -63,17 +66,17 @@ export function validateItem(dataItem: Item, table: Table): Error | undefined {
 
 export function validateAttributeUpdates(
 	attributeUpdates: Record<string, AttributeValueUpdate>,
-	table: Table,
+	def: TableDefinition,
 ): Error | undefined {
 	return (
-		traverseTableKey(table, (attr) => {
+		traverseTableKey(def, (attr) => {
 			if (attributeUpdates?.[attr] != null) {
 				return validationError(
 					`One or more parameter values were invalid: Cannot update attribute ${attr}. This attribute is part of the key`,
 				);
 			}
 		}) ||
-		traverseIndexes(table, (attr, type, index) => {
+		traverseIndexes(def, (attr, type, index) => {
 			const value = attributeUpdates?.[attr]?.Value;
 			const actualType = value && Object.keys(value)[0];
 
@@ -92,12 +95,12 @@ export function validateExpressionUpdates(
 		sections: Array<{ path: string[]; attrType: string }>;
 		nestedPaths?: Record<string, boolean>;
 	},
-	table: Table,
+	def: TableDefinition,
 ): Error | undefined {
 	const { sections, nestedPaths } = expressionUpdates;
 
 	return (
-		traverseTableKey(table, (attr) => {
+		traverseTableKey(def, (attr) => {
 			const hasKey = sections.some((section) => section.path[0] === attr);
 
 			if (hasKey) {
@@ -106,7 +109,7 @@ export function validateExpressionUpdates(
 				);
 			}
 		}) ||
-		traverseIndexes(table, (attr, type, index) => {
+		traverseIndexes(def, (attr, type, index) => {
 			const actualType = sections.find(
 				(section) => section.path.length === 1 && section.path[0] === attr,
 			)?.attrType;
@@ -117,7 +120,7 @@ export function validateExpressionUpdates(
 				);
 			}
 		}) ||
-		validateKeyPaths(nestedPaths, table)
+		validateKeyPaths(nestedPaths, def)
 	);
 }
 
@@ -142,18 +145,18 @@ export function validateKeyPiece(
 
 export function validateKeyPaths(
 	nestedPaths: Record<string, boolean> | undefined,
-	table: Table,
+	def: TableDefinition,
 ): Error | undefined {
 	if (!nestedPaths) return;
 	return (
-		traverseTableKey(table, (attr) => {
+		traverseTableKey(def, (attr) => {
 			if (nestedPaths[attr]) {
 				return validationError(
 					`Key attributes must be scalars; list random access '[]' and map lookup '.' are not allowed: Key: ${attr}`,
 				);
 			}
 		}) ||
-		traverseIndexes(table, (attr) => {
+		traverseIndexes(def, (attr) => {
 			if (nestedPaths[attr]) {
 				return validationError(
 					`Key attributes must be scalars; list random access '[]' and map lookup '.' are not allowed: IndexKey: ${attr}`,
@@ -164,7 +167,7 @@ export function validateKeyPaths(
 }
 
 export function traverseIndexes(
-	table: Table,
+	def: TableDefinition,
 	visitIndex: (
 		attr: string,
 		type: AttributeType,
@@ -172,10 +175,10 @@ export function traverseIndexes(
 		isGlobal: boolean,
 	) => Error | undefined,
 ): Error | undefined {
-	if (table.GlobalSecondaryIndexes) {
-		for (const index of table.GlobalSecondaryIndexes) {
+	if (def.GlobalSecondaryIndexes) {
+		for (const index of def.GlobalSecondaryIndexes) {
 			for (const { AttributeName: attr } of index.KeySchema) {
-				const type = table.AttributeDefinitions.find(
+				const type = def.AttributeDefinitions.find(
 					(def) => def.AttributeName === attr,
 				)?.AttributeType;
 				if (!type) continue;
@@ -185,10 +188,10 @@ export function traverseIndexes(
 			}
 		}
 	}
-	if (table.LocalSecondaryIndexes) {
-		for (const index of table.LocalSecondaryIndexes) {
+	if (def.LocalSecondaryIndexes) {
+		for (const index of def.LocalSecondaryIndexes) {
 			for (const { AttributeName: attr } of index.KeySchema) {
-				const type = table.AttributeDefinitions.find(
+				const type = def.AttributeDefinitions.find(
 					(def) => def.AttributeName === attr,
 				)?.AttributeType;
 				if (!type) continue;

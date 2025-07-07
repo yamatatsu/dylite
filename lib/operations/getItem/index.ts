@@ -6,8 +6,9 @@ import { validateInput } from "./schema";
 
 export async function execute(json: unknown, store: Store) {
 	const input = validateInput(json);
+	const tableStore = store.tableStore;
 
-	const table = await store.getTable(input.TableName);
+	const table = await tableStore.get(input.TableName);
 	if (!table) {
 		throw validationException("Cannot do operations on a non-existent table");
 	}

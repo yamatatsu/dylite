@@ -6,20 +6,20 @@ import type {
 	AttributeValueType,
 	Item,
 	KeySchema,
-	Table,
+	TableDefinition,
 } from "./types";
 
 export function createIndexKey(
 	item: Item,
-	table: Table,
+	def: TableDefinition,
 	keySchema: KeySchema[],
 ): string {
 	const tableKeyPieces: [AttributeValueType, AttributeType][] = [];
-	traverseTableKey(table, (attr, type): undefined => {
+	traverseTableKey(def, (attr, type): undefined => {
 		tableKeyPieces.push([item[attr][type] as AttributeValueType, type]);
 	});
 	return (
-		createKey(item, table.AttributeDefinitions, keySchema) +
+		createKey(item, def.AttributeDefinitions, keySchema) +
 		hashPrefix(...tableKeyPieces[0], ...tableKeyPieces[1])
 	);
 }

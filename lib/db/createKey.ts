@@ -1,10 +1,15 @@
 import { hashPrefix } from "./hashPrefix";
 import { toRangeStr } from "./toRangeStr";
 import { traverseKey } from "./traverseKey";
-import type { AttributeDefinition, Item, KeySchema, Table } from "./types";
+import type {
+	AttributeDefinition,
+	Item,
+	KeySchema,
+	TableDefinition,
+} from "./types";
 
-export function createTableKey(item: Item, table: Table): string {
-	return createKey(item, table.AttributeDefinitions, table.KeySchema);
+export function createTableKey(item: Item, def: TableDefinition): string {
+	return createKey(item, def.AttributeDefinitions, def.KeySchema);
 }
 
 export function createKey(

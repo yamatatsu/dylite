@@ -1,10 +1,12 @@
 import { AbstractLevel, AbstractSublevel } from "abstract-level";
-import { createStore } from "./createStore";
-import type { Store, Table } from "./types";
+import { TableStore, createStore } from "./createStore";
+import type { ITableStore, Store } from "./types";
 
 let store: Store;
+let tableStore: ITableStore;
 beforeEach(async () => {
 	store = createStore({});
+	tableStore = store.tableStore;
 });
 afterEach(async () => {
 	await store.db.close();
@@ -25,14 +27,13 @@ describe("createStore", () => {
 					maxItemSize: 409600,
 				},
 				db: expect.any(AbstractLevel),
-				tableDb: expect.any(AbstractSublevel),
+				tableStore: expect.any(TableStore),
 				getItemDb: expect.any(Function),
 				deleteItemDb: expect.any(Function),
 				getIndexDb: expect.any(Function),
 				deleteIndexDb: expect.any(Function),
 				getTagDb: expect.any(Function),
 				deleteTagDb: expect.any(Function),
-				getTable: expect.any(Function),
 			}),
 		);
 	});
@@ -93,68 +94,4 @@ describe("deleteTagDb", () => {
 		await store.deleteTagDb("test");
 		expect(await tagDb.get("a")).toBeUndefined();
 	});
-});
-
-describe("getTable", () => {
-	it("should get a Table if ACTIVE", async () => {
-		const testTable = {
-			TableName: "test-table",
-			KeySchema: [{ AttributeName: "a", KeyType: "HASH" }],
-			AttributeDefinitions: [{ AttributeName: "a", AttributeType: "S" }],
-			TableStatus: "ACTIVE",
-			GlobalSecondaryIndexes: [],
-			LocalSecondaryIndexes: [],
-		} satisfies Table;
-		await store.tableDb.put(testTable.TableName, testTable);
-
-		const table = await store.getTable("test-table");
-
-		expect(table).toEqual(testTable);
-	});
-
-	it.each(["CREATING", "DELETING"] as const)(
-		"should get a Table if %s",
-		async (status) => {
-			const testTable = {
-				TableName: "test-table",
-				KeySchema: [{ AttributeName: "a", KeyType: "HASH" }],
-				AttributeDefinitions: [{ AttributeName: "a", AttributeType: "S" }],
-				TableStatus: status,
-				GlobalSecondaryIndexes: [],
-				LocalSecondaryIndexes: [],
-			} satisfies Table;
-			await store.tableDb.put(testTable.TableName, testTable);
-
-			await expect(store.getTable("test-table")).rejects.toThrow(
-				expect.objectContaining({
-					name: "NotFoundError",
-					statusCode: 400,
-					body: expect.objectContaining({
-						__type:
-							"com.amazonaws.dynamodb.v20120810#ResourceNotFoundException",
-						message: "Requested resource not found",
-					}),
-				}),
-			);
-		},
-	);
-
-	it.each(["CREATING", "DELETING"] as const)(
-		"should get a Table if %s",
-		async (status) => {
-			const testTable = {
-				TableName: "test-table",
-				KeySchema: [{ AttributeName: "a", KeyType: "HASH" }],
-				AttributeDefinitions: [{ AttributeName: "a", AttributeType: "S" }],
-				TableStatus: status,
-				GlobalSecondaryIndexes: [],
-				LocalSecondaryIndexes: [],
-			} satisfies Table;
-			await store.tableDb.put(testTable.TableName, testTable);
-
-			const table = await store.getTable("test-table", false);
-
-			expect(table).toEqual(testTable);
-		},
-	);
 });

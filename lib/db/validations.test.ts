@@ -1,5 +1,5 @@
 import { validationError } from "./errors";
-import type { Table } from "./types";
+import type { TableDefinition } from "./types";
 import {
 	validateAttributeUpdates,
 	validateExpressionUpdates,
@@ -20,7 +20,7 @@ describe("validateKey", () => {
 			{ AttributeName: "p_key", AttributeType: "S" },
 			{ AttributeName: "s_key", AttributeType: "S" },
 		],
-	} satisfies Table;
+	} satisfies TableDefinition;
 
 	it.each`
 		case                                                                            | dataKey                                       | message
@@ -76,7 +76,7 @@ describe("validateItem", () => {
 				Projection: { ProjectionType: "ALL" },
 			},
 		],
-	} satisfies Table;
+	} satisfies TableDefinition;
 
 	it.each`
 		case                                                                | item                                                                    | message
@@ -142,7 +142,7 @@ describe("validateAttributeUpdates", () => {
 				Projection: { ProjectionType: "ALL" },
 			},
 		],
-	} satisfies Table;
+	} satisfies TableDefinition;
 
 	it.each`
 		case                                                                | attributeUpdates                                                       | message
@@ -201,7 +201,7 @@ describe("validateExpressionUpdates", () => {
 				Projection: { ProjectionType: "ALL" },
 			},
 		],
-	} satisfies Table;
+	} satisfies TableDefinition;
 
 	it.each`
 		case                                                                 | sections                                        | nestedPaths        | message
@@ -291,7 +291,7 @@ describe("validateKeyPaths", () => {
 				Projection: { ProjectionType: "ALL" },
 			},
 		],
-	} satisfies Table;
+	} satisfies TableDefinition;
 
 	it.each`
 		path            | message

@@ -5,12 +5,12 @@ import type {
 	IndexActions,
 	Item,
 	Store,
-	Table,
+	TableDefinition,
 } from "./types";
 
 export async function updateIndexes(
 	store: Store,
-	table: Table,
+	def: TableDefinition,
 	existingItem: Item | null,
 	item: Item | null,
 ): Promise<void> {
@@ -18,43 +18,43 @@ export async function updateIndexes(
 		return;
 	}
 
-	const gsiList = table.GlobalSecondaryIndexes ?? [];
-	const lsiList = table.LocalSecondaryIndexes ?? [];
+	const gsiList = def.GlobalSecondaryIndexes ?? [];
+	const lsiList = def.LocalSecondaryIndexes ?? [];
 
-	const gsiActions = getIndexActions(gsiList, existingItem, item, table);
-	const lsiActions = getIndexActions(lsiList, existingItem, item, table);
+	const gsiActions = getIndexActions(gsiList, existingItem, item, def);
+	const lsiActions = getIndexActions(lsiList, existingItem, item, def);
 
 	await Promise.all([
-		...putIndexesByActions(store, table, gsiActions.puts, "Global"),
-		...putIndexesByActions(store, table, lsiActions.puts, "Local"),
+		...putIndexesByActions(store, def, gsiActions.puts, "Global"),
+		...putIndexesByActions(store, def, lsiActions.puts, "Local"),
 	]);
 
 	await Promise.all([
-		...deleteIndexesByActions(store, table, gsiActions.deletes, "Global"),
-		...deleteIndexesByActions(store, table, lsiActions.deletes, "Local"),
+		...deleteIndexesByActions(store, def, gsiActions.deletes, "Global"),
+		...deleteIndexesByActions(store, def, lsiActions.deletes, "Local"),
 	]);
 }
 
 function putIndexesByActions(
 	store: Store,
-	table: Table,
+	def: TableDefinition,
 	actions: IndexAction[],
 	indexType: string,
 ) {
 	return actions.map((action) => {
-		const indexDb = store.getIndexDb(indexType, table.TableName, action.index);
+		const indexDb = store.getIndexDb(indexType, def.TableName, action.index);
 		return action.item && indexDb.put(action.key, action.item);
 	});
 }
 
 function deleteIndexesByActions(
 	store: Store,
-	table: Table,
+	def: TableDefinition,
 	actions: IndexAction[],
 	indexType: string,
 ) {
 	return actions.map((action) => {
-		const indexDb = store.getIndexDb(indexType, table.TableName, action.index);
+		const indexDb = store.getIndexDb(indexType, def.TableName, action.index);
 		return indexDb.del(action.key);
 	});
 }
@@ -63,11 +63,11 @@ function getIndexActions(
 	indexes: Index[],
 	existingItem: Item | null,
 	item: Item | null,
-	table: Table,
+	def: TableDefinition,
 ): IndexActions {
 	const puts: IndexAction[] = [];
 	const deletes: IndexAction[] = [];
-	const tableKeys = table.KeySchema.map((key) => key.AttributeName);
+	const tableKeys = def.KeySchema.map((key) => key.AttributeName);
 
 	for (const index of indexes) {
 		const {
@@ -88,12 +88,12 @@ function getIndexActions(
 							indexKeys.concat(tableKeys, projection.NonKeyAttributes ?? []),
 						);
 
-			key = createIndexKey(itemPieces, table, keySchema);
+			key = createIndexKey(itemPieces, def, keySchema);
 			puts.push({ index: indexName, key, item: itemPieces });
 		}
 
 		if (existingItem && isItemIncludesAllIndexKeys(existingItem, indexKeys)) {
-			const existingKey = createIndexKey(existingItem, table, keySchema);
+			const existingKey = createIndexKey(existingItem, def, keySchema);
 			if (existingKey !== key) {
 				deletes.push({ index: indexName, key: existingKey });
 			}

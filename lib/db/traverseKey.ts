@@ -2,7 +2,7 @@ import type {
 	AttributeDefinition,
 	AttributeType,
 	KeySchema,
-	Table,
+	TableDefinition,
 } from "./types";
 
 type VisitKey = (
@@ -12,10 +12,10 @@ type VisitKey = (
 ) => Error | undefined;
 
 export function traverseTableKey(
-	table: Table,
+	def: TableDefinition,
 	visitKey: VisitKey,
 ): Error | undefined {
-	return traverseKey(table.AttributeDefinitions, table.KeySchema, visitKey);
+	return traverseKey(def.AttributeDefinitions, def.KeySchema, visitKey);
 }
 
 export function traverseKey(

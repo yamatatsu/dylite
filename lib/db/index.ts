@@ -21,7 +21,7 @@ import type {
 	Store,
 	StoreOptions,
 	SubDB,
-	Table,
+	TableDefinition,
 } from "./types";
 
 export { createStore, MAX_SIZE } from "./createStore";

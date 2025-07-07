@@ -2,12 +2,13 @@ import AsyncLock from "async-lock";
 import { Level } from "level";
 import { MemoryLevel } from "memory-level";
 import type {
+	ITableStore,
 	Item,
 	Store,
 	StoreOptions,
 	StoreOptionsInput,
 	SubDB,
-	Table,
+	TableDefinition,
 } from "./types";
 
 export const MAX_SIZE = 409600; // TODO: get rid of this? or leave for backwards compat?
@@ -26,7 +27,6 @@ export function createStore(options: StoreOptionsInput = {}): Store {
 		? new Level(defaultOptions.path)
 		: new MemoryLevel();
 	const subDbs: Record<string, SubDB> = {};
-	const tableDb = getSubDb<Table>("table");
 
 	const awsAccountId = process.env.AWS_ACCOUNT_ID || "000000000000";
 	const awsRegion =
@@ -79,11 +79,54 @@ export function createStore(options: StoreOptionsInput = {}): Store {
 		delete subDbs[name];
 	}
 
-	async function getTable(
-		name: string,
-		checkStatus = true,
-	): Promise<Table | null> {
-		const table = await tableDb.get(name);
+	return {
+		awsAccountId: awsAccountId,
+		awsRegion: awsRegion,
+		options: defaultOptions,
+		db,
+		tableStore: TableStore.create(db),
+		tableLock: new AsyncLock(),
+		getItemDb,
+		deleteItemDb,
+		getIndexDb,
+		deleteIndexDb,
+		getTagDb,
+		deleteTagDb,
+	};
+}
+
+export class TableStore implements ITableStore {
+	public static create(_db: MemoryLevel | Level): TableStore {
+		// biome-ignore format: needs `()` to make overload of `db.sublevel` work
+		const db = (_db.sublevel<string, TableDefinition>)("table", { valueEncoding: "json" });
+		return new TableStore(db);
+	}
+
+	constructor(private db: SubDB<TableDefinition>) {}
+
+	async tableNames(options?: {
+		limit?: number;
+		exclusiveStartTableName?: string;
+	}) {
+		const { limit = 100, exclusiveStartTableName = "" } = options ?? {};
+
+		const names: string[] = [];
+		let lastEvaluatedTableName: string | undefined;
+		for await (const table of this.db.keys({
+			gt: exclusiveStartTableName,
+		})) {
+			if (names.length === limit) {
+				lastEvaluatedTableName = names[names.length - 1];
+				break;
+			}
+			names.push(table);
+		}
+
+		return [names, lastEvaluatedTableName] as const;
+	}
+
+	async get(name: string, checkStatus = true): Promise<TableDefinition | null> {
+		const table = await this.db.get(name);
 		if (
 			(checkStatus &&
 				(table?.TableStatus === "CREATING" ||
@@ -95,19 +138,24 @@ export function createStore(options: StoreOptionsInput = {}): Store {
 		return table;
 	}
 
-	return {
-		awsAccountId: awsAccountId,
-		awsRegion: awsRegion,
-		options: defaultOptions,
-		db,
-		tableDb,
-		tableLock: new AsyncLock(),
-		getItemDb,
-		deleteItemDb,
-		getIndexDb,
-		deleteIndexDb,
-		getTagDb,
-		deleteTagDb,
-		getTable,
-	};
+	async put(table: TableDefinition): Promise<void> {
+		await this.db.put(table.TableName, table);
+	}
+
+	async delete(name: string): Promise<void> {
+		await this.db.del(name);
+	}
+}
+
+export class ItemStore {}
+
+class LevelFactory {
+	constructor(
+		private db: Level<string, string> | MemoryLevel<string, string>,
+	) {}
+
+	sublevel<Value>(name: string): SubDB<Value> {
+		// biome-ignore format: needs `()` to make overload of `db.sublevel` work
+		return (this.db.sublevel<string, Value>)(name, { valueEncoding: "json" });
+	}
 }

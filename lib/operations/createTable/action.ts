@@ -1,13 +1,12 @@
-import { randomUUID } from "node:crypto";
 import type { Store } from "../../db/types";
 import type { Schema } from "./schema";
 
 export async function action(store: Store, data: Schema) {
 	const key = data.TableName;
-	const tableDb = store.tableDb;
+	const tableStore = store.tableStore;
 
 	return store.tableLock.acquire(key, async () => {
-		const table = await tableDb.get(key);
+		const table = await tableStore.get(key);
 		if (table) {
 			// TODO: define errors and handling
 			return {
@@ -85,7 +84,7 @@ export async function action(store: Store, data: Schema) {
 			},
 		} as const;
 
-		await tableDb.put(key, _data);
+		await tableStore.put(_data);
 
 		return { TableDescription: _data };
 	});

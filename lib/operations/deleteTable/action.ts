@@ -4,9 +4,9 @@ import type { Schema } from "./schema";
 
 export async function action(store: Store, data: Schema) {
 	const key = data.TableName;
-	const tableDb = store.tableDb;
+	const tableStore = store.tableStore;
 
-	const table = await store.getTable(key, false);
+	const table = await tableStore.get(key, false);
 	if (!table) {
 		throw validationException("Cannot do operations on a non-existent table");
 	}
@@ -27,7 +27,7 @@ export async function action(store: Store, data: Schema) {
 		TableStatus: "ACTIVE",
 		GlobalSecondaryIndexes: undefined,
 	} as const;
-	await tableDb.put(key, _table);
+	await tableStore.put(_table);
 
 	await Promise.all([
 		store.deleteItemDb(key),
@@ -41,7 +41,7 @@ export async function action(store: Store, data: Schema) {
 	]);
 
 	// without await intentionally
-	tableDb.del(key);
+	tableStore.delete(key);
 
 	return { TableDescription: _table };
 }

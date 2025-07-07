@@ -11,7 +11,7 @@ export type SubDB<Value = unknown> = AbstractSublevel<
 	Value
 >;
 
-export interface Table {
+export interface TableDefinition {
 	TableName: string;
 	KeySchema: KeySchema[];
 	AttributeDefinitions: AttributeDefinition[];
@@ -128,7 +128,7 @@ export interface Store {
 	awsRegion: string;
 	options: StoreOptions;
 	db: DB;
-	tableDb: SubDB<Table>;
+	tableStore: ITableStore;
 	tableLock: AsyncLock;
 	getItemDb: (name: string) => SubDB<Item>;
 	deleteItemDb: (name: string) => Promise<void>;
@@ -144,7 +144,16 @@ export interface Store {
 	) => Promise<void>;
 	getTagDb: (name: string) => SubDB<Item>;
 	deleteTagDb: (name: string) => Promise<void>;
-	getTable: (name: string, checkStatus?: boolean) => Promise<Table | null>;
+}
+
+export interface ITableStore {
+	tableNames(options?: {
+		limit?: number;
+		exclusiveStartTableName?: string;
+	}): Promise<readonly [string[], string | undefined]>;
+	get(name: string, checkStatus?: boolean): Promise<TableDefinition | null>;
+	put(table: TableDefinition): Promise<void>;
+	delete(name: string): Promise<void>;
 }
 
 export type StoreOptionsInput = Partial<StoreOptions>;

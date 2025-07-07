@@ -1,5 +1,5 @@
 import { createStore } from "./createStore";
-import type { Store, Table } from "./types";
+import type { Store, TableDefinition } from "./types";
 import { updateIndexes } from "./updateIndexes";
 
 const table = {
@@ -54,7 +54,7 @@ const table = {
 			KeySchema: [{ AttributeName: "lsi2_s_key", KeyType: "RANGE" }],
 		},
 	],
-} satisfies Table;
+} satisfies TableDefinition;
 
 const simpleItem = {
 	p_key: { S: "p_key_val" },

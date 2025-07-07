@@ -1,12 +1,12 @@
 import { traverseTableKey } from "./traverseKey";
-import type { Table } from "./types";
+import type { TableDefinition } from "./types";
 
 test("only hash key", () => {
 	const table = {
 		TableName: "test-table",
 		KeySchema: [{ AttributeName: "hash-attr", KeyType: "HASH" }],
 		AttributeDefinitions: [{ AttributeName: "hash-attr", AttributeType: "S" }],
-	} satisfies Table;
+	} satisfies TableDefinition;
 	const visitKey = jest.fn();
 
 	traverseTableKey(table, visitKey);
@@ -26,7 +26,7 @@ test("both hash and range keys", () => {
 			{ AttributeName: "hash-attr", AttributeType: "S" },
 			{ AttributeName: "range-attr", AttributeType: "N" },
 		],
-	} satisfies Table;
+	} satisfies TableDefinition;
 	const visitKey = jest.fn();
 
 	traverseTableKey(table, visitKey);
@@ -47,7 +47,7 @@ test("error in visitKey", () => {
 			{ AttributeName: "hash-attr", AttributeType: "S" },
 			{ AttributeName: "range-attr", AttributeType: "N" },
 		],
-	} satisfies Table;
+	} satisfies TableDefinition;
 	const visitKey = jest.fn().mockReturnValue(new Error("test"));
 
 	traverseTableKey(table, visitKey);
