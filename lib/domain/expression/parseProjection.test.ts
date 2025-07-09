@@ -79,4 +79,31 @@ describe("parseProjection", () => {
 			parseProjection("Id,,Name", { ExpressionAttributeNames: undefined });
 		}).toThrow('Expected "#" or [A-Z_a-z] but "," found.');
 	});
+
+	it("should return an error for an undefined expression attribute name", () => {
+		const result = parseProjection("#undefined", {
+			ExpressionAttributeNames: { "#n": "Name" },
+		});
+		expect(result).toBe(
+			"An expression attribute name used in the document path is not defined; attribute name: #undefined",
+		);
+	});
+
+	it("should return an error for conflicting document paths", () => {
+		const result = parseProjection("MyAttr.SubAttr, MyAttr[0]", {
+			ExpressionAttributeNames: undefined,
+		});
+		expect(result).toBe(
+			"Two document paths conflict with each other; must remove or rewrite one of these paths; path one: [MyAttr, SubAttr], path two: [MyAttr, [0]]",
+		);
+	});
+
+	it("should return an error for overlapping document paths", () => {
+		const result = parseProjection("MyAttr, MyAttr.SubAttr", {
+			ExpressionAttributeNames: undefined,
+		});
+		expect(result).toBe(
+			"Two document paths overlap with each other; must remove or rewrite one of these paths; path one: [MyAttr], path two: [MyAttr, SubAttr]",
+		);
+	});
 });
