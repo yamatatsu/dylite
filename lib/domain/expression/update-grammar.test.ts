@@ -1,4 +1,4 @@
-import { parse } from "./updateParser";
+import { parse } from "./update-grammar";
 
 describe("UpdateExpressionParser", () => {
 	const context = {

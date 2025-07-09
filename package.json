@@ -4,7 +4,7 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"build": "for file in ./lib/expression-parser/*.pegjs; do peggy \"$file\" --dts --return-types='{}'; done",
+		"build": "for file in ./lib/domain/expression/*.pegjs; do peggy \"$file\" --dts --return-types='{}'; done",
 		"dev": "DEBUG='*' tsx watch bin/server.ts",
 		"type-check": "tsc --noEmit",
 		"lint": "pnpm biome check .",

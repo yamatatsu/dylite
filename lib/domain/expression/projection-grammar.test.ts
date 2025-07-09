@@ -1,4 +1,4 @@
-import { parse } from "./projectionParser";
+import { parse } from "./projection-grammar";
 
 describe("ProjectionExpressionParser", () => {
 	const context = {

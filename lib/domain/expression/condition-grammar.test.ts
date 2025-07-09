@@ -1,5 +1,5 @@
-import { compare } from "../db/compare";
-import { parse } from "./conditionParser";
+import { compare } from "../../db/compare";
+import { parse } from "./condition-grammar";
 
 describe("ConditionExpressionParser", () => {
 	const context = {

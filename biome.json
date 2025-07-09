@@ -1,7 +1,7 @@
 {
 	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
 	"files": {
-		"ignore": ["./lib/expression-parser/*.js", "./lib/expression-parser/*.d.ts"]
+		"ignore": ["./lib/domain/expression/*.js", "./lib/domain/expression/*.d.ts"]
 	},
 	"organizeImports": {
 		"enabled": true
