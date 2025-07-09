@@ -1,5 +1,5 @@
 import type { QueryCommandInput } from "@aws-sdk/client-dynamodb";
-import { compare } from "../../db/compare";
+import { compare } from "../compare";
 import conditionParser from "./condition-grammar";
 import isReserved from "./isReserved";
 
