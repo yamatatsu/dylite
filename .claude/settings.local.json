@@ -1,9 +1,10 @@
 {
 	"permissions": {
 		"allow": [
-			"Bash(pnpm test:ddblocal -- *)",
-			"Bash(pnpm test:dylite -- *)",
-			"Bash(pnpm test:unit -- *)"
+			"Bash(pnpm test:ddblocal:*)",
+			"Bash(pnpm test:dylite:*)",
+			"Bash(pnpm test:unit:*)",
+			"Bash(pnpm build:*)"
 		],
 		"deny": []
 	}

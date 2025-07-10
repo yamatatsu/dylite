@@ -8,6 +8,20 @@ These implementations especially pegjs files are brought from [Dynalite](https:/
 
 Running the `pnpm build` command will parse the `.pegjs` files and create the corresponding `.js` and `.d.ts` files.
 
+## Testing
+
+To run unit tests for the expression parsers:
+
+```bash
+# Run all unit tests in this directory
+pnpm test:unit -- lib/domain/expression/
+
+# Run tests for a specific parser
+pnpm test:unit -- lib/domain/expression/parseProjection.test.ts
+pnpm test:unit -- lib/domain/expression/parseCondition.test.ts
+pnpm test:unit -- lib/domain/expression/parseUpdate.test.ts
+```
+
 ## Core Concepts of DynamoDB Expressions
 
 DynamoDB expressions use a combination of attribute names, attribute values, operators, and functions.

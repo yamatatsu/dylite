@@ -1,7 +1,7 @@
 /**
  * @see https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/ReservedWords.html
  */
-const RESERVED_WORDS = new Set([
+export const RESERVED_WORDS = new Set([
 	"ABORT",
 	"ABSOLUTE",
 	"ACTION",
