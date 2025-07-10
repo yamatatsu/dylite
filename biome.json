@@ -1,7 +1,11 @@
 {
 	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
 	"files": {
-		"ignore": ["./lib/domain/expression/*.js", "./lib/domain/expression/*.d.ts"]
+		"ignore": [
+			"./lib/domain/expression/*.js",
+			"./lib/domain/expression/*.d.ts",
+			".claude/settings.local.json"
+		]
 	},
 	"organizeImports": {
 		"enabled": true
