@@ -3,32 +3,20 @@ import isReserved from "./isReserved";
 import projectionParser from "./projection-grammar";
 
 // AST Types
-export interface ProjectionExpression {
+export type ProjectionExpression = {
 	type: "ProjectionExpression";
 	paths: PathExpression[];
-}
+};
 
-export interface PathExpression {
+export type PathExpression = {
 	type: "PathExpression";
 	segments: PathSegment[];
-}
+};
 
-export type PathSegment = IdentifierSegment | ArrayIndexSegment | AliasSegment;
-
-export interface IdentifierSegment {
-	type: "Identifier";
-	name: string;
-}
-
-export interface ArrayIndexSegment {
-	type: "ArrayIndex";
-	index: number;
-}
-
-export interface AliasSegment {
-	type: "Alias";
-	name: string;
-}
+export type PathSegment =
+	| { type: "Identifier"; name: string }
+	| { type: "ArrayIndex"; index: number }
+	| { type: "Alias"; name: string };
 
 export function parseProjection(
 	expression: string,

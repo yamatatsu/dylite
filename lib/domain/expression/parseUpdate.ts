@@ -4,7 +4,7 @@ import updateParser from "./update-grammar";
 
 type PathSegment =
 	| { type: "Identifier"; name: string }
-	| { type: "AttributeName"; name: string }
+	| { type: "Alias"; name: string }
 	| { type: "ArrayIndex"; index: number };
 
 type PathExpression = {
@@ -216,7 +216,7 @@ function resolvePath(
 			checkReserved(segment.name, context.isReserved, errors);
 			if (errors.reserved) return [];
 			resolvedSegments.push(segment.name);
-		} else if (segment.type === "AttributeName") {
+		} else if (segment.type === "Alias") {
 			const resolved = resolveAttrName(segment.name, context, errors);
 			if (errors.attrName || resolved === null) return [];
 			resolvedSegments.push(resolved);
