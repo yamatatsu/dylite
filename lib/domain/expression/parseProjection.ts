@@ -36,19 +36,7 @@ export function parseProjection(
 		ExpressionAttributeNames: QueryCommandInput["ExpressionAttributeNames"];
 	},
 ) {
-	const context = {
-		attrNames: options.ExpressionAttributeNames,
-		/**
-		 * Before parsing, it have all ExpressionAttributeNames.
-		 * After parsing, attribute name used in the expression will be removed from this object.
-		 */
-		unusedAttrNames: replaceRecordValueToTrue(options.ExpressionAttributeNames),
-		isReserved,
-	};
-
-	// Parse to AST
-	let ast: ProjectionExpression;
-	ast = projectionParser.parse(expression, { context });
+	const ast: ProjectionExpression = projectionParser.parse(expression);
 
 	// Validate and transform AST
 	const errors: {
@@ -76,11 +64,10 @@ export function parseProjection(
 			} else if (segment.type === "Alias") {
 				// Resolve alias
 				if (!errors.attrNameVal) {
-					const attrName = context.attrNames?.[segment.name];
+					const attrName = options.ExpressionAttributeNames?.[segment.name];
 					if (!attrName) {
 						errors.attrNameVal = `An expression attribute name used in the document path is not defined; attribute name: ${segment.name}`;
 					} else {
-						delete context.unusedAttrNames[segment.name];
 						path.push(attrName);
 					}
 				} else {
