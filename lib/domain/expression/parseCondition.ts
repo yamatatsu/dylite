@@ -8,23 +8,20 @@ import isReserved from "./isReserved";
 type AttrVal = string | boolean | string[];
 type Attr = Record<string, AttrVal>;
 
-// Path segment types based on PEG.js grammar
-type PathSegment = string | number | AttributeNameNode;
+// AST Types - unified with projection and update parsers
+type PathSegment =
+	| { type: "Identifier"; name: string }
+	| { type: "ArrayIndex"; index: number }
+	| { type: "Alias"; name: string };
 
-// AST node types based on the PEG.js grammar structure
-type AttributeNameNode = {
-	type: "attrName";
-	name: string;
+type PathExpression = {
+	type: "PathExpression";
+	segments: PathSegment[];
 };
 
 type AttributeValueNode = {
-	type: "attrValue";
+	type: "AttributeValue";
 	name: string;
-};
-
-type PathNode = {
-	type: "path";
-	path: PathSegment[];
 };
 
 type FunctionNode = {
@@ -57,13 +54,12 @@ type RedundantParensNode = {
 
 // Union type for all possible AST nodes
 type ASTNode =
-	| AttributeNameNode
+	| PathExpression
 	| AttributeValueNode
-	| PathNode
 	| FunctionNode
 	| OperatorNode
 	| RedundantParensNode
-	| PathSegment[] // Resolved path
+	| (string | number)[] // Resolved path
 	| AttributeValue // Resolved attribute value
 	| string // Identifier
 	| number; // Array index
@@ -167,7 +163,7 @@ function processNode(
 
 	// Handle arrays (resolved paths)
 	if (Array.isArray(node)) {
-		return node.map((item: PathSegment) =>
+		return node.map((item: string | number) =>
 			processNode(
 				item as ASTNode,
 				context,
@@ -176,7 +172,7 @@ function processNode(
 				pathHeads,
 				false,
 			),
-		) as PathSegment[];
+		) as (string | number)[];
 	}
 
 	// Handle redundant parentheses
@@ -195,18 +191,22 @@ function processNode(
 	}
 
 	// Handle paths
-	if (isPathNode(node)) {
-		const path = node.path.map((segment: PathSegment) => {
-			if (isAttributeNameNode(segment)) {
+	if (isPathExpression(node)) {
+		const path: (string | number)[] = [];
+
+		for (const segment of node.segments) {
+			if (segment.type === "Identifier") {
+				checkReserved(segment.name, context, errors);
+				if (errors.reserved) return [];
+				path.push(segment.name);
+			} else if (segment.type === "Alias") {
 				const resolved = resolveAttrName(segment.name, context, errors);
-				if (resolved === undefined) return segment.name; // Keep original if error
-				return resolved;
+				if (resolved === undefined) return [];
+				path.push(resolved);
+			} else if (segment.type === "ArrayIndex") {
+				path.push(segment.index);
 			}
-			if (typeof segment === "string") {
-				checkReserved(segment, context, errors);
-			}
-			return segment;
-		});
+		}
 
 		// Track nested paths and path heads
 		if (path.length > 1) {
@@ -311,30 +311,21 @@ function processNode(
 }
 
 // Type guards
-function isAttributeNameNode(node: unknown): node is AttributeNameNode {
-	return (
-		typeof node === "object" &&
-		node !== null &&
-		"type" in node &&
-		node.type === "attrName"
-	);
-}
-
 function isAttributeValueNode(node: unknown): node is AttributeValueNode {
 	return (
 		typeof node === "object" &&
 		node !== null &&
 		"type" in node &&
-		node.type === "attrValue"
+		node.type === "AttributeValue"
 	);
 }
 
-function isPathNode(node: unknown): node is PathNode {
+function isPathExpression(node: unknown): node is PathExpression {
 	return (
 		typeof node === "object" &&
 		node !== null &&
 		"type" in node &&
-		node.type === "path"
+		node.type === "PathExpression"
 	);
 }
 
@@ -594,7 +585,7 @@ function checkBetweenArgs(
 	}
 }
 
-function pathStr(path: PathSegment[]): string {
+function pathStr(path: (string | number)[]): string {
 	return `[${path
 		.map((piece) => (typeof piece === "number" ? `[${piece}]` : piece))
 		.join(", ")}]`;
