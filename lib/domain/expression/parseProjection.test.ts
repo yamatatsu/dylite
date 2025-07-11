@@ -6,8 +6,17 @@ describe("parseProjection", () => {
 			ExpressionAttributeNames: undefined,
 		});
 		expect(result).toEqual({
-			paths: [["Attr1"], ["Attr2"]],
-			nestedPaths: {},
+			type: "ProjectionExpression",
+			paths: [
+				{
+					type: "PathExpression",
+					segments: [{ type: "Identifier", name: "Attr1" }],
+				},
+				{
+					type: "PathExpression",
+					segments: [{ type: "Identifier", name: "Attr2" }],
+				},
+			],
 		});
 	});
 
@@ -19,8 +28,17 @@ describe("parseProjection", () => {
 			},
 		});
 		expect(result).toEqual({
-			paths: [["Name"], ["Age"]],
-			nestedPaths: {},
+			type: "ProjectionExpression",
+			paths: [
+				{
+					type: "PathExpression",
+					segments: [{ type: "Alias", name: "#n" }],
+				},
+				{
+					type: "PathExpression",
+					segments: [{ type: "Alias", name: "#a" }],
+				},
+			],
 		});
 	});
 
@@ -31,8 +49,20 @@ describe("parseProjection", () => {
 			},
 		});
 		expect(result).toEqual({
-			paths: [["Product", "Price"], ["Brand"]],
-			nestedPaths: { Product: true },
+			type: "ProjectionExpression",
+			paths: [
+				{
+					type: "PathExpression",
+					segments: [
+						{ type: "Identifier", name: "Product" },
+						{ type: "Identifier", name: "Price" },
+					],
+				},
+				{
+					type: "PathExpression",
+					segments: [{ type: "Alias", name: "#b" }],
+				},
+			],
 		});
 	});
 
@@ -44,11 +74,24 @@ describe("parseProjection", () => {
 			},
 		});
 		expect(result).toEqual({
+			type: "ProjectionExpression",
 			paths: [
-				["Items", 0],
-				["Items", 1, "Name"],
+				{
+					type: "PathExpression",
+					segments: [
+						{ type: "Alias", name: "#i" },
+						{ type: "ArrayIndex", index: 0 },
+					],
+				},
+				{
+					type: "PathExpression",
+					segments: [
+						{ type: "Alias", name: "#i" },
+						{ type: "ArrayIndex", index: 1 },
+						{ type: "Alias", name: "#n" },
+					],
+				},
 			],
-			nestedPaths: { Items: true },
 		});
 	});
 
@@ -60,8 +103,31 @@ describe("parseProjection", () => {
 			},
 		});
 		expect(result).toEqual({
-			paths: [["Id"], ["Name"], ["Product", "Price"], ["Items", 0]],
-			nestedPaths: { Product: true, Items: true },
+			type: "ProjectionExpression",
+			paths: [
+				{
+					type: "PathExpression",
+					segments: [{ type: "Identifier", name: "Id" }],
+				},
+				{
+					type: "PathExpression",
+					segments: [{ type: "Alias", name: "#n" }],
+				},
+				{
+					type: "PathExpression",
+					segments: [
+						{ type: "Identifier", name: "Product" },
+						{ type: "Identifier", name: "Price" },
+					],
+				},
+				{
+					type: "PathExpression",
+					segments: [
+						{ type: "Alias", name: "#i" },
+						{ type: "ArrayIndex", index: 0 },
+					],
+				},
+			],
 		});
 	});
 

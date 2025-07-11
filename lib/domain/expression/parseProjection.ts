@@ -3,29 +3,29 @@ import isReserved from "./isReserved";
 import projectionParser from "./projection-grammar";
 
 // AST Types
-interface ProjectionExpression {
+export interface ProjectionExpression {
 	type: "ProjectionExpression";
 	paths: PathExpression[];
 }
 
-interface PathExpression {
+export interface PathExpression {
 	type: "PathExpression";
 	segments: PathSegment[];
 }
 
-type PathSegment = IdentifierSegment | ArrayIndexSegment | AliasSegment;
+export type PathSegment = IdentifierSegment | ArrayIndexSegment | AliasSegment;
 
-interface IdentifierSegment {
+export interface IdentifierSegment {
 	type: "Identifier";
 	name: string;
 }
 
-interface ArrayIndexSegment {
+export interface ArrayIndexSegment {
 	type: "ArrayIndex";
 	index: number;
 }
 
-interface AliasSegment {
+export interface AliasSegment {
 	type: "Alias";
 	name: string;
 }
@@ -35,10 +35,10 @@ export function parseProjection(
 	options: {
 		ExpressionAttributeNames: QueryCommandInput["ExpressionAttributeNames"];
 	},
-) {
+): ProjectionExpression | string {
 	const ast: ProjectionExpression = projectionParser.parse(expression);
 
-	// Validate and transform AST
+	// Validate AST
 	const errors: {
 		reserved?: string;
 		attrNameVal?: string;
@@ -47,9 +47,8 @@ export function parseProjection(
 	} = {};
 
 	const paths: (string | number)[][] = [];
-	const nestedPaths: Record<string, boolean> = Object.create(null);
 
-	// Process each path
+	// Process each path for validation
 	for (const pathExpr of ast.paths) {
 		const path: (string | number)[] = [];
 
@@ -62,7 +61,7 @@ export function parseProjection(
 				}
 				path.push(segment.name);
 			} else if (segment.type === "Alias") {
-				// Resolve alias
+				// Validate alias
 				if (!errors.attrNameVal) {
 					const attrName = options.ExpressionAttributeNames?.[segment.name];
 					if (!attrName) {
@@ -85,11 +84,6 @@ export function parseProjection(
 		}
 
 		paths.push(path);
-
-		// Track nested paths
-		if (path.length > 1) {
-			nestedPaths[path[0] as string] = true;
-		}
 	}
 
 	// Check errors in order
@@ -105,7 +99,7 @@ export function parseProjection(
 		}
 	}
 
-	return { paths, nestedPaths };
+	return ast;
 }
 
 function checkPath(
