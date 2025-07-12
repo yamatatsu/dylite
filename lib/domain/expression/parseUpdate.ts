@@ -12,7 +12,7 @@ type PathExpression = {
 	segments: PathSegment[];
 };
 
-type Value = { type: "AttributeValue"; name: string } | Record<string, unknown>; // DynamoDB attribute values after resolution
+type Value = { type: "AttributeValue"; name: string }; // DynamoDB attribute values after resolution
 
 type Operand = PathExpression | Value | FunctionCall | ArithmeticExpression;
 
@@ -195,7 +195,6 @@ export function parseUpdate(
 type Context = {
 	attrNames?: Record<string, string>;
 	attrVals?: Record<string, unknown>;
-	nestedPaths?: Record<string, boolean>;
 };
 
 function validatePath(
@@ -237,11 +236,6 @@ function resolvePath(
 		} else if (segment.type === "ArrayIndex") {
 			resolvedSegments.push(segment.index);
 		}
-	}
-
-	if (resolvedSegments.length > 1) {
-		context.nestedPaths = context.nestedPaths || {};
-		context.nestedPaths[resolvedSegments[0]] = true;
 	}
 
 	return resolvedSegments;
