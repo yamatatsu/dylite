@@ -184,31 +184,33 @@ function processNode(
 		);
 	}
 
-	// Handle paths
+	// Handle paths - keep AST structure, validate internally
 	if (isPathExpression(node)) {
-		const path: (string | number)[] = [];
+		// Validate segments and track paths for error checking
+		const resolvedPath: (string | number)[] = [];
 
 		for (const segment of node.segments) {
 			if (segment.type === "Identifier") {
 				checkReserved(segment.name, errors);
-				if (errors.reserved) return [];
-				path.push(segment.name);
+				if (errors.reserved) return node;
+				resolvedPath.push(segment.name);
 			} else if (segment.type === "Alias") {
 				const resolved = resolveAttrName(segment.name, context, errors);
-				if (resolved === undefined) return [];
-				path.push(resolved);
+				if (resolved === undefined) return node;
+				resolvedPath.push(resolved);
 			} else if (segment.type === "ArrayIndex") {
-				path.push(segment.index);
+				resolvedPath.push(segment.index);
 			}
 		}
 
-		// Track nested paths and path heads
-		if (path.length > 1) {
-			nestedPaths[path[0] as string] = true;
+		// Track nested paths and path heads using resolved path
+		if (resolvedPath.length > 1) {
+			nestedPaths[resolvedPath[0] as string] = true;
 		}
-		pathHeads[path[0] as string] = true;
+		pathHeads[resolvedPath[0] as string] = true;
 
-		return path;
+		// Return the original AST structure
+		return node;
 	}
 
 	// Handle attribute values
@@ -460,7 +462,7 @@ function validateFunction(
 	switch (name) {
 		case "attribute_exists":
 		case "attribute_not_exists":
-			if (!Array.isArray(args[0])) {
+			if (!isPathExpression(args[0])) {
 				errors.function = `Operator or function requires a document path; operator or function: ${name}`;
 				return undefined;
 			}
@@ -531,18 +533,38 @@ function checkDistinct(
 	if (
 		errors.distinct ||
 		args.length !== 2 ||
-		!Array.isArray(args[0]) ||
-		!Array.isArray(args[1]) ||
-		args[0].length !== args[1].length
+		!isPathExpression(args[0]) ||
+		!isPathExpression(args[1])
 	) {
 		return;
 	}
-	for (let i = 0; i < args[0].length; i++) {
-		if (args[0][i] !== args[1][i]) {
+
+	const path1 = args[0] as PathExpression;
+	const path2 = args[1] as PathExpression;
+
+	// Compare segments for equality
+	if (path1.segments.length !== path2.segments.length) {
+		return;
+	}
+
+	for (let i = 0; i < path1.segments.length; i++) {
+		const seg1 = path1.segments[i];
+		const seg2 = path2.segments[i];
+
+		if (seg1.type !== seg2.type) {
 			return;
 		}
+
+		if (seg1.type === "Identifier" && seg2.type === "Identifier") {
+			if (seg1.name !== seg2.name) return;
+		} else if (seg1.type === "Alias" && seg2.type === "Alias") {
+			if (seg1.name !== seg2.name) return;
+		} else if (seg1.type === "ArrayIndex" && seg2.type === "ArrayIndex") {
+			if (seg1.index !== seg2.index) return;
+		}
 	}
-	errors.distinct = `The first operand must be distinct from the remaining operands for this operator or function; operator: ${name}, first operand: ${pathStr(args[0])}`;
+
+	errors.distinct = `The first operand must be distinct from the remaining operands for this operator or function; operator: ${name}, first operand: ${pathToString(path1)}`;
 }
 
 function checkBetweenArgs(
@@ -577,6 +599,22 @@ function pathStr(path: (string | number)[]): string {
 	return `[${path
 		.map((piece) => (typeof piece === "number" ? `[${piece}]` : piece))
 		.join(", ")}]`;
+}
+
+function pathToString(pathExpr: PathExpression): string {
+	const parts = pathExpr.segments.map((segment) => {
+		if (segment.type === "Identifier") {
+			return segment.name;
+		}
+		if (segment.type === "Alias") {
+			return segment.name;
+		}
+		if (segment.type === "ArrayIndex") {
+			return `[${segment.index}]`;
+		}
+		return "";
+	});
+	return `[${parts.join(", ")}]`;
 }
 
 function getType(val: ASTNode): string | null {
