@@ -160,7 +160,12 @@ export function parseUpdate(
 
 					// For type checking, we need the resolved value
 					const resolvedValue = resolveValue(expr.value, context, errors);
-					const attrType = checkOperator("DELETE", resolvedValue, context, errors);
+					const attrType = checkOperator(
+						"DELETE",
+						resolvedValue,
+						context,
+						errors,
+					);
 					if (hasError(errors)) break;
 
 					processedExpr = {
@@ -273,7 +278,12 @@ function resolveOperand(
 		const right = resolveOperand(arithExpr.right, context, errors);
 		if (hasError(errors)) return null;
 
-		const attrType = checkFunction(arithExpr.operator, [left, right], context, errors);
+		const attrType = checkFunction(
+			arithExpr.operator,
+			[left, right],
+			context,
+			errors,
+		);
 		if (hasError(errors)) return null;
 
 		return {
@@ -530,7 +540,13 @@ function getType(val: unknown, context?: Context): string | null {
 		return (val as { attrType: string }).attrType;
 	}
 	// For AttributeValueNode, resolve the actual value to get its type
-	if (val && typeof val === "object" && "type" in val && val.type === "AttributeValue" && context) {
+	if (
+		val &&
+		typeof val === "object" &&
+		"type" in val &&
+		val.type === "AttributeValue" &&
+		context
+	) {
 		const attrValue = val as { type: "AttributeValue"; name: string };
 		const errors: Record<string, string> = {};
 		const resolved = resolveAttrVal(attrValue.name, context, errors);
