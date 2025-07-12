@@ -13,7 +13,7 @@ describe("parseCondition", () => {
 					type: "PathExpression",
 					segments: [{ type: "Identifier", name: "Attr1" }],
 				},
-				{ N: "5" },
+				{ type: "AttributeValue", name: ":v1" },
 			],
 		});
 	});
@@ -27,7 +27,7 @@ describe("parseCondition", () => {
 			type: ">",
 			args: [
 				{ type: "PathExpression", segments: [{ type: "Alias", name: "#p" }] },
-				{ N: "100" },
+				{ type: "AttributeValue", name: ":v1" },
 			],
 		});
 	});
@@ -44,8 +44,8 @@ describe("parseCondition", () => {
 			type: "between",
 			args: [
 				{ type: "PathExpression", segments: [{ type: "Alias", name: "#p" }] },
-				{ N: "0" },
-				{ N: "10" },
+				{ type: "AttributeValue", name: ":lo" },
+				{ type: "AttributeValue", name: ":hi" },
 			],
 		});
 	});
@@ -65,8 +65,8 @@ describe("parseCondition", () => {
 					type: "PathExpression",
 					segments: [{ type: "Alias", name: "#cat" }],
 				},
-				{ S: "Book" },
-				{ S: "Movie" },
+				{ type: "AttributeValue", name: ":c1" },
+				{ type: "AttributeValue", name: ":c2" },
 			],
 		});
 	});
@@ -116,7 +116,7 @@ describe("parseCondition", () => {
 							type: "PathExpression",
 							segments: [{ type: "Alias", name: "#s" }],
 						},
-						{ S: "abc" },
+						{ type: "AttributeValue", name: ":prefix" },
 					],
 					attrType: "BOOL",
 				},
@@ -130,7 +130,7 @@ describe("parseCondition", () => {
 									type: "PathExpression",
 									segments: [{ type: "Alias", name: "#p" }],
 								},
-								{ N: "100" },
+								{ type: "AttributeValue", name: ":val" },
 							],
 						},
 						{
@@ -143,7 +143,7 @@ describe("parseCondition", () => {
 											type: "PathExpression",
 											segments: [{ type: "Alias", name: "#cat" }],
 										},
-										{ S: "Book" },
+										{ type: "AttributeValue", name: ":c" },
 									],
 								},
 							],

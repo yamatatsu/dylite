@@ -172,10 +172,13 @@ function processNode(
 		return node;
 	}
 
-	// Handle attribute values
+	// Handle attribute values - keep AST structure, validate internally
 	if (isAttributeValueNode(node)) {
-		const resolved = resolveAttrVal(node.name, context, errors);
-		return resolved !== undefined ? resolved : node;
+		// Validate that the attribute value exists
+		resolveAttrVal(node.name, context, errors);
+
+		// Return the original AST structure
+		return node;
 	}
 
 	// Handle functions
@@ -188,7 +191,12 @@ function processNode(
 		checkMisusedFunction(processedArgs, errors);
 
 		// Validate function
-		const attrType = validateFunction(node.name, processedArgs, errors);
+		const attrType = validateFunction(
+			node.name,
+			processedArgs,
+			context,
+			errors,
+		);
 
 		// If this function is used as a condition expression, apply condition error checks
 		if (isConditionExpression) {
@@ -376,6 +384,7 @@ function resolveAttrVal(
 function validateFunction(
 	name: string,
 	args: ASTNode[],
+	context: ValidationContext,
 	errors: ValidationErrors,
 ): string | undefined {
 	if (errors.unknownFunction) {
@@ -418,10 +427,10 @@ function validateFunction(
 				errors.function = `Operator or function requires a document path; operator or function: ${name}`;
 				return undefined;
 			}
-			return getType(args[1]) || undefined;
+			return getType(args[1], context) || undefined;
 		case "begins_with":
 			for (let i = 0; i < args.length; i++) {
-				const type = getType(args[i]);
+				const type = getType(args[i], context);
 				if (type && type !== "S" && type !== "B") {
 					errors.function = `Incorrect operand type for operator or function; operator or function: ${name}, operand type: ${type}`;
 					return undefined;
@@ -429,12 +438,21 @@ function validateFunction(
 			}
 			return "BOOL";
 		case "attribute_type": {
-			const type = getType(args[1]);
+			const type = getType(args[1], context);
 			if (type !== "S") {
 				errors.function = `Incorrect operand type for operator or function; operator or function: ${name}, operand type: ${type || "{NS,SS,L,BS,N,M,B,BOOL,NULL,S}"}`;
 				return undefined;
 			}
-			const attrVal = args[1] as AttributeValue;
+
+			// Resolve AttributeValueNode to actual value for validation
+			let attrVal = args[1] as AttributeValue;
+			if (isAttributeValueNode(args[1])) {
+				const tempErrors: ValidationErrors = {};
+				const resolved = resolveAttrVal(args[1].name, context, tempErrors);
+				if (tempErrors.attrNameVal) return undefined;
+				attrVal = resolved as AttributeValue;
+			}
+
 			if (
 				!["S", "N", "B", "NULL", "SS", "BOOL", "L", "BS", "NS", "M"].includes(
 					attrVal.S || "",
@@ -446,7 +464,7 @@ function validateFunction(
 			return "BOOL";
 		}
 		case "size": {
-			const type = getType(args[0]);
+			const type = getType(args[0], context);
 			if (["N", "BOOL", "NULL"].includes(type as string)) {
 				errors.function = `Incorrect operand type for operator or function; operator or function: ${name}, operand type: ${type}`;
 				return undefined;
@@ -528,20 +546,39 @@ function checkBetweenArgs(
 	if (errors.function) {
 		return;
 	}
-	const type1 = getImmediateType(x);
-	const type2 = getImmediateType(y);
+
+	// Resolve AttributeValueNode to actual values for comparison
+	let xResolved = x;
+	let yResolved = y;
+
+	if (isAttributeValueNode(x)) {
+		const tempErrors: ValidationErrors = {};
+		const resolved = resolveAttrVal(x.name, context, tempErrors);
+		if (tempErrors.attrNameVal || !resolved) return;
+		xResolved = resolved as ASTNode;
+	}
+
+	if (isAttributeValueNode(y)) {
+		const tempErrors: ValidationErrors = {};
+		const resolved = resolveAttrVal(y.name, context, tempErrors);
+		if (tempErrors.attrNameVal || !resolved) return;
+		yResolved = resolved as ASTNode;
+	}
+
+	const type1 = getImmediateType(xResolved);
+	const type2 = getImmediateType(yResolved);
 	if (type1 && type2) {
 		if (type1 !== type2) {
-			const xVal = x as AttributeValue;
-			const yVal = y as AttributeValue;
+			const xVal = xResolved as AttributeValue;
+			const yVal = yResolved as AttributeValue;
 			errors.function = `The BETWEEN operator requires same data type for lower and upper bounds; lower bound operand: AttributeValue: {${type1}:${xVal[type1 as keyof AttributeValue]}}, upper bound operand: AttributeValue: {${type2}:${yVal[type2 as keyof AttributeValue]}}`;
 		} else if (
-			isAttributeValue(x) &&
-			isAttributeValue(y) &&
-			context.compare("GT", x, y)
+			isAttributeValue(xResolved) &&
+			isAttributeValue(yResolved) &&
+			context.compare("GT", xResolved, yResolved)
 		) {
-			const xVal = x as AttributeValue;
-			const yVal = y as AttributeValue;
+			const xVal = xResolved as AttributeValue;
+			const yVal = yResolved as AttributeValue;
 			errors.function = `The BETWEEN operator requires upper bound to be greater than or equal to lower bound; lower bound operand: AttributeValue: {${type1}:${xVal[type1 as keyof AttributeValue]}}, upper bound operand: AttributeValue: {${type2}:${yVal[type2 as keyof AttributeValue]}}`;
 		}
 	}
@@ -569,9 +606,18 @@ function pathToString(pathExpr: PathExpression): string {
 	return `[${parts.join(", ")}]`;
 }
 
-function getType(val: ASTNode): string | null {
+function getType(val: ASTNode, context?: ValidationContext): string | null {
 	if (!val || typeof val !== "object" || Array.isArray(val)) return null;
 	if (isFunctionNode(val) && val.attrType) return val.attrType;
+	// For AttributeValueNode, resolve the actual value to get its type
+	if (isAttributeValueNode(val) && context) {
+		const errors: ValidationErrors = {};
+		const resolved = resolveAttrVal(val.name, context, errors);
+		if (resolved && !errors.attrNameVal) {
+			return getImmediateType(resolved);
+		}
+		return null;
+	}
 	return getImmediateType(val);
 }
 
