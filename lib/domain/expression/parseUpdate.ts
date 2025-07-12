@@ -102,7 +102,11 @@ export function parseUpdate(
 		for (const expr of section.expressions) {
 			let processedExpr: unknown;
 
-			// Process path and check for errors
+			// Validate path and check for errors, but keep AST structure
+			validatePath(expr.path, context, errors);
+			if (errors.attrName || errors.reserved) break;
+
+			// Still resolve path for internal tracking
 			const resolvedPath = resolvePath(expr.path, context, errors);
 			if (errors.attrName || errors.reserved) break;
 
@@ -118,7 +122,7 @@ export function parseUpdate(
 					const attrType = getType(resolvedValue);
 					processedExpr = {
 						type: "set",
-						path: resolvedPath,
+						path: expr.path,
 						val: resolvedValue,
 						attrType: attrType,
 					};
@@ -127,7 +131,7 @@ export function parseUpdate(
 				case "RemoveExpression": {
 					processedExpr = {
 						type: "remove",
-						path: resolvedPath,
+						path: expr.path,
 					};
 					break;
 				}
@@ -140,7 +144,7 @@ export function parseUpdate(
 
 					processedExpr = {
 						type: "add",
-						path: resolvedPath,
+						path: expr.path,
 						val: resolvedValue,
 						attrType: attrType,
 					};
@@ -155,7 +159,7 @@ export function parseUpdate(
 
 					processedExpr = {
 						type: "delete",
-						path: resolvedPath,
+						path: expr.path,
 						val: resolvedValue,
 						attrType: attrType,
 					};
@@ -187,6 +191,24 @@ type Context = {
 	attrVals?: Record<string, unknown>;
 	nestedPaths?: Record<string, boolean>;
 };
+
+function validatePath(
+	path: PathExpression,
+	context: Context,
+	errors: Record<string, string>,
+): void {
+	for (let i = 0; i < path.segments.length; i++) {
+		const segment = path.segments[i];
+
+		if (segment.type === "Identifier") {
+			checkReserved(segment.name, isReserved, errors);
+			if (errors.reserved) return;
+		} else if (segment.type === "Alias") {
+			const resolved = resolveAttrName(segment.name, context, errors);
+			if (errors.attrName || resolved === null) return;
+		}
+	}
+}
 
 function resolvePath(
 	path: PathExpression,
@@ -225,7 +247,9 @@ function resolveOperand(
 	errors: Record<string, string>,
 ): unknown {
 	if (operand.type === "PathExpression") {
-		return resolvePath(operand as PathExpression, context, errors);
+		// Keep PathExpression as AST, but validate it
+		validatePath(operand as PathExpression, context, errors);
+		return operand;
 	}
 	if (operand.type === "AttributeValue") {
 		return resolveValue(operand as Value, context, errors);
@@ -337,7 +361,12 @@ function checkFunction(
 
 	switch (name) {
 		case "if_not_exists":
-			if (!Array.isArray(args[0])) {
+			if (
+				!args[0] ||
+				typeof args[0] !== "object" ||
+				!("type" in args[0]) ||
+				args[0].type !== "PathExpression"
+			) {
 				errors.function = `Operator or function requires a document path; operator or function: ${name}`;
 				return null;
 			}

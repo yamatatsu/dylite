@@ -11,8 +11,24 @@ describe("parseUpdate", () => {
 		});
 		expect(result).toEqual({
 			sections: [
-				{ type: "set", path: ["Price"], val: { N: "100" }, attrType: "N" },
-				{ type: "set", path: ["Color"], val: { S: "blue" }, attrType: "S" },
+				{
+					type: "set",
+					path: {
+						type: "PathExpression",
+						segments: [{ type: "Alias", name: "#p" }],
+					},
+					val: { N: "100" },
+					attrType: "N",
+				},
+				{
+					type: "set",
+					path: {
+						type: "PathExpression",
+						segments: [{ type: "Alias", name: "#c" }],
+					},
+					val: { S: "blue" },
+					attrType: "S",
+				},
 			],
 			paths: [["Price"], ["Color"]],
 			nestedPaths: {},
@@ -28,11 +44,20 @@ describe("parseUpdate", () => {
 			sections: [
 				{
 					type: "set",
-					path: ["Price"],
+					path: {
+						type: "PathExpression",
+						segments: [{ type: "Alias", name: "#p" }],
+					},
 					val: {
 						type: "function",
 						name: "if_not_exists",
-						args: [["Price"], { N: "100" }],
+						args: [
+							{
+								type: "PathExpression",
+								segments: [{ type: "Alias", name: "#p" }],
+							},
+							{ N: "100" },
+						],
 						attrType: "N",
 					},
 					attrType: "N",
@@ -50,8 +75,20 @@ describe("parseUpdate", () => {
 		});
 		expect(result).toEqual({
 			sections: [
-				{ type: "remove", path: ["InStock"] },
-				{ type: "remove", path: ["Description"] },
+				{
+					type: "remove",
+					path: {
+						type: "PathExpression",
+						segments: [{ type: "Alias", name: "#s" }],
+					},
+				},
+				{
+					type: "remove",
+					path: {
+						type: "PathExpression",
+						segments: [{ type: "Alias", name: "#d" }],
+					},
+				},
 			],
 			paths: [["InStock"], ["Description"]],
 			nestedPaths: {},
@@ -65,7 +102,15 @@ describe("parseUpdate", () => {
 		});
 		expect(result).toEqual({
 			sections: [
-				{ type: "add", path: ["Quantity"], val: { N: "1" }, attrType: "N" },
+				{
+					type: "add",
+					path: {
+						type: "PathExpression",
+						segments: [{ type: "Alias", name: "#q" }],
+					},
+					val: { N: "1" },
+					attrType: "N",
+				},
 			],
 			paths: [["Quantity"]],
 			nestedPaths: {},
@@ -81,7 +126,10 @@ describe("parseUpdate", () => {
 			sections: [
 				{
 					type: "delete",
-					path: ["Colors"],
+					path: {
+						type: "PathExpression",
+						segments: [{ type: "Alias", name: "#c" }],
+					},
 					val: { SS: ["red"] },
 					attrType: "SS",
 				},
@@ -98,9 +146,31 @@ describe("parseUpdate", () => {
 		});
 		expect(result).toEqual({
 			sections: [
-				{ type: "set", path: ["Price"], val: { N: "100" }, attrType: "N" },
-				{ type: "remove", path: ["OldAttr"] },
-				{ type: "add", path: ["Quantity"], val: { N: "1" }, attrType: "N" },
+				{
+					type: "set",
+					path: {
+						type: "PathExpression",
+						segments: [{ type: "Alias", name: "#p" }],
+					},
+					val: { N: "100" },
+					attrType: "N",
+				},
+				{
+					type: "remove",
+					path: {
+						type: "PathExpression",
+						segments: [{ type: "Identifier", name: "OldAttr" }],
+					},
+				},
+				{
+					type: "add",
+					path: {
+						type: "PathExpression",
+						segments: [{ type: "Alias", name: "#q" }],
+					},
+					val: { N: "1" },
+					attrType: "N",
+				},
 			],
 			paths: [["Price"], ["OldAttr"], ["Quantity"]],
 			nestedPaths: {},
