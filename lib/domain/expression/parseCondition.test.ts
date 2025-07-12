@@ -7,18 +7,14 @@ describe("parseCondition", () => {
 			ExpressionAttributeValues: { ":v1": { N: "5" } },
 		});
 		expect(result).toEqual({
-			expression: {
-				type: ">",
-				args: [
-					{
-						type: "PathExpression",
-						segments: [{ type: "Identifier", name: "Attr1" }],
-					},
-					{ N: "5" },
-				],
-			},
-			nestedPaths: {},
-			pathHeads: { Attr1: true },
+			type: ">",
+			args: [
+				{
+					type: "PathExpression",
+					segments: [{ type: "Identifier", name: "Attr1" }],
+				},
+				{ N: "5" },
+			],
 		});
 	});
 
@@ -28,15 +24,11 @@ describe("parseCondition", () => {
 			ExpressionAttributeValues: { ":v1": { N: "100" } },
 		});
 		expect(result).toEqual({
-			expression: {
-				type: ">",
-				args: [
-					{ type: "PathExpression", segments: [{ type: "Alias", name: "#p" }] },
-					{ N: "100" },
-				],
-			},
-			nestedPaths: {},
-			pathHeads: { Price: true },
+			type: ">",
+			args: [
+				{ type: "PathExpression", segments: [{ type: "Alias", name: "#p" }] },
+				{ N: "100" },
+			],
 		});
 	});
 
@@ -49,16 +41,12 @@ describe("parseCondition", () => {
 			},
 		});
 		expect(result).toEqual({
-			expression: {
-				type: "between",
-				args: [
-					{ type: "PathExpression", segments: [{ type: "Alias", name: "#p" }] },
-					{ N: "0" },
-					{ N: "10" },
-				],
-			},
-			nestedPaths: {},
-			pathHeads: { Price: true },
+			type: "between",
+			args: [
+				{ type: "PathExpression", segments: [{ type: "Alias", name: "#p" }] },
+				{ N: "0" },
+				{ N: "10" },
+			],
 		});
 	});
 
@@ -71,19 +59,15 @@ describe("parseCondition", () => {
 			},
 		});
 		expect(result).toEqual({
-			expression: {
-				type: "in",
-				args: [
-					{
-						type: "PathExpression",
-						segments: [{ type: "Alias", name: "#cat" }],
-					},
-					{ S: "Book" },
-					{ S: "Movie" },
-				],
-			},
-			nestedPaths: {},
-			pathHeads: { Category: true },
+			type: "in",
+			args: [
+				{
+					type: "PathExpression",
+					segments: [{ type: "Alias", name: "#cat" }],
+				},
+				{ S: "Book" },
+				{ S: "Movie" },
+			],
 		});
 	});
 
@@ -93,19 +77,15 @@ describe("parseCondition", () => {
 			ExpressionAttributeValues: undefined,
 		});
 		expect(result).toEqual({
-			expression: {
-				type: "function",
-				name: "attribute_exists",
-				args: [
-					{
-						type: "PathExpression",
-						segments: [{ type: "Alias", name: "#id" }],
-					},
-				],
-				attrType: null,
-			},
-			nestedPaths: {},
-			pathHeads: { Id: true },
+			type: "function",
+			name: "attribute_exists",
+			args: [
+				{
+					type: "PathExpression",
+					segments: [{ type: "Alias", name: "#id" }],
+				},
+			],
+			attrType: null,
 		});
 	});
 
@@ -126,55 +106,51 @@ describe("parseCondition", () => {
 			},
 		);
 		expect(result).toEqual({
-			expression: {
-				type: "and",
-				args: [
-					{
-						type: "function",
-						name: "begins_with",
-						args: [
-							{
-								type: "PathExpression",
-								segments: [{ type: "Alias", name: "#s" }],
-							},
-							{ S: "abc" },
-						],
-						attrType: "BOOL",
-					},
-					{
-						type: "or",
-						args: [
-							{
-								type: ">",
-								args: [
-									{
-										type: "PathExpression",
-										segments: [{ type: "Alias", name: "#p" }],
-									},
-									{ N: "100" },
-								],
-							},
-							{
-								type: "not",
-								args: [
-									{
-										type: "=",
-										args: [
-											{
-												type: "PathExpression",
-												segments: [{ type: "Alias", name: "#cat" }],
-											},
-											{ S: "Book" },
-										],
-									},
-								],
-							},
-						],
-					},
-				],
-			},
-			nestedPaths: {},
-			pathHeads: { SK: true, Price: true, Category: true },
+			type: "and",
+			args: [
+				{
+					type: "function",
+					name: "begins_with",
+					args: [
+						{
+							type: "PathExpression",
+							segments: [{ type: "Alias", name: "#s" }],
+						},
+						{ S: "abc" },
+					],
+					attrType: "BOOL",
+				},
+				{
+					type: "or",
+					args: [
+						{
+							type: ">",
+							args: [
+								{
+									type: "PathExpression",
+									segments: [{ type: "Alias", name: "#p" }],
+								},
+								{ N: "100" },
+							],
+						},
+						{
+							type: "not",
+							args: [
+								{
+									type: "=",
+									args: [
+										{
+											type: "PathExpression",
+											segments: [{ type: "Alias", name: "#cat" }],
+										},
+										{ S: "Book" },
+									],
+								},
+							],
+						},
+					],
+				},
+			],
 		});
 	});
 

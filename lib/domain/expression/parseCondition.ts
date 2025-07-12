@@ -104,18 +104,9 @@ export function parseCondition(
 	};
 
 	const errors: ValidationErrors = {};
-	const nestedPaths: Record<string, boolean> = {};
-	const pathHeads: Record<string, boolean> = {};
 
 	// Process the AST: validate and resolve aliases
-	const processedAst = processNode(
-		ast,
-		context,
-		errors,
-		nestedPaths,
-		pathHeads,
-		true,
-	);
+	const processedAst = processNode(ast, context, errors, true);
 
 	// Check if size() is used at top level
 	if (
@@ -136,19 +127,13 @@ export function parseCondition(
 		return error;
 	}
 
-	return {
-		expression: processedAst,
-		nestedPaths,
-		pathHeads,
-	};
+	return processedAst;
 }
 
 function processNode(
 	node: ASTNode,
 	context: ValidationContext,
 	errors: ValidationErrors,
-	nestedPaths: Record<string, boolean>,
-	pathHeads: Record<string, boolean>,
 	isConditionExpression = false,
 ): ASTNode {
 	if (!node || typeof node !== "object") {
@@ -158,14 +143,7 @@ function processNode(
 	// Handle arrays (resolved paths)
 	if (Array.isArray(node)) {
 		return node.map((item: string | number) =>
-			processNode(
-				item as ASTNode,
-				context,
-				errors,
-				nestedPaths,
-				pathHeads,
-				false,
-			),
+			processNode(item as ASTNode, context, errors, false),
 		) as (string | number)[];
 	}
 
@@ -174,40 +152,21 @@ function processNode(
 		if (!errors.parens) {
 			errors.parens = "The expression has redundant parentheses;";
 		}
-		return processNode(
-			node.expr,
-			context,
-			errors,
-			nestedPaths,
-			pathHeads,
-			isConditionExpression,
-		);
+		return processNode(node.expr, context, errors, isConditionExpression);
 	}
 
 	// Handle paths - keep AST structure, validate internally
 	if (isPathExpression(node)) {
-		// Validate segments and track paths for error checking
-		const resolvedPath: (string | number)[] = [];
-
+		// Validate segments
 		for (const segment of node.segments) {
 			if (segment.type === "Identifier") {
 				checkReserved(segment.name, errors);
 				if (errors.reserved) return node;
-				resolvedPath.push(segment.name);
 			} else if (segment.type === "Alias") {
 				const resolved = resolveAttrName(segment.name, context, errors);
 				if (resolved === undefined) return node;
-				resolvedPath.push(resolved);
-			} else if (segment.type === "ArrayIndex") {
-				resolvedPath.push(segment.index);
 			}
 		}
-
-		// Track nested paths and path heads using resolved path
-		if (resolvedPath.length > 1) {
-			nestedPaths[resolvedPath[0] as string] = true;
-		}
-		pathHeads[resolvedPath[0] as string] = true;
 
 		// Return the original AST structure
 		return node;
@@ -222,7 +181,7 @@ function processNode(
 	// Handle functions
 	if (isFunctionNode(node)) {
 		const processedArgs = node.args.map((arg: ASTNode) =>
-			processNode(arg, context, errors, nestedPaths, pathHeads, false),
+			processNode(arg, context, errors, false),
 		);
 
 		// Check for misused functions in arguments
@@ -247,7 +206,7 @@ function processNode(
 	// Handle operators
 	if (isOperatorNode(node)) {
 		const processedArgs = node.args.map((arg: ASTNode) =>
-			processNode(arg, context, errors, nestedPaths, pathHeads, false),
+			processNode(arg, context, errors, false),
 		);
 
 		// Validate based on operator type
@@ -292,14 +251,7 @@ function processNode(
 	const result: Record<string, unknown> = { ...node };
 	for (const key in result) {
 		if (key !== "type" && Object.hasOwn(result, key)) {
-			result[key] = processNode(
-				result[key] as ASTNode,
-				context,
-				errors,
-				nestedPaths,
-				pathHeads,
-				false,
-			);
+			result[key] = processNode(result[key] as ASTNode, context, errors, false);
 		}
 	}
 
