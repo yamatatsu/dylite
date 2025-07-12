@@ -67,9 +67,6 @@ type ASTNode =
 type ValidationContext = {
 	attrNames: Record<string, string> | undefined;
 	attrVals: Record<string, AttributeValue> | undefined;
-	unusedAttrNames: Record<string, boolean>;
-	unusedAttrVals: Record<string, boolean>;
-	isReserved: typeof isReserved;
 	compare: (comp: string, x: AttributeValue, y: AttributeValue) => boolean;
 };
 
@@ -101,9 +98,6 @@ export function parseCondition(
 		attrVals: options.ExpressionAttributeValues as
 			| Record<string, AttributeValue>
 			| undefined,
-		unusedAttrNames: replaceRecordValueToTrue(options.ExpressionAttributeNames),
-		unusedAttrVals: replaceRecordValueToTrue(options.ExpressionAttributeValues),
-		isReserved,
 		compare: (comp: string, x: AttributeValue, y: AttributeValue) => {
 			return compare(comp, x as Attr, [y as Attr]);
 		},
@@ -196,7 +190,7 @@ function processNode(
 
 		for (const segment of node.segments) {
 			if (segment.type === "Identifier") {
-				checkReserved(segment.name, context, errors);
+				checkReserved(segment.name, errors);
 				if (errors.reserved) return [];
 				path.push(segment.name);
 			} else if (segment.type === "Alias") {
@@ -389,12 +383,8 @@ function isAttributeValue(node: unknown): node is AttributeValue {
 	return attributeTypes.some((type) => type in node);
 }
 
-function checkReserved(
-	name: string,
-	context: ValidationContext,
-	errors: ValidationErrors,
-) {
-	if (context.isReserved(name) && !errors.reserved) {
+function checkReserved(name: string, errors: ValidationErrors) {
+	if (isReserved(name) && !errors.reserved) {
 		errors.reserved = `Attribute name is a reserved keyword; reserved keyword: ${name}`;
 	}
 }
@@ -411,7 +401,6 @@ function resolveAttrName(
 		errors.attrNameVal = `An expression attribute name used in the document path is not defined; attribute name: ${name}`;
 		return undefined;
 	}
-	delete context.unusedAttrNames[name];
 	return context.attrNames[name];
 }
 
@@ -427,7 +416,6 @@ function resolveAttrVal(
 		errors.attrNameVal = `An expression attribute value used in expression is not defined; attribute value: ${name}`;
 		return undefined;
 	}
-	delete context.unusedAttrVals[name];
 	return context.attrVals[name];
 }
 
@@ -659,22 +647,4 @@ function checkErrors(errors: ValidationErrors): string | null {
 		if (errors[errorOrder[i]]) return errors[errorOrder[i]] as string;
 	}
 	return null;
-}
-
-///////////////////
-// libs
-
-function replaceRecordValueToTrue(
-	record: Record<string, unknown> | undefined | null,
-): Record<string, boolean> {
-	if (!record) {
-		return {};
-	}
-	return Object.keys(record).reduce(
-		(acc, key) => {
-			acc[key] = true;
-			return acc;
-		},
-		{} as Record<string, boolean>,
-	);
 }

@@ -77,17 +77,6 @@ export function parseUpdate(
 	const context = {
 		attrNames: options.ExpressionAttributeNames,
 		attrVals: options.ExpressionAttributeValues,
-		/**
-		 * Before parsing, it have all ExpressionAttributeNames.
-		 * After parsing, attribute name used in the expression will be removed from this object.
-		 */
-		unusedAttrNames: replaceRecordValueToTrue(options.ExpressionAttributeNames),
-		/**
-		 * Before parsing, it have all ExpressionAttributeValues.
-		 * After parsing, attribute value used in the expression will be removed from this object.
-		 */
-		unusedAttrVals: replaceRecordValueToTrue(options.ExpressionAttributeValues),
-		isReserved,
 	};
 
 	// Parse to AST
@@ -196,9 +185,6 @@ export function parseUpdate(
 type Context = {
 	attrNames?: Record<string, string>;
 	attrVals?: Record<string, unknown>;
-	unusedAttrNames: Record<string, boolean>;
-	unusedAttrVals: Record<string, boolean>;
-	isReserved: (name: string) => boolean;
 	nestedPaths?: Record<string, boolean>;
 };
 
@@ -213,7 +199,7 @@ function resolvePath(
 		const segment = path.segments[i];
 
 		if (segment.type === "Identifier") {
-			checkReserved(segment.name, context.isReserved, errors);
+			checkReserved(segment.name, isReserved, errors);
 			if (errors.reserved) return [];
 			resolvedSegments.push(segment.name);
 		} else if (segment.type === "Alias") {
@@ -391,7 +377,6 @@ function resolveAttrName(
 		errors.attrName = `An expression attribute name used in the document path is not defined; attribute name: ${name}`;
 		return null;
 	}
-	delete context.unusedAttrNames[name];
 	return context.attrNames[name];
 }
 
@@ -407,7 +392,6 @@ function resolveAttrVal(
 		errors.attrVal = `An expression attribute value used in expression is not defined; attribute value: ${name}`;
 		return null;
 	}
-	delete context.unusedAttrVals[name];
 	return context.attrVals[name];
 }
 
@@ -530,22 +514,4 @@ function checkErrors(errors: Record<string, string>): string | null {
 
 function hasError(errors: Record<string, string>): boolean {
 	return Object.keys(errors).length > 0;
-}
-
-///////////////////
-// libs
-
-function replaceRecordValueToTrue(
-	record: Record<string, unknown> | undefined | null,
-): Record<string, boolean> {
-	if (!record) {
-		return {};
-	}
-	return Object.keys(record).reduce(
-		(acc, key) => {
-			acc[key] = true;
-			return acc;
-		},
-		{} as Record<string, boolean>,
-	);
 }

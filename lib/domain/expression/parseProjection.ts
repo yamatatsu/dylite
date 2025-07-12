@@ -132,21 +132,3 @@ function pathStr(path: (string | number)[]): string {
 		})
 		.join(", ")}]`;
 }
-
-///////////////////
-// libs
-
-function replaceRecordValueToTrue(
-	record: Record<string, unknown> | undefined | null,
-): Record<string, boolean> {
-	if (!record) {
-		return {};
-	}
-	return Object.keys(record).reduce(
-		(acc, key) => {
-			acc[key] = true;
-			return acc;
-		},
-		{} as Record<string, boolean>,
-	);
-}
