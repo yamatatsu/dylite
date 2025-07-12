@@ -86,7 +86,6 @@ export function parseUpdate(
 	const errors: Record<string, string> = {};
 	const sections: Record<string, boolean> = {};
 	const paths: (string | number)[][] = [];
-	const nestedPaths: Record<string, boolean> = {};
 	const processedSections: unknown[] = [];
 
 	for (const section of ast.sections) {
@@ -190,11 +189,7 @@ export function parseUpdate(
 	const error = checkErrors(errors);
 	if (error) return error;
 
-	return {
-		sections: processedSections,
-		paths: paths,
-		nestedPaths: nestedPaths,
-	};
+	return processedSections;
 }
 
 type Context = {

@@ -9,30 +9,26 @@ describe("parseUpdate", () => {
 				":c": { S: "blue" },
 			},
 		});
-		expect(result).toEqual({
-			sections: [
-				{
-					type: "set",
-					path: {
-						type: "PathExpression",
-						segments: [{ type: "Alias", name: "#p" }],
-					},
-					val: { type: "AttributeValue", name: ":p" },
-					attrType: "N",
+		expect(result).toEqual([
+			{
+				type: "set",
+				path: {
+					type: "PathExpression",
+					segments: [{ type: "Alias", name: "#p" }],
 				},
-				{
-					type: "set",
-					path: {
-						type: "PathExpression",
-						segments: [{ type: "Alias", name: "#c" }],
-					},
-					val: { type: "AttributeValue", name: ":c" },
-					attrType: "S",
+				val: { type: "AttributeValue", name: ":p" },
+				attrType: "N",
+			},
+			{
+				type: "set",
+				path: {
+					type: "PathExpression",
+					segments: [{ type: "Alias", name: "#c" }],
 				},
-			],
-			paths: [["Price"], ["Color"]],
-			nestedPaths: {},
-		});
+				val: { type: "AttributeValue", name: ":c" },
+				attrType: "S",
+			},
+		]);
 	});
 
 	it("should parse a SET action with if_not_exists", () => {
@@ -40,32 +36,28 @@ describe("parseUpdate", () => {
 			ExpressionAttributeNames: { "#p": "Price" },
 			ExpressionAttributeValues: { ":p": { N: "100" } },
 		});
-		expect(result).toEqual({
-			sections: [
-				{
-					type: "set",
-					path: {
-						type: "PathExpression",
-						segments: [{ type: "Alias", name: "#p" }],
-					},
-					val: {
-						type: "function",
-						name: "if_not_exists",
-						args: [
-							{
-								type: "PathExpression",
-								segments: [{ type: "Alias", name: "#p" }],
-							},
-							{ type: "AttributeValue", name: ":p" },
-						],
-						attrType: "N",
-					},
+		expect(result).toEqual([
+			{
+				type: "set",
+				path: {
+					type: "PathExpression",
+					segments: [{ type: "Alias", name: "#p" }],
+				},
+				val: {
+					type: "function",
+					name: "if_not_exists",
+					args: [
+						{
+							type: "PathExpression",
+							segments: [{ type: "Alias", name: "#p" }],
+						},
+						{ type: "AttributeValue", name: ":p" },
+					],
 					attrType: "N",
 				},
-			],
-			paths: [["Price"]],
-			nestedPaths: {},
-		});
+				attrType: "N",
+			},
+		]);
 	});
 
 	it("should parse a REMOVE action", () => {
@@ -73,26 +65,22 @@ describe("parseUpdate", () => {
 			ExpressionAttributeNames: { "#s": "InStock", "#d": "Description" },
 			ExpressionAttributeValues: undefined,
 		});
-		expect(result).toEqual({
-			sections: [
-				{
-					type: "remove",
-					path: {
-						type: "PathExpression",
-						segments: [{ type: "Alias", name: "#s" }],
-					},
+		expect(result).toEqual([
+			{
+				type: "remove",
+				path: {
+					type: "PathExpression",
+					segments: [{ type: "Alias", name: "#s" }],
 				},
-				{
-					type: "remove",
-					path: {
-						type: "PathExpression",
-						segments: [{ type: "Alias", name: "#d" }],
-					},
+			},
+			{
+				type: "remove",
+				path: {
+					type: "PathExpression",
+					segments: [{ type: "Alias", name: "#d" }],
 				},
-			],
-			paths: [["InStock"], ["Description"]],
-			nestedPaths: {},
-		});
+			},
+		]);
 	});
 
 	it("should parse an ADD action", () => {
@@ -100,21 +88,17 @@ describe("parseUpdate", () => {
 			ExpressionAttributeNames: { "#q": "Quantity" },
 			ExpressionAttributeValues: { ":v": { N: "1" } },
 		});
-		expect(result).toEqual({
-			sections: [
-				{
-					type: "add",
-					path: {
-						type: "PathExpression",
-						segments: [{ type: "Alias", name: "#q" }],
-					},
-					val: { type: "AttributeValue", name: ":v" },
-					attrType: "N",
+		expect(result).toEqual([
+			{
+				type: "add",
+				path: {
+					type: "PathExpression",
+					segments: [{ type: "Alias", name: "#q" }],
 				},
-			],
-			paths: [["Quantity"]],
-			nestedPaths: {},
-		});
+				val: { type: "AttributeValue", name: ":v" },
+				attrType: "N",
+			},
+		]);
 	});
 
 	it("should parse a DELETE action", () => {
@@ -122,21 +106,17 @@ describe("parseUpdate", () => {
 			ExpressionAttributeNames: { "#c": "Colors" },
 			ExpressionAttributeValues: { ":v": { SS: ["red"] } },
 		});
-		expect(result).toEqual({
-			sections: [
-				{
-					type: "delete",
-					path: {
-						type: "PathExpression",
-						segments: [{ type: "Alias", name: "#c" }],
-					},
-					val: { type: "AttributeValue", name: ":v" },
-					attrType: "SS",
+		expect(result).toEqual([
+			{
+				type: "delete",
+				path: {
+					type: "PathExpression",
+					segments: [{ type: "Alias", name: "#c" }],
 				},
-			],
-			paths: [["Colors"]],
-			nestedPaths: {},
-		});
+				val: { type: "AttributeValue", name: ":v" },
+				attrType: "SS",
+			},
+		]);
 	});
 
 	it("should parse multiple actions", () => {
@@ -144,37 +124,33 @@ describe("parseUpdate", () => {
 			ExpressionAttributeNames: { "#p": "Price", "#q": "Quantity" },
 			ExpressionAttributeValues: { ":p": { N: "100" }, ":v": { N: "1" } },
 		});
-		expect(result).toEqual({
-			sections: [
-				{
-					type: "set",
-					path: {
-						type: "PathExpression",
-						segments: [{ type: "Alias", name: "#p" }],
-					},
-					val: { type: "AttributeValue", name: ":p" },
-					attrType: "N",
+		expect(result).toEqual([
+			{
+				type: "set",
+				path: {
+					type: "PathExpression",
+					segments: [{ type: "Alias", name: "#p" }],
 				},
-				{
-					type: "remove",
-					path: {
-						type: "PathExpression",
-						segments: [{ type: "Identifier", name: "OldAttr" }],
-					},
+				val: { type: "AttributeValue", name: ":p" },
+				attrType: "N",
+			},
+			{
+				type: "remove",
+				path: {
+					type: "PathExpression",
+					segments: [{ type: "Identifier", name: "OldAttr" }],
 				},
-				{
-					type: "add",
-					path: {
-						type: "PathExpression",
-						segments: [{ type: "Alias", name: "#q" }],
-					},
-					val: { type: "AttributeValue", name: ":v" },
-					attrType: "N",
+			},
+			{
+				type: "add",
+				path: {
+					type: "PathExpression",
+					segments: [{ type: "Alias", name: "#q" }],
 				},
-			],
-			paths: [["Price"], ["OldAttr"], ["Quantity"]],
-			nestedPaths: {},
-		});
+				val: { type: "AttributeValue", name: ":v" },
+				attrType: "N",
+			},
+		]);
 	});
 
 	it("should return an error for an update with a reserved word", () => {
