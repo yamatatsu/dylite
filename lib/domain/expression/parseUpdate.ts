@@ -119,7 +119,7 @@ export function parseUpdate(
 					const resolvedValue = resolveOperand(expr.value, context, errors);
 					if (hasError(errors)) break;
 
-					const attrType = getType(resolvedValue);
+					const attrType = getType(resolvedValue, context);
 					processedExpr = {
 						type: "set",
 						path: expr.path,
@@ -136,31 +136,37 @@ export function parseUpdate(
 					break;
 				}
 				case "AddExpression": {
-					const resolvedValue = resolveValue(expr.value, context, errors);
+					// Validate value but keep AST structure
+					validateValue(expr.value, context, errors);
 					if (errors.attrVal) break;
 
-					const attrType = checkOperator("ADD", resolvedValue, errors);
+					// For type checking, we need the resolved value
+					const resolvedValue = resolveValue(expr.value, context, errors);
+					const attrType = checkOperator("ADD", resolvedValue, context, errors);
 					if (hasError(errors)) break;
 
 					processedExpr = {
 						type: "add",
 						path: expr.path,
-						val: resolvedValue,
+						val: expr.value,
 						attrType: attrType,
 					};
 					break;
 				}
 				case "DeleteExpression": {
-					const resolvedValue = resolveValue(expr.value, context, errors);
+					// Validate value but keep AST structure
+					validateValue(expr.value, context, errors);
 					if (errors.attrVal) break;
 
-					const attrType = checkOperator("DELETE", resolvedValue, errors);
+					// For type checking, we need the resolved value
+					const resolvedValue = resolveValue(expr.value, context, errors);
+					const attrType = checkOperator("DELETE", resolvedValue, context, errors);
 					if (hasError(errors)) break;
 
 					processedExpr = {
 						type: "delete",
 						path: expr.path,
-						val: resolvedValue,
+						val: expr.value,
 						attrType: attrType,
 					};
 					break;
@@ -252,7 +258,9 @@ function resolveOperand(
 		return operand;
 	}
 	if (operand.type === "AttributeValue") {
-		return resolveValue(operand as Value, context, errors);
+		// Keep AttributeValue as AST, but validate it
+		validateValue(operand as Value, context, errors);
+		return operand;
 	}
 	if (operand.type === "FunctionCall") {
 		return resolveFunction(operand as FunctionCall, context, errors);
@@ -265,7 +273,7 @@ function resolveOperand(
 		const right = resolveOperand(arithExpr.right, context, errors);
 		if (hasError(errors)) return null;
 
-		const attrType = checkFunction(arithExpr.operator, [left, right], errors);
+		const attrType = checkFunction(arithExpr.operator, [left, right], context, errors);
 		if (hasError(errors)) return null;
 
 		return {
@@ -275,6 +283,23 @@ function resolveOperand(
 		};
 	}
 	return operand;
+}
+
+function validateValue(
+	value: Value,
+	context: Context,
+	errors: Record<string, string>,
+): void {
+	if (
+		value &&
+		typeof value === "object" &&
+		"type" in value &&
+		value.type === "AttributeValue"
+	) {
+		const attrValue = value as { type: "AttributeValue"; name: string };
+		// Validate that the attribute value exists
+		resolveAttrVal(attrValue.name, context, errors);
+	}
 }
 
 function resolveValue(
@@ -307,7 +332,7 @@ function resolveFunction(
 		resolvedArgs.push(resolved);
 	}
 
-	const attrType = checkFunction(func.name, resolvedArgs, errors);
+	const attrType = checkFunction(func.name, resolvedArgs, context, errors);
 	if (hasError(errors)) return null;
 
 	return {
@@ -331,6 +356,7 @@ function checkReserved(
 function checkFunction(
 	name: string,
 	args: unknown[],
+	context: Context,
 	errors: Record<string, string>,
 ): string | null {
 	if (errors.unknownFunction) {
@@ -370,10 +396,10 @@ function checkFunction(
 				errors.function = `Operator or function requires a document path; operator or function: ${name}`;
 				return null;
 			}
-			return getType(args[1]);
+			return getType(args[1], context);
 		case "list_append":
 			for (let i = 0; i < args.length; i++) {
-				const type = getImmediateType(args[i]);
+				const type = getType(args[i], context);
 				if (type && type !== "L") {
 					errors.function = `Incorrect operand type for operator or function; operator or function: ${name}, operand type: ${type}`;
 					return null;
@@ -383,7 +409,7 @@ function checkFunction(
 		case "+":
 		case "-":
 			for (let i = 0; i < args.length; i++) {
-				const type = getImmediateType(args[i]);
+				const type = getType(args[i], context);
 				if (type && type !== "N") {
 					errors.function = `Incorrect operand type for operator or function; operator or function: ${name}, operand type: ${type}`;
 					return null;
@@ -469,6 +495,7 @@ function pathStr(path: (string | number)[]): string {
 function checkOperator(
 	operator: string,
 	val: unknown,
+	context: Context,
 	errors: Record<string, string>,
 ): string | null {
 	if (errors.operand || !val) {
@@ -486,7 +513,7 @@ function checkOperator(
 		NS: "NUMBER_SET",
 		BS: "BINARY_SET",
 	};
-	const type = getImmediateType(val);
+	const type = getType(val, context);
 	if (type && typeMappings[type] && !(operator === "ADD" && type === "N")) {
 		if (operator === "DELETE" && !type.endsWith("S")) {
 			errors.operand = `Incorrect operand type for operator or function; operator: ${operator}, operand type: ${typeMappings[type]}`;
@@ -497,10 +524,20 @@ function checkOperator(
 	return type;
 }
 
-function getType(val: unknown): string | null {
+function getType(val: unknown, context?: Context): string | null {
 	if (!val || typeof val !== "object" || Array.isArray(val)) return null;
 	if (val && typeof val === "object" && "attrType" in val) {
 		return (val as { attrType: string }).attrType;
+	}
+	// For AttributeValueNode, resolve the actual value to get its type
+	if (val && typeof val === "object" && "type" in val && val.type === "AttributeValue" && context) {
+		const attrValue = val as { type: "AttributeValue"; name: string };
+		const errors: Record<string, string> = {};
+		const resolved = resolveAttrVal(attrValue.name, context, errors);
+		if (resolved && !errors.attrVal) {
+			return getImmediateType(resolved);
+		}
+		return null;
 	}
 	return getImmediateType(val);
 }
