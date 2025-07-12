@@ -8,6 +8,7 @@
 		"dev": "DEBUG='*' tsx watch bin/server.ts",
 		"type-check": "tsc --noEmit",
 		"lint": "pnpm biome check .",
+		"format": "pnpm lint --write",
 		"test:unit": "jest --selectProjects unit",
 		"test:ddblocal": "jest --selectProjects ddblocal",
 		"test:dylite": "DEBUG='dylite:error' jest --selectProjects dylite",

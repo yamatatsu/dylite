@@ -1,1 +1,3 @@
+pnpm format
 pnpm check
+pnpm test:unit
