@@ -3,7 +3,7 @@ import type { PathSegment } from "./PathSegment";
 export class PathExpression {
 	public readonly type = "PathExpression";
 
-	constructor(public readonly segments: PathSegment[]) {}
+	constructor(private readonly segments: PathSegment[]) {}
 
 	getReservedWord(): PathSegment | undefined {
 		for (const segment of this.segments) {
