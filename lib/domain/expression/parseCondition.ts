@@ -48,7 +48,6 @@ type ASTNode =
 	| FunctionNode
 	| OperatorNode
 	| RedundantParensNode
-	| (string | number)[] // Resolved path
 	| AttributeValue // Resolved attribute value
 	| string // Identifier
 	| number; // Array index
@@ -131,13 +130,6 @@ function processNode(
 ): ASTNode {
 	if (!node || typeof node !== "object") {
 		return node;
-	}
-
-	// Handle arrays (resolved paths)
-	if (Array.isArray(node)) {
-		return node.map((item: string | number) =>
-			processNode(item as ASTNode, context, errors, false),
-		) as (string | number)[];
 	}
 
 	// Handle redundant parentheses
