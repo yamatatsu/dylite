@@ -390,21 +390,6 @@ function checkFunction(
 	return null;
 }
 
-function resolveAttrName(
-	name: string,
-	context: ValidationContext,
-	errors: Record<string, string>,
-): string | null {
-	if (errors.attrName) {
-		return null;
-	}
-	if (!context.attrNames || !context.attrNames[name]) {
-		errors.attrName = `An expression attribute name used in the document path is not defined; attribute name: ${name}`;
-		return null;
-	}
-	return context.attrNames[name];
-}
-
 function resolveAttrVal(
 	name: string,
 	context: ValidationContext,
