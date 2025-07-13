@@ -1,17 +1,12 @@
 import { compare } from "../compare";
 import type { AttributeValue } from "../types";
-import type { PathSegment } from "./PathSegment";
+import type { PathExpression } from "./PathExpression";
 import conditionParser from "./condition-grammar";
 import type { Context } from "./context";
 
 // Type for compare function
 type AttrVal = string | boolean | string[];
 type Attr = Record<string, AttrVal>;
-
-type PathExpression = {
-	type: "PathExpression";
-	segments: PathSegment[];
-};
 
 type AttributeValueNode = {
 	type: "AttributeValue";
@@ -156,15 +151,18 @@ function processNode(
 	// Handle paths - keep AST structure, validate internally
 	if (isPathExpression(node)) {
 		// Validate segments
-		for (const segment of node.segments) {
+		for (let i = 0; i < node.size(); i++) {
+			const segment = node.at(i);
+			if (!segment) continue;
+
 			if (segment.type === "Identifier") {
 				if (!errors.reserved && segment.isReserved()) {
-					errors.reserved = `Attribute name is a reserved keyword; reserved keyword: ${segment.toString()}`;
+					errors.reserved = `Attribute name is a reserved keyword; reserved keyword: ${segment}`;
 				}
 				if (errors.reserved) return node;
 			} else if (segment.type === "Alias") {
 				if (!errors.attrNameVal && segment.isUnresolvable()) {
-					errors.attrNameVal = `An expression attribute name used in the document path is not defined; attribute name: ${segment.toString()}`;
+					errors.attrNameVal = `An expression attribute name used in the document path is not defined; attribute name: ${segment}`;
 				}
 				if (errors.attrNameVal) return node;
 			}
@@ -347,21 +345,6 @@ function isAttributeValue(node: unknown): node is AttributeValue {
 	return attributeTypes.some((type) => type in node);
 }
 
-function resolveAttrName(
-	name: string,
-	context: ValidationContext,
-	errors: ValidationErrors,
-): string | undefined {
-	if (errors.attrNameVal) {
-		return undefined;
-	}
-	if (!context.attrNames || !context.attrNames[name]) {
-		errors.attrNameVal = `An expression attribute name used in the document path is not defined; attribute name: ${name}`;
-		return undefined;
-	}
-	return context.attrNames[name];
-}
-
 function resolveAttrVal(
 	name: string,
 	context: ValidationContext,
@@ -509,13 +492,15 @@ function checkDistinct(
 	const path2 = args[1] as PathExpression;
 
 	// Compare segments for equality
-	if (path1.segments.length !== path2.segments.length) {
+	if (path1.size() !== path2.size()) {
 		return;
 	}
 
-	for (let i = 0; i < path1.segments.length; i++) {
-		const seg1 = path1.segments[i];
-		const seg2 = path2.segments[i];
+	for (let i = 0; i < path1.size(); i++) {
+		const seg1 = path1.at(i);
+		const seg2 = path2.at(i);
+
+		if (!seg1 || !seg2) return;
 
 		if (seg1.isArrayIndex !== seg2.isArrayIndex) {
 			return;
@@ -526,7 +511,7 @@ function checkDistinct(
 		}
 	}
 
-	errors.distinct = `The first operand must be distinct from the remaining operands for this operator or function; operator: ${name}, first operand: ${pathToString(path1)}`;
+	errors.distinct = `The first operand must be distinct from the remaining operands for this operator or function; operator: ${name}, first operand: ${path1}`;
 }
 
 function checkBetweenArgs(
@@ -574,16 +559,6 @@ function checkBetweenArgs(
 			errors.function = `The BETWEEN operator requires upper bound to be greater than or equal to lower bound; lower bound operand: AttributeValue: {${type1}:${xVal[type1 as keyof AttributeValue]}}, upper bound operand: AttributeValue: {${type2}:${yVal[type2 as keyof AttributeValue]}}`;
 		}
 	}
-}
-
-function pathStr(path: (string | number)[]): string {
-	return `[${path
-		.map((piece) => (typeof piece === "number" ? `[${piece}]` : piece))
-		.join(", ")}]`;
-}
-
-function pathToString(pathExpr: PathExpression): string {
-	return `[${pathExpr.segments.map((seg) => seg.toString()).join(", ")}]`;
 }
 
 function getType(val: ASTNode, context?: ValidationContext): string | null {

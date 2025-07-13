@@ -1,12 +1,7 @@
 import type { AttributeValue } from "../types";
-import type { PathSegment } from "./PathSegment";
+import type { PathExpression } from "./PathExpression";
 import type { Context } from "./context";
 import updateParser from "./update-grammar";
-
-type PathExpression = {
-	type: "PathExpression";
-	segments: PathSegment[];
-};
 
 type Value = { type: "AttributeValue"; name: string }; // DynamoDB attribute values after resolution
 
@@ -86,7 +81,7 @@ export function parseUpdate(
 	// Process AST: resolve aliases and validate
 	const errors: Record<string, string> = {};
 	const sections: Record<string, boolean> = {};
-	const paths: (string | number)[][] = [];
+	const paths: PathExpression[] = [];
 	const processedSections: unknown[] = [];
 
 	for (const section of ast.sections) {
@@ -106,12 +101,8 @@ export function parseUpdate(
 			validatePath(expr.path, validationContext, errors);
 			if (errors.attrName || errors.reserved) break;
 
-			// Still resolve path for internal tracking
-			const resolvedPath = resolvePath(expr.path, validationContext, errors);
-			if (errors.attrName || errors.reserved) break;
-
 			// Check path conflicts
-			checkPath(resolvedPath, paths, errors);
+			checkPath(expr.path, paths, errors);
 			if (errors.pathOverlap || errors.pathConflict) break;
 
 			switch (expr.type) {
@@ -220,8 +211,9 @@ function validatePath(
 	context: ValidationContext,
 	errors: Record<string, string>,
 ): void {
-	for (let i = 0; i < path.segments.length; i++) {
-		const segment = path.segments[i];
+	for (let i = 0; i < path.size(); i++) {
+		const segment = path.at(i);
+		if (!segment) continue;
 
 		if (segment.type === "Identifier") {
 			if (!errors.reserved && segment.isReserved()) {
@@ -235,21 +227,6 @@ function validatePath(
 			if (errors.attrName) return;
 		}
 	}
-}
-
-function resolvePath(
-	path: PathExpression,
-	context: ValidationContext,
-	errors: Record<string, string>,
-): (string | number)[] {
-	const resolvedSegments: (string | number)[] = [];
-
-	for (let i = 0; i < path.segments.length; i++) {
-		const segment = path.segments[i];
-		resolvedSegments.push(segment.value());
-	}
-
-	return resolvedSegments;
 }
 
 function resolveOperand(
@@ -451,11 +428,11 @@ function resolveAttrVal(
 }
 
 function checkPath(
-	path: (string | number)[],
-	paths: (string | number)[][],
+	path: PathExpression,
+	paths: PathExpression[],
 	errors: Record<string, string>,
 ) {
-	if (errors.pathOverlap || !Array.isArray(path)) {
+	if (errors.pathOverlap || errors.pathConflict) {
 		return;
 	}
 	for (let i = 0; i < paths.length; i++) {
@@ -468,28 +445,20 @@ function checkPath(
 }
 
 function checkPaths(
-	path1: (string | number)[],
-	path2: (string | number)[],
+	path1: PathExpression,
+	path2: PathExpression,
 	errors: Record<string, string>,
 ) {
-	for (let i = 0; i < path1.length && i < path2.length; i++) {
-		if (typeof path1[i] !== typeof path2[i]) {
-			errors.pathConflict = `Two document paths conflict with each other; must remove or rewrite one of these paths; path one: ${pathStr(path1)}, path two: ${pathStr(path2)}`;
+	for (let i = 0; i < path1.size() && i < path2.size(); i++) {
+		if (path1.at(i)?.isArrayIndex !== path2.at(i)?.isArrayIndex) {
+			errors.pathConflict = `Two document paths conflict with each other; must remove or rewrite one of these paths; path one: ${path1}, path two: ${path2}`;
 			return;
 		}
-		if (path1[i] !== path2[i]) return;
+		if (path1.at(i)?.value() !== path2.at(i)?.value()) return;
 	}
 	if (!errors.pathOverlap) {
-		errors.pathOverlap = `Two document paths overlap with each other; must remove or rewrite one of these paths; path one: ${pathStr(path1)}, path two: ${pathStr(path2)}`;
+		errors.pathOverlap = `Two document paths overlap with each other; must remove or rewrite one of these paths; path one: ${path1}, path two: ${path2}`;
 	}
-}
-
-function pathStr(path: (string | number)[]): string {
-	return `[${path
-		.map((piece) => {
-			return typeof piece === "number" ? `[${piece}]` : piece;
-		})
-		.join(", ")}]`;
 }
 
 function checkOperator(

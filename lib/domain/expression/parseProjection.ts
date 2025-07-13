@@ -1,5 +1,5 @@
 import type { QueryCommandInput } from "@aws-sdk/client-dynamodb";
-import type { PathSegment } from "./PathSegment";
+import type { PathExpression } from "./PathExpression";
 import type { Context } from "./context";
 import projectionParser from "./projection-grammar";
 
@@ -7,11 +7,6 @@ import projectionParser from "./projection-grammar";
 export type ProjectionExpression = {
 	type: "ProjectionExpression";
 	paths: PathExpression[];
-};
-
-export type PathExpression = {
-	type: "PathExpression";
-	segments: PathSegment[];
 };
 
 export function parseProjection(
@@ -35,12 +30,10 @@ export function parseProjection(
 		pathConflict?: string;
 	} = {};
 
-	const paths: PathSegment[][] = [];
+	const paths: PathExpression[] = [];
 
 	// Process each path for validation
 	for (const pathExpr of ast.paths) {
-		const path: PathSegment[] = [];
-
 		// Process segments
 		for (const segment of pathExpr.segments) {
 			if (segment.type === "Identifier") {
@@ -54,15 +47,14 @@ export function parseProjection(
 					errors.attrNameVal = `An expression attribute name used in the document path is not defined; attribute name: ${segment}`;
 				}
 			}
-			path.push(segment);
 		}
 
 		// Check for path conflicts/overlaps
 		if (!errors.pathOverlap && !errors.pathConflict) {
-			checkPath(path, paths, errors);
+			checkPath(pathExpr, paths, errors);
 		}
 
-		paths.push(path);
+		paths.push(pathExpr);
 	}
 
 	// Check errors in order
@@ -82,8 +74,8 @@ export function parseProjection(
 }
 
 function checkPath(
-	newPath: PathSegment[],
-	existingPaths: PathSegment[][],
+	newPath: PathExpression,
+	existingPaths: PathExpression[],
 	errors: {
 		pathOverlap?: string;
 		pathConflict?: string;
@@ -98,24 +90,20 @@ function checkPath(
 }
 
 function checkPaths(
-	path1: PathSegment[],
-	path2: PathSegment[],
+	path1: PathExpression,
+	path2: PathExpression,
 	errors: {
 		pathOverlap?: string;
 		pathConflict?: string;
 	},
 ) {
-	for (let i = 0; i < path1.length && i < path2.length; i++) {
-		if (path1[i].isArrayIndex !== path2[i].isArrayIndex) {
-			errors.pathConflict = `Two document paths conflict with each other; must remove or rewrite one of these paths; path one: ${pathStr(path1)}, path two: ${pathStr(path2)}`;
+	for (let i = 0; i < path1.size() && i < path2.size(); i++) {
+		if (path1.at(i)?.isArrayIndex !== path2.at(i)?.isArrayIndex) {
+			errors.pathConflict = `Two document paths conflict with each other; must remove or rewrite one of these paths; path one: ${path1}, path two: ${path2}`;
 			return;
 		}
-		if (path1[i].value() !== path2[i].value()) return;
+		if (path1.at(i)?.value() !== path2.at(i)?.value()) return;
 	}
 
-	errors.pathOverlap = `Two document paths overlap with each other; must remove or rewrite one of these paths; path one: ${pathStr(path1)}, path two: ${pathStr(path2)}`;
-}
-
-function pathStr(path: PathSegment[]): string {
-	return `[${path.map((seg) => seg.toString()).join(", ")}]`;
+	errors.pathOverlap = `Two document paths overlap with each other; must remove or rewrite one of these paths; path one: ${path1}, path two: ${path2}`;
 }
