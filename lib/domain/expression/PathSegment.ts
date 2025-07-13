@@ -16,10 +16,7 @@ interface IPathSegment {
 export class IdentifierPathSegment implements IPathSegment {
 	public readonly type = "Identifier" as const;
 	public readonly isArrayIndex = false;
-	constructor(
-		private readonly name: string,
-		private readonly context: Context,
-	) {}
+	constructor(private readonly name: string) {}
 
 	isReserved(): boolean {
 		return isReserved(this.name);
@@ -36,10 +33,7 @@ export class IdentifierPathSegment implements IPathSegment {
 export class ArrayIndexPathSegment implements IPathSegment {
 	public readonly type = "ArrayIndex" as const;
 	public readonly isArrayIndex = true;
-	constructor(
-		private readonly index: number,
-		private readonly context: Context,
-	) {}
+	constructor(private readonly index: number) {}
 
 	value(): number {
 		return this.index;
@@ -54,15 +48,15 @@ export class AliasPathSegment implements IPathSegment {
 	public readonly isArrayIndex = false;
 	constructor(
 		private readonly name: string,
-		private readonly context: Context,
+		private readonly attrNameMap: Record<string, string>,
 	) {}
 
 	isUnresolvable(): boolean {
-		return !this.context.attrNameMap[this.name];
+		return !this.attrNameMap[this.name];
 	}
 
 	value(): string {
-		return this.context.attrNameMap[this.name] ?? "";
+		return this.attrNameMap[this.name] ?? "";
 	}
 
 	toString(): string {
