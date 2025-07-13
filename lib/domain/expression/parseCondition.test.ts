@@ -11,7 +11,9 @@ describe("parseCondition", () => {
 			args: [
 				{
 					type: "PathExpression",
-					segments: [{ type: "Identifier", name: "Attr1" }],
+					segments: [
+						expect.objectContaining({ type: "Identifier", name: "Attr1" }),
+					],
 				},
 				{ type: "AttributeValue", name: ":v1" },
 			],
@@ -26,7 +28,10 @@ describe("parseCondition", () => {
 		expect(result).toEqual({
 			type: ">",
 			args: [
-				{ type: "PathExpression", segments: [{ type: "Alias", name: "#p" }] },
+				{
+					type: "PathExpression",
+					segments: [expect.objectContaining({ type: "Alias", name: "#p" })],
+				},
 				{ type: "AttributeValue", name: ":v1" },
 			],
 		});
@@ -43,7 +48,10 @@ describe("parseCondition", () => {
 		expect(result).toEqual({
 			type: "between",
 			args: [
-				{ type: "PathExpression", segments: [{ type: "Alias", name: "#p" }] },
+				{
+					type: "PathExpression",
+					segments: [expect.objectContaining({ type: "Alias", name: "#p" })],
+				},
 				{ type: "AttributeValue", name: ":lo" },
 				{ type: "AttributeValue", name: ":hi" },
 			],
@@ -63,7 +71,7 @@ describe("parseCondition", () => {
 			args: [
 				{
 					type: "PathExpression",
-					segments: [{ type: "Alias", name: "#cat" }],
+					segments: [expect.objectContaining({ type: "Alias", name: "#cat" })],
 				},
 				{ type: "AttributeValue", name: ":c1" },
 				{ type: "AttributeValue", name: ":c2" },
@@ -82,7 +90,7 @@ describe("parseCondition", () => {
 			args: [
 				{
 					type: "PathExpression",
-					segments: [{ type: "Alias", name: "#id" }],
+					segments: [expect.objectContaining({ type: "Alias", name: "#id" })],
 				},
 			],
 			attrType: null,
@@ -114,7 +122,9 @@ describe("parseCondition", () => {
 					args: [
 						{
 							type: "PathExpression",
-							segments: [{ type: "Alias", name: "#s" }],
+							segments: [
+								expect.objectContaining({ type: "Alias", name: "#s" }),
+							],
 						},
 						{ type: "AttributeValue", name: ":prefix" },
 					],
@@ -128,7 +138,9 @@ describe("parseCondition", () => {
 							args: [
 								{
 									type: "PathExpression",
-									segments: [{ type: "Alias", name: "#p" }],
+									segments: [
+										expect.objectContaining({ type: "Alias", name: "#p" }),
+									],
 								},
 								{ type: "AttributeValue", name: ":val" },
 							],
@@ -141,7 +153,12 @@ describe("parseCondition", () => {
 									args: [
 										{
 											type: "PathExpression",
-											segments: [{ type: "Alias", name: "#cat" }],
+											segments: [
+												expect.objectContaining({
+													type: "Alias",
+													name: "#cat",
+												}),
+											],
 										},
 										{ type: "AttributeValue", name: ":c" },
 									],

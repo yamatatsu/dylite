@@ -10,11 +10,15 @@ describe("parseProjection", () => {
 			paths: [
 				{
 					type: "PathExpression",
-					segments: [{ type: "Identifier", name: "Attr1" }],
+					segments: [
+						expect.objectContaining({ type: "Identifier", name: "Attr1" }),
+					],
 				},
 				{
 					type: "PathExpression",
-					segments: [{ type: "Identifier", name: "Attr2" }],
+					segments: [
+						expect.objectContaining({ type: "Identifier", name: "Attr2" }),
+					],
 				},
 			],
 		});
@@ -32,11 +36,11 @@ describe("parseProjection", () => {
 			paths: [
 				{
 					type: "PathExpression",
-					segments: [{ type: "Alias", name: "#n" }],
+					segments: [expect.objectContaining({ type: "Alias", name: "#n" })],
 				},
 				{
 					type: "PathExpression",
-					segments: [{ type: "Alias", name: "#a" }],
+					segments: [expect.objectContaining({ type: "Alias", name: "#a" })],
 				},
 			],
 		});
@@ -54,13 +58,13 @@ describe("parseProjection", () => {
 				{
 					type: "PathExpression",
 					segments: [
-						{ type: "Identifier", name: "Product" },
-						{ type: "Identifier", name: "Price" },
+						expect.objectContaining({ type: "Identifier", name: "Product" }),
+						expect.objectContaining({ type: "Identifier", name: "Price" }),
 					],
 				},
 				{
 					type: "PathExpression",
-					segments: [{ type: "Alias", name: "#b" }],
+					segments: [expect.objectContaining({ type: "Alias", name: "#b" })],
 				},
 			],
 		});
@@ -79,16 +83,16 @@ describe("parseProjection", () => {
 				{
 					type: "PathExpression",
 					segments: [
-						{ type: "Alias", name: "#i" },
-						{ type: "ArrayIndex", index: 0 },
+						expect.objectContaining({ type: "Alias", name: "#i" }),
+						expect.objectContaining({ type: "ArrayIndex", index: 0 }),
 					],
 				},
 				{
 					type: "PathExpression",
 					segments: [
-						{ type: "Alias", name: "#i" },
-						{ type: "ArrayIndex", index: 1 },
-						{ type: "Alias", name: "#n" },
+						expect.objectContaining({ type: "Alias", name: "#i" }),
+						expect.objectContaining({ type: "ArrayIndex", index: 1 }),
+						expect.objectContaining({ type: "Alias", name: "#n" }),
 					],
 				},
 			],
@@ -107,24 +111,26 @@ describe("parseProjection", () => {
 			paths: [
 				{
 					type: "PathExpression",
-					segments: [{ type: "Identifier", name: "Id" }],
+					segments: [
+						expect.objectContaining({ type: "Identifier", name: "Id" }),
+					],
 				},
 				{
 					type: "PathExpression",
-					segments: [{ type: "Alias", name: "#n" }],
+					segments: [expect.objectContaining({ type: "Alias", name: "#n" })],
 				},
 				{
 					type: "PathExpression",
 					segments: [
-						{ type: "Identifier", name: "Product" },
-						{ type: "Identifier", name: "Price" },
+						expect.objectContaining({ type: "Identifier", name: "Product" }),
+						expect.objectContaining({ type: "Identifier", name: "Price" }),
 					],
 				},
 				{
 					type: "PathExpression",
 					segments: [
-						{ type: "Alias", name: "#i" },
-						{ type: "ArrayIndex", index: 0 },
+						expect.objectContaining({ type: "Alias", name: "#i" }),
+						expect.objectContaining({ type: "ArrayIndex", index: 0 }),
 					],
 				},
 			],

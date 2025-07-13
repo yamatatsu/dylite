@@ -1,11 +1,7 @@
-import type { QueryCommandInput } from "@aws-sdk/client-dynamodb";
-import isReserved from "./isReserved";
+import type { AttributeValue } from "../types";
+import type { PathSegment } from "./PathSegment";
+import type { Context } from "./context";
 import updateParser from "./update-grammar";
-
-type PathSegment =
-	| { type: "Identifier"; name: string }
-	| { type: "Alias"; name: string }
-	| { type: "ArrayIndex"; index: number };
 
 type PathExpression = {
 	type: "PathExpression";
@@ -70,17 +66,22 @@ type UpdateExpressionAST = {
 export function parseUpdate(
 	expression: string,
 	options: {
-		ExpressionAttributeNames: QueryCommandInput["ExpressionAttributeNames"];
-		ExpressionAttributeValues: QueryCommandInput["ExpressionAttributeValues"];
+		ExpressionAttributeNames: Record<string, string> | undefined;
+		ExpressionAttributeValues: Record<string, AttributeValue> | undefined;
 	},
 ) {
-	const context = {
+	const context: Context = {
+		attrNameMap: options.ExpressionAttributeNames ?? {},
+		attrValMap: options.ExpressionAttributeValues ?? {},
+	};
+
+	const validationContext = {
 		attrNames: options.ExpressionAttributeNames,
 		attrVals: options.ExpressionAttributeValues,
 	};
 
 	// Parse to AST
-	const ast: UpdateExpressionAST = updateParser.parse(expression);
+	const ast: UpdateExpressionAST = updateParser.parse(expression, { context });
 
 	// Process AST: resolve aliases and validate
 	const errors: Record<string, string> = {};
@@ -102,11 +103,11 @@ export function parseUpdate(
 			let processedExpr: unknown;
 
 			// Validate path and check for errors, but keep AST structure
-			validatePath(expr.path, context, errors);
+			validatePath(expr.path, validationContext, errors);
 			if (errors.attrName || errors.reserved) break;
 
 			// Still resolve path for internal tracking
-			const resolvedPath = resolvePath(expr.path, context, errors);
+			const resolvedPath = resolvePath(expr.path, validationContext, errors);
 			if (errors.attrName || errors.reserved) break;
 
 			// Check path conflicts
@@ -115,10 +116,14 @@ export function parseUpdate(
 
 			switch (expr.type) {
 				case "SetExpression": {
-					const resolvedValue = resolveOperand(expr.value, context, errors);
+					const resolvedValue = resolveOperand(
+						expr.value,
+						validationContext,
+						errors,
+					);
 					if (hasError(errors)) break;
 
-					const attrType = getType(resolvedValue, context);
+					const attrType = getType(resolvedValue, validationContext);
 					processedExpr = {
 						type: "set",
 						path: expr.path,
@@ -136,12 +141,21 @@ export function parseUpdate(
 				}
 				case "AddExpression": {
 					// Validate value but keep AST structure
-					validateValue(expr.value, context, errors);
+					validateValue(expr.value, validationContext, errors);
 					if (errors.attrVal) break;
 
 					// For type checking, we need the resolved value
-					const resolvedValue = resolveValue(expr.value, context, errors);
-					const attrType = checkOperator("ADD", resolvedValue, context, errors);
+					const resolvedValue = resolveValue(
+						expr.value,
+						validationContext,
+						errors,
+					);
+					const attrType = checkOperator(
+						"ADD",
+						resolvedValue,
+						validationContext,
+						errors,
+					);
 					if (hasError(errors)) break;
 
 					processedExpr = {
@@ -154,15 +168,19 @@ export function parseUpdate(
 				}
 				case "DeleteExpression": {
 					// Validate value but keep AST structure
-					validateValue(expr.value, context, errors);
+					validateValue(expr.value, validationContext, errors);
 					if (errors.attrVal) break;
 
 					// For type checking, we need the resolved value
-					const resolvedValue = resolveValue(expr.value, context, errors);
+					const resolvedValue = resolveValue(
+						expr.value,
+						validationContext,
+						errors,
+					);
 					const attrType = checkOperator(
 						"DELETE",
 						resolvedValue,
-						context,
+						validationContext,
 						errors,
 					);
 					if (hasError(errors)) break;
@@ -192,50 +210,43 @@ export function parseUpdate(
 	return processedSections;
 }
 
-type Context = {
+type ValidationContext = {
 	attrNames?: Record<string, string>;
 	attrVals?: Record<string, unknown>;
 };
 
 function validatePath(
 	path: PathExpression,
-	context: Context,
+	context: ValidationContext,
 	errors: Record<string, string>,
 ): void {
 	for (let i = 0; i < path.segments.length; i++) {
 		const segment = path.segments[i];
 
 		if (segment.type === "Identifier") {
-			checkReserved(segment.name, isReserved, errors);
+			if (!errors.reserved && segment.isReserved()) {
+				errors.reserved = `Attribute name is a reserved keyword; reserved keyword: ${segment.toString()}`;
+			}
 			if (errors.reserved) return;
 		} else if (segment.type === "Alias") {
-			const resolved = resolveAttrName(segment.name, context, errors);
-			if (errors.attrName || resolved === null) return;
+			if (!errors.attrName && segment.isUnresolvable()) {
+				errors.attrName = `An expression attribute name used in the document path is not defined; attribute name: ${segment.toString()}`;
+			}
+			if (errors.attrName) return;
 		}
 	}
 }
 
 function resolvePath(
 	path: PathExpression,
-	context: Context,
+	context: ValidationContext,
 	errors: Record<string, string>,
 ): (string | number)[] {
 	const resolvedSegments: (string | number)[] = [];
 
 	for (let i = 0; i < path.segments.length; i++) {
 		const segment = path.segments[i];
-
-		if (segment.type === "Identifier") {
-			checkReserved(segment.name, isReserved, errors);
-			if (errors.reserved) return [];
-			resolvedSegments.push(segment.name);
-		} else if (segment.type === "Alias") {
-			const resolved = resolveAttrName(segment.name, context, errors);
-			if (errors.attrName || resolved === null) return [];
-			resolvedSegments.push(resolved);
-		} else if (segment.type === "ArrayIndex") {
-			resolvedSegments.push(segment.index);
-		}
+		resolvedSegments.push(segment.value());
 	}
 
 	return resolvedSegments;
@@ -243,7 +254,7 @@ function resolvePath(
 
 function resolveOperand(
 	operand: Operand,
-	context: Context,
+	context: ValidationContext,
 	errors: Record<string, string>,
 ): unknown {
 	if (operand.type === "PathExpression") {
@@ -286,7 +297,7 @@ function resolveOperand(
 
 function validateValue(
 	value: Value,
-	context: Context,
+	context: ValidationContext,
 	errors: Record<string, string>,
 ): void {
 	if (
@@ -303,7 +314,7 @@ function validateValue(
 
 function resolveValue(
 	value: Value,
-	context: Context,
+	context: ValidationContext,
 	errors: Record<string, string>,
 ): unknown {
 	if (
@@ -320,7 +331,7 @@ function resolveValue(
 
 function resolveFunction(
 	func: FunctionCall,
-	context: Context,
+	context: ValidationContext,
 	errors: Record<string, string>,
 ): unknown {
 	const resolvedArgs: unknown[] = [];
@@ -342,20 +353,10 @@ function resolveFunction(
 	};
 }
 
-function checkReserved(
-	name: string,
-	isReserved: (name: string) => boolean,
-	errors: Record<string, string>,
-) {
-	if (isReserved(name) && !errors.reserved) {
-		errors.reserved = `Attribute name is a reserved keyword; reserved keyword: ${name}`;
-	}
-}
-
 function checkFunction(
 	name: string,
 	args: unknown[],
-	context: Context,
+	context: ValidationContext,
 	errors: Record<string, string>,
 ): string | null {
 	if (errors.unknownFunction) {
@@ -421,7 +422,7 @@ function checkFunction(
 
 function resolveAttrName(
 	name: string,
-	context: Context,
+	context: ValidationContext,
 	errors: Record<string, string>,
 ): string | null {
 	if (errors.attrName) {
@@ -436,7 +437,7 @@ function resolveAttrName(
 
 function resolveAttrVal(
 	name: string,
-	context: Context,
+	context: ValidationContext,
 	errors: Record<string, string>,
 ): unknown {
 	if (errors.attrVal) {
@@ -494,7 +495,7 @@ function pathStr(path: (string | number)[]): string {
 function checkOperator(
 	operator: string,
 	val: unknown,
-	context: Context,
+	context: ValidationContext,
 	errors: Record<string, string>,
 ): string | null {
 	if (errors.operand || !val) {
@@ -523,7 +524,7 @@ function checkOperator(
 	return type;
 }
 
-function getType(val: unknown, context?: Context): string | null {
+function getType(val: unknown, context?: ValidationContext): string | null {
 	if (!val || typeof val !== "object" || Array.isArray(val)) return null;
 	if (val && typeof val === "object" && "attrType" in val) {
 		return (val as { attrType: string }).attrType;

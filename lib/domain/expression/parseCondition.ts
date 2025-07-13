@@ -1,18 +1,12 @@
-import type { QueryCommandInput } from "@aws-sdk/client-dynamodb";
 import { compare } from "../compare";
 import type { AttributeValue } from "../types";
+import type { PathSegment } from "./PathSegment";
 import conditionParser from "./condition-grammar";
-import isReserved from "./isReserved";
+import type { Context } from "./context";
 
 // Type for compare function
 type AttrVal = string | boolean | string[];
 type Attr = Record<string, AttrVal>;
-
-// AST Types - unified with projection and update parsers
-type PathSegment =
-	| { type: "Identifier"; name: string }
-	| { type: "ArrayIndex"; index: number }
-	| { type: "Alias"; name: string };
 
 type PathExpression = {
 	type: "PathExpression";
@@ -85,15 +79,19 @@ type ValidationErrors = {
 export function parseCondition(
 	expression: string,
 	options: {
-		ExpressionAttributeNames: QueryCommandInput["ExpressionAttributeNames"];
-		ExpressionAttributeValues: QueryCommandInput["ExpressionAttributeValues"];
+		ExpressionAttributeNames: Record<string, string> | undefined;
+		ExpressionAttributeValues: Record<string, AttributeValue> | undefined;
 	},
 ) {
-	// Parse the expression to get raw AST
-	const ast = conditionParser.parse(expression) as ASTNode;
+	// Parse the expression to get raw AST with context
+	const context: Context = {
+		attrNameMap: options.ExpressionAttributeNames ?? {},
+		attrValMap: options.ExpressionAttributeValues ?? {},
+	};
+	const ast = conditionParser.parse(expression, { context }) as ASTNode;
 
 	// Create validation context
-	const context: ValidationContext = {
+	const validationContext: ValidationContext = {
 		attrNames: options.ExpressionAttributeNames,
 		attrVals: options.ExpressionAttributeValues as
 			| Record<string, AttributeValue>
@@ -106,7 +104,7 @@ export function parseCondition(
 	const errors: ValidationErrors = {};
 
 	// Process the AST: validate and resolve aliases
-	const processedAst = processNode(ast, context, errors, true);
+	const processedAst = processNode(ast, validationContext, errors, true);
 
 	// Check if size() is used at top level
 	if (
@@ -160,11 +158,15 @@ function processNode(
 		// Validate segments
 		for (const segment of node.segments) {
 			if (segment.type === "Identifier") {
-				checkReserved(segment.name, errors);
+				if (!errors.reserved && segment.isReserved()) {
+					errors.reserved = `Attribute name is a reserved keyword; reserved keyword: ${segment.toString()}`;
+				}
 				if (errors.reserved) return node;
 			} else if (segment.type === "Alias") {
-				const resolved = resolveAttrName(segment.name, context, errors);
-				if (resolved === undefined) return node;
+				if (!errors.attrNameVal && segment.isUnresolvable()) {
+					errors.attrNameVal = `An expression attribute name used in the document path is not defined; attribute name: ${segment.toString()}`;
+				}
+				if (errors.attrNameVal) return node;
 			}
 		}
 
@@ -345,12 +347,6 @@ function isAttributeValue(node: unknown): node is AttributeValue {
 	return attributeTypes.some((type) => type in node);
 }
 
-function checkReserved(name: string, errors: ValidationErrors) {
-	if (isReserved(name) && !errors.reserved) {
-		errors.reserved = `Attribute name is a reserved keyword; reserved keyword: ${name}`;
-	}
-}
-
 function resolveAttrName(
 	name: string,
 	context: ValidationContext,
@@ -521,16 +517,12 @@ function checkDistinct(
 		const seg1 = path1.segments[i];
 		const seg2 = path2.segments[i];
 
-		if (seg1.type !== seg2.type) {
+		if (seg1.isArrayIndex !== seg2.isArrayIndex) {
 			return;
 		}
 
-		if (seg1.type === "Identifier" && seg2.type === "Identifier") {
-			if (seg1.name !== seg2.name) return;
-		} else if (seg1.type === "Alias" && seg2.type === "Alias") {
-			if (seg1.name !== seg2.name) return;
-		} else if (seg1.type === "ArrayIndex" && seg2.type === "ArrayIndex") {
-			if (seg1.index !== seg2.index) return;
+		if (seg1.value() !== seg2.value()) {
+			return;
 		}
 	}
 
@@ -591,19 +583,7 @@ function pathStr(path: (string | number)[]): string {
 }
 
 function pathToString(pathExpr: PathExpression): string {
-	const parts = pathExpr.segments.map((segment) => {
-		if (segment.type === "Identifier") {
-			return segment.name;
-		}
-		if (segment.type === "Alias") {
-			return segment.name;
-		}
-		if (segment.type === "ArrayIndex") {
-			return `[${segment.index}]`;
-		}
-		return "";
-	});
-	return `[${parts.join(", ")}]`;
+	return `[${pathExpr.segments.map((seg) => seg.toString()).join(", ")}]`;
 }
 
 function getType(val: ASTNode, context?: ValidationContext): string | null {

@@ -1,5 +1,6 @@
 import type { QueryCommandInput } from "@aws-sdk/client-dynamodb";
-import isReserved from "./isReserved";
+import type { PathSegment } from "./PathSegment";
+import type { Context } from "./context";
 import projectionParser from "./projection-grammar";
 
 // AST Types
@@ -13,18 +14,18 @@ export type PathExpression = {
 	segments: PathSegment[];
 };
 
-export type PathSegment =
-	| { type: "Identifier"; name: string }
-	| { type: "ArrayIndex"; index: number }
-	| { type: "Alias"; name: string };
-
 export function parseProjection(
 	expression: string,
 	options: {
 		ExpressionAttributeNames: QueryCommandInput["ExpressionAttributeNames"];
 	},
 ): ProjectionExpression | string {
-	const ast: ProjectionExpression = projectionParser.parse(expression);
+	const ast: ProjectionExpression = projectionParser.parse(expression, {
+		context: {
+			attrNameMap: options.ExpressionAttributeNames ?? {},
+			attrValMap: {},
+		} satisfies Context,
+	});
 
 	// Validate AST
 	const errors: {
@@ -34,36 +35,26 @@ export function parseProjection(
 		pathConflict?: string;
 	} = {};
 
-	const paths: (string | number)[][] = [];
+	const paths: PathSegment[][] = [];
 
 	// Process each path for validation
 	for (const pathExpr of ast.paths) {
-		const path: (string | number)[] = [];
+		const path: PathSegment[] = [];
 
 		// Process segments
 		for (const segment of pathExpr.segments) {
 			if (segment.type === "Identifier") {
 				// Check for reserved words
-				if (!errors.reserved && isReserved(segment.name)) {
-					errors.reserved = `Attribute name is a reserved keyword; reserved keyword: ${segment.name}`;
+				if (!errors.reserved && segment.isReserved()) {
+					errors.reserved = `Attribute name is a reserved keyword; reserved keyword: ${segment}`;
 				}
-				path.push(segment.name);
 			} else if (segment.type === "Alias") {
 				// Validate alias
-				if (!errors.attrNameVal) {
-					const attrName = options.ExpressionAttributeNames?.[segment.name];
-					if (!attrName) {
-						errors.attrNameVal = `An expression attribute name used in the document path is not defined; attribute name: ${segment.name}`;
-					} else {
-						path.push(attrName);
-					}
-				} else {
-					// If there's already an error, just push empty to maintain path structure
-					path.push("");
+				if (!errors.attrNameVal && segment.isUnresolvable()) {
+					errors.attrNameVal = `An expression attribute name used in the document path is not defined; attribute name: ${segment}`;
 				}
-			} else if (segment.type === "ArrayIndex") {
-				path.push(segment.index);
 			}
+			path.push(segment);
 		}
 
 		// Check for path conflicts/overlaps
@@ -91,8 +82,8 @@ export function parseProjection(
 }
 
 function checkPath(
-	newPath: (string | number)[],
-	existingPaths: (string | number)[][],
+	newPath: PathSegment[],
+	existingPaths: PathSegment[][],
 	errors: {
 		pathOverlap?: string;
 		pathConflict?: string;
@@ -107,28 +98,24 @@ function checkPath(
 }
 
 function checkPaths(
-	path1: (string | number)[],
-	path2: (string | number)[],
+	path1: PathSegment[],
+	path2: PathSegment[],
 	errors: {
 		pathOverlap?: string;
 		pathConflict?: string;
 	},
 ) {
 	for (let i = 0; i < path1.length && i < path2.length; i++) {
-		if (typeof path1[i] !== typeof path2[i]) {
+		if (path1[i].isArrayIndex !== path2[i].isArrayIndex) {
 			errors.pathConflict = `Two document paths conflict with each other; must remove or rewrite one of these paths; path one: ${pathStr(path1)}, path two: ${pathStr(path2)}`;
 			return;
 		}
-		if (path1[i] !== path2[i]) return;
+		if (path1[i].value() !== path2[i].value()) return;
 	}
 
 	errors.pathOverlap = `Two document paths overlap with each other; must remove or rewrite one of these paths; path one: ${pathStr(path1)}, path two: ${pathStr(path2)}`;
 }
 
-function pathStr(path: (string | number)[]): string {
-	return `[${path
-		.map((piece) => {
-			return typeof piece === "number" ? `[${piece}]` : piece;
-		})
-		.join(", ")}]`;
+function pathStr(path: PathSegment[]): string {
+	return `[${path.map((seg) => seg.toString()).join(", ")}]`;
 }

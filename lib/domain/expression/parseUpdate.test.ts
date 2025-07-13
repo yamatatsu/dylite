@@ -14,7 +14,7 @@ describe("parseUpdate", () => {
 				type: "set",
 				path: {
 					type: "PathExpression",
-					segments: [{ type: "Alias", name: "#p" }],
+					segments: [expect.objectContaining({ type: "Alias", name: "#p" })],
 				},
 				val: { type: "AttributeValue", name: ":p" },
 				attrType: "N",
@@ -23,7 +23,7 @@ describe("parseUpdate", () => {
 				type: "set",
 				path: {
 					type: "PathExpression",
-					segments: [{ type: "Alias", name: "#c" }],
+					segments: [expect.objectContaining({ type: "Alias", name: "#c" })],
 				},
 				val: { type: "AttributeValue", name: ":c" },
 				attrType: "S",
@@ -41,7 +41,7 @@ describe("parseUpdate", () => {
 				type: "set",
 				path: {
 					type: "PathExpression",
-					segments: [{ type: "Alias", name: "#p" }],
+					segments: [expect.objectContaining({ type: "Alias", name: "#p" })],
 				},
 				val: {
 					type: "function",
@@ -49,7 +49,9 @@ describe("parseUpdate", () => {
 					args: [
 						{
 							type: "PathExpression",
-							segments: [{ type: "Alias", name: "#p" }],
+							segments: [
+								expect.objectContaining({ type: "Alias", name: "#p" }),
+							],
 						},
 						{ type: "AttributeValue", name: ":p" },
 					],
@@ -70,14 +72,14 @@ describe("parseUpdate", () => {
 				type: "remove",
 				path: {
 					type: "PathExpression",
-					segments: [{ type: "Alias", name: "#s" }],
+					segments: [expect.objectContaining({ type: "Alias", name: "#s" })],
 				},
 			},
 			{
 				type: "remove",
 				path: {
 					type: "PathExpression",
-					segments: [{ type: "Alias", name: "#d" }],
+					segments: [expect.objectContaining({ type: "Alias", name: "#d" })],
 				},
 			},
 		]);
@@ -93,7 +95,7 @@ describe("parseUpdate", () => {
 				type: "add",
 				path: {
 					type: "PathExpression",
-					segments: [{ type: "Alias", name: "#q" }],
+					segments: [expect.objectContaining({ type: "Alias", name: "#q" })],
 				},
 				val: { type: "AttributeValue", name: ":v" },
 				attrType: "N",
@@ -111,7 +113,7 @@ describe("parseUpdate", () => {
 				type: "delete",
 				path: {
 					type: "PathExpression",
-					segments: [{ type: "Alias", name: "#c" }],
+					segments: [expect.objectContaining({ type: "Alias", name: "#c" })],
 				},
 				val: { type: "AttributeValue", name: ":v" },
 				attrType: "SS",
@@ -129,7 +131,7 @@ describe("parseUpdate", () => {
 				type: "set",
 				path: {
 					type: "PathExpression",
-					segments: [{ type: "Alias", name: "#p" }],
+					segments: [expect.objectContaining({ type: "Alias", name: "#p" })],
 				},
 				val: { type: "AttributeValue", name: ":p" },
 				attrType: "N",
@@ -138,14 +140,16 @@ describe("parseUpdate", () => {
 				type: "remove",
 				path: {
 					type: "PathExpression",
-					segments: [{ type: "Identifier", name: "OldAttr" }],
+					segments: [
+						expect.objectContaining({ type: "Identifier", name: "OldAttr" }),
+					],
 				},
 			},
 			{
 				type: "add",
 				path: {
 					type: "PathExpression",
-					segments: [{ type: "Alias", name: "#q" }],
+					segments: [expect.objectContaining({ type: "Alias", name: "#q" })],
 				},
 				val: { type: "AttributeValue", name: ":v" },
 				attrType: "N",
