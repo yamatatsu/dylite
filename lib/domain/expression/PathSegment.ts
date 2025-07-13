@@ -17,7 +17,7 @@ export class IdentifierPathSegment implements IPathSegment {
 	public readonly type = "Identifier" as const;
 	public readonly isArrayIndex = false;
 	constructor(
-		public name: string,
+		private name: string,
 		private context: Context,
 	) {}
 
@@ -37,7 +37,7 @@ export class ArrayIndexPathSegment implements IPathSegment {
 	public readonly type = "ArrayIndex" as const;
 	public readonly isArrayIndex = true;
 	constructor(
-		public index: number,
+		private index: number,
 		private context: Context,
 	) {}
 
@@ -53,7 +53,7 @@ export class AliasPathSegment implements IPathSegment {
 	public readonly type = "Alias" as const;
 	public readonly isArrayIndex = false;
 	constructor(
-		public name: string,
+		private name: string,
 		private context: Context,
 	) {}
 
