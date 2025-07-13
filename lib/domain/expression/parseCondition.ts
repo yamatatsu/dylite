@@ -150,22 +150,15 @@ function processNode(
 
 	// Handle paths - keep AST structure, validate internally
 	if (isPathExpression(node)) {
-		// Validate segments
-		for (let i = 0; i < node.size(); i++) {
-			const segment = node.at(i);
-			if (!segment) continue;
+		const reserved = node.getReservedWord();
+		if (reserved) {
+			errors.reserved ??= `Attribute name is a reserved keyword; reserved keyword: ${reserved}`;
+		}
+		if (errors.reserved) return node;
 
-			if (segment.type === "Identifier") {
-				if (!errors.reserved && segment.isReserved()) {
-					errors.reserved = `Attribute name is a reserved keyword; reserved keyword: ${segment}`;
-				}
-				if (errors.reserved) return node;
-			} else if (segment.type === "Alias") {
-				if (!errors.attrNameVal && segment.isUnresolvable()) {
-					errors.attrNameVal = `An expression attribute name used in the document path is not defined; attribute name: ${segment}`;
-				}
-				if (errors.attrNameVal) return node;
-			}
+		const unresolvableAlias = node.getUnresolvableAlias();
+		if (unresolvableAlias) {
+			errors.attrNameVal ??= `An expression attribute name used in the document path is not defined; attribute name: ${unresolvableAlias}`;
 		}
 
 		// Return the original AST structure

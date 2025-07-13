@@ -98,7 +98,7 @@ export function parseUpdate(
 			let processedExpr: unknown;
 
 			// Validate path and check for errors, but keep AST structure
-			validatePath(expr.path, validationContext, errors);
+			validatePath(expr.path, errors);
 			if (errors.attrName || errors.reserved) break;
 
 			// Check path conflicts
@@ -208,24 +208,17 @@ type ValidationContext = {
 
 function validatePath(
 	path: PathExpression,
-	context: ValidationContext,
 	errors: Record<string, string>,
 ): void {
-	for (let i = 0; i < path.size(); i++) {
-		const segment = path.at(i);
-		if (!segment) continue;
+	const reserved = path.getReservedWord();
+	if (reserved) {
+		errors.reserved ??= `Attribute name is a reserved keyword; reserved keyword: ${reserved}`;
+	}
+	if (errors.reserved) return;
 
-		if (segment.type === "Identifier") {
-			if (!errors.reserved && segment.isReserved()) {
-				errors.reserved = `Attribute name is a reserved keyword; reserved keyword: ${segment.toString()}`;
-			}
-			if (errors.reserved) return;
-		} else if (segment.type === "Alias") {
-			if (!errors.attrName && segment.isUnresolvable()) {
-				errors.attrName = `An expression attribute name used in the document path is not defined; attribute name: ${segment.toString()}`;
-			}
-			if (errors.attrName) return;
-		}
+	const unresolvableAlias = path.getUnresolvableAlias();
+	if (unresolvableAlias) {
+		errors.attrName ??= `An expression attribute name used in the document path is not defined; attribute name: ${unresolvableAlias}`;
 	}
 }
 
@@ -236,7 +229,7 @@ function resolveOperand(
 ): unknown {
 	if (operand.type === "PathExpression") {
 		// Keep PathExpression as AST, but validate it
-		validatePath(operand as PathExpression, context, errors);
+		validatePath(operand as PathExpression, errors);
 		return operand;
 	}
 	if (operand.type === "AttributeValue") {
@@ -436,7 +429,16 @@ function checkPath(
 		return;
 	}
 	for (let i = 0; i < paths.length; i++) {
-		checkPaths(paths[i], path, errors);
+		// checkPaths(paths[i], path, errors);
+		const path1 = paths[i];
+		const path2 = path;
+
+		if (path1.isOverlappedOf(path2)) {
+			errors.pathOverlap = `Two document paths overlap with each other; must remove or rewrite one of these paths; path one: ${path1}, path two: ${path2}`;
+		}
+		if (path1.isConflictWith(path2)) {
+			errors.pathConflict = `Two document paths conflict with each other; must remove or rewrite one of these paths; path one: ${path1}, path two: ${path2}`;
+		}
 		if (errors.pathOverlap || errors.pathConflict) {
 			return;
 		}
@@ -449,15 +451,11 @@ function checkPaths(
 	path2: PathExpression,
 	errors: Record<string, string>,
 ) {
-	for (let i = 0; i < path1.size() && i < path2.size(); i++) {
-		if (path1.at(i)?.isArrayIndex !== path2.at(i)?.isArrayIndex) {
-			errors.pathConflict = `Two document paths conflict with each other; must remove or rewrite one of these paths; path one: ${path1}, path two: ${path2}`;
-			return;
-		}
-		if (path1.at(i)?.value() !== path2.at(i)?.value()) return;
-	}
-	if (!errors.pathOverlap) {
+	if (path1.isOverlappedOf(path2)) {
 		errors.pathOverlap = `Two document paths overlap with each other; must remove or rewrite one of these paths; path one: ${path1}, path two: ${path2}`;
+	}
+	if (path1.isConflictWith(path2)) {
+		errors.pathConflict = `Two document paths conflict with each other; must remove or rewrite one of these paths; path one: ${path1}, path two: ${path2}`;
 	}
 }
 

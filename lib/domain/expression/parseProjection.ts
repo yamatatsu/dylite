@@ -22,88 +22,70 @@ export function parseProjection(
 		} satisfies Context,
 	});
 
-	// Validate AST
-	const errors: {
-		reserved?: string;
-		attrNameVal?: string;
-		pathOverlap?: string;
-		pathConflict?: string;
-	} = {};
-
-	const paths: PathExpression[] = [];
-
-	// Process each path for validation
-	for (const pathExpr of ast.paths) {
-		// Process segments
-		for (const segment of pathExpr.segments) {
-			if (segment.type === "Identifier") {
-				// Check for reserved words
-				if (!errors.reserved && segment.isReserved()) {
-					errors.reserved = `Attribute name is a reserved keyword; reserved keyword: ${segment}`;
-				}
-			} else if (segment.type === "Alias") {
-				// Validate alias
-				if (!errors.attrNameVal && segment.isUnresolvable()) {
-					errors.attrNameVal = `An expression attribute name used in the document path is not defined; attribute name: ${segment}`;
-				}
-			}
+	for (const path of ast.paths) {
+		const reserved = path.getReservedWord();
+		if (reserved) {
+			return `Attribute name is a reserved keyword; reserved keyword: ${reserved}`;
 		}
-
-		// Check for path conflicts/overlaps
-		if (!errors.pathOverlap && !errors.pathConflict) {
-			checkPath(pathExpr, paths, errors);
+	}
+	for (const path of ast.paths) {
+		const unresolvableAlias = path.getUnresolvableAlias();
+		if (unresolvableAlias) {
+			return `An expression attribute name used in the document path is not defined; attribute name: ${unresolvableAlias}`;
 		}
-
-		paths.push(pathExpr);
 	}
 
-	// Check errors in order
-	const errorOrder: (keyof typeof errors)[] = [
-		"reserved",
-		"attrNameVal",
-		"pathOverlap",
-		"pathConflict",
-	];
-	for (const errorKey of errorOrder) {
-		if (errors[errorKey]) {
-			return errors[errorKey];
+	const pairs = getCombinations(ast.paths);
+	for (const [path1, path2] of pairs) {
+		if (path1.isOverlappedOf(path2)) {
+			return `Two document paths overlap with each other; must remove or rewrite one of these paths; path one: ${path1}, path two: ${path2}`;
+		}
+	}
+	for (const [path1, path2] of pairs) {
+		if (path1.isConflictWith(path2)) {
+			return `Two document paths conflict with each other; must remove or rewrite one of these paths; path one: ${path1}, path two: ${path2}`;
 		}
 	}
 
 	return ast;
 }
 
-function checkPath(
-	newPath: PathExpression,
-	existingPaths: PathExpression[],
-	errors: {
-		pathOverlap?: string;
-		pathConflict?: string;
-	},
-) {
-	for (const existingPath of existingPaths) {
-		checkPaths(existingPath, newPath, errors);
-		if (errors.pathOverlap || errors.pathConflict) {
-			return;
+/**
+ * Generates all unique pairs (combinations) of elements from a single array.
+ *
+ * @example
+ * const numbers = [1, 2, 3];
+ * const combinations = getCombinations(numbers);
+ * // Expected output: [[1, 2], [1, 3], [2, 3]]
+ *
+ * @example
+ * const letters = ['a', 'b', 'c', 'd'];
+ * const letterCombinations = getCombinations(letters);
+ * // Expected output:
+ * // [
+ * //   ['a', 'b'], ['a', 'c'], ['a', 'd'],
+ * //   ['b', 'c'], ['b', 'd'],
+ * //   ['c', 'd']
+ * // ]
+ *
+ * @example
+ * const singleElement = ['only'];
+ * const emptyCombinations = getCombinations(singleElement);
+ * // Expected output: []
+ *
+ * @example
+ * const emptyArray = [];
+ * const anotherEmptyCombinations = getCombinations(emptyArray);
+ * // Expected output: []
+ */
+function getCombinations<T>(arr: T[]): [T, T][] {
+	const result: [T, T][] = [];
+
+	for (let i = 0; i < arr.length; i++) {
+		for (let j = i + 1; j < arr.length; j++) {
+			result.push([arr[i], arr[j]]);
 		}
 	}
-}
 
-function checkPaths(
-	path1: PathExpression,
-	path2: PathExpression,
-	errors: {
-		pathOverlap?: string;
-		pathConflict?: string;
-	},
-) {
-	for (let i = 0; i < path1.size() && i < path2.size(); i++) {
-		if (path1.at(i)?.isArrayIndex !== path2.at(i)?.isArrayIndex) {
-			errors.pathConflict = `Two document paths conflict with each other; must remove or rewrite one of these paths; path one: ${path1}, path two: ${path2}`;
-			return;
-		}
-		if (path1.at(i)?.value() !== path2.at(i)?.value()) return;
-	}
-
-	errors.pathOverlap = `Two document paths overlap with each other; must remove or rewrite one of these paths; path one: ${path1}, path two: ${path2}`;
+	return result;
 }
