@@ -16,7 +16,7 @@ describe("parseUpdate", () => {
 					type: "PathExpression",
 					segments: [expect.objectContaining({ type: "Alias", name: "#p" })],
 				},
-				val: { type: "AttributeValue", name: ":p" },
+				val: expect.objectContaining({ type: "AttributeValue", name: ":p" }),
 				attrType: "N",
 			},
 			{
@@ -25,7 +25,7 @@ describe("parseUpdate", () => {
 					type: "PathExpression",
 					segments: [expect.objectContaining({ type: "Alias", name: "#c" })],
 				},
-				val: { type: "AttributeValue", name: ":c" },
+				val: expect.objectContaining({ type: "AttributeValue", name: ":c" }),
 				attrType: "S",
 			},
 		]);
@@ -53,7 +53,7 @@ describe("parseUpdate", () => {
 								expect.objectContaining({ type: "Alias", name: "#p" }),
 							],
 						},
-						{ type: "AttributeValue", name: ":p" },
+						expect.objectContaining({ type: "AttributeValue", name: ":p" }),
 					],
 					attrType: "N",
 				},
@@ -97,7 +97,7 @@ describe("parseUpdate", () => {
 					type: "PathExpression",
 					segments: [expect.objectContaining({ type: "Alias", name: "#q" })],
 				},
-				val: { type: "AttributeValue", name: ":v" },
+				val: expect.objectContaining({ type: "AttributeValue", name: ":v" }),
 				attrType: "N",
 			},
 		]);
@@ -115,7 +115,7 @@ describe("parseUpdate", () => {
 					type: "PathExpression",
 					segments: [expect.objectContaining({ type: "Alias", name: "#c" })],
 				},
-				val: { type: "AttributeValue", name: ":v" },
+				val: expect.objectContaining({ type: "AttributeValue", name: ":v" }),
 				attrType: "SS",
 			},
 		]);
@@ -133,7 +133,7 @@ describe("parseUpdate", () => {
 					type: "PathExpression",
 					segments: [expect.objectContaining({ type: "Alias", name: "#p" })],
 				},
-				val: { type: "AttributeValue", name: ":p" },
+				val: expect.objectContaining({ type: "AttributeValue", name: ":p" }),
 				attrType: "N",
 			},
 			{
@@ -151,7 +151,7 @@ describe("parseUpdate", () => {
 					type: "PathExpression",
 					segments: [expect.objectContaining({ type: "Alias", name: "#q" })],
 				},
-				val: { type: "AttributeValue", name: ":v" },
+				val: expect.objectContaining({ type: "AttributeValue", name: ":v" }),
 				attrType: "N",
 			},
 		]);

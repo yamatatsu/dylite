@@ -1,5 +1,6 @@
 import { compare } from "../compare";
 import type { AttributeValue } from "../types";
+import type { AliasAttributeValue } from "./AttributeValue";
 import type { PathExpression } from "./PathExpression";
 import conditionParser from "./condition-grammar";
 import type { Context } from "./context";
@@ -7,11 +8,6 @@ import type { Context } from "./context";
 // Type for compare function
 type AttrVal = string | boolean | string[];
 type Attr = Record<string, AttrVal>;
-
-type AttributeValueNode = {
-	type: "AttributeValue";
-	name: string;
-};
 
 type FunctionNode = {
 	type: "function";
@@ -44,7 +40,7 @@ type RedundantParensNode = {
 // Union type for all possible AST nodes
 type ASTNode =
 	| PathExpression
-	| AttributeValueNode
+	| AliasAttributeValue
 	| FunctionNode
 	| OperatorNode
 	| RedundantParensNode
@@ -252,7 +248,7 @@ function processNode(
 }
 
 // Type guards
-function isAttributeValueNode(node: unknown): node is AttributeValueNode {
+function isAttributeValueNode(node: unknown): node is AliasAttributeValue {
 	return (
 		typeof node === "object" &&
 		node !== null &&

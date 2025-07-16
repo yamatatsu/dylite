@@ -1,11 +1,14 @@
 import type { AttributeValue } from "../types";
+import type { AliasAttributeValue } from "./AttributeValue";
 import type { PathExpression } from "./PathExpression";
 import type { Context } from "./context";
 import updateParser from "./update-grammar";
 
-type Value = { type: "AttributeValue"; name: string }; // DynamoDB attribute values after resolution
-
-type Operand = PathExpression | Value | FunctionCall | ArithmeticExpression;
+type Operand =
+	| PathExpression
+	| AliasAttributeValue
+	| FunctionCall
+	| ArithmeticExpression;
 
 type FunctionCall = {
 	type: "FunctionCall";
@@ -34,13 +37,13 @@ type RemoveExpression = {
 type AddExpression = {
 	type: "AddExpression";
 	path: PathExpression;
-	value: Value;
+	value: AliasAttributeValue;
 };
 
 type DeleteExpression = {
 	type: "DeleteExpression";
 	path: PathExpression;
-	value: Value;
+	value: AliasAttributeValue;
 };
 
 type Section = {
@@ -234,7 +237,7 @@ function resolveOperand(
 	}
 	if (operand.type === "AttributeValue") {
 		// Keep AttributeValue as AST, but validate it
-		validateValue(operand as Value, context, errors);
+		validateValue(operand as AliasAttributeValue, context, errors);
 		return operand;
 	}
 	if (operand.type === "FunctionCall") {
@@ -266,7 +269,7 @@ function resolveOperand(
 }
 
 function validateValue(
-	value: Value,
+	value: AliasAttributeValue,
 	context: ValidationContext,
 	errors: Record<string, string>,
 ): void {
@@ -283,7 +286,7 @@ function validateValue(
 }
 
 function resolveValue(
-	value: Value,
+	value: AliasAttributeValue,
 	context: ValidationContext,
 	errors: Record<string, string>,
 ): unknown {

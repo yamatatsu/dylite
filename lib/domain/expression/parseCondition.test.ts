@@ -15,7 +15,7 @@ describe("parseCondition", () => {
 						expect.objectContaining({ type: "Identifier", name: "Attr1" }),
 					],
 				},
-				{ type: "AttributeValue", name: ":v1" },
+				expect.objectContaining({ type: "AttributeValue", name: ":v1" }),
 			],
 		});
 	});
@@ -32,7 +32,7 @@ describe("parseCondition", () => {
 					type: "PathExpression",
 					segments: [expect.objectContaining({ type: "Alias", name: "#p" })],
 				},
-				{ type: "AttributeValue", name: ":v1" },
+				expect.objectContaining({ type: "AttributeValue", name: ":v1" }),
 			],
 		});
 	});
@@ -52,8 +52,8 @@ describe("parseCondition", () => {
 					type: "PathExpression",
 					segments: [expect.objectContaining({ type: "Alias", name: "#p" })],
 				},
-				{ type: "AttributeValue", name: ":lo" },
-				{ type: "AttributeValue", name: ":hi" },
+				expect.objectContaining({ type: "AttributeValue", name: ":lo" }),
+				expect.objectContaining({ type: "AttributeValue", name: ":hi" }),
 			],
 		});
 	});
@@ -73,8 +73,8 @@ describe("parseCondition", () => {
 					type: "PathExpression",
 					segments: [expect.objectContaining({ type: "Alias", name: "#cat" })],
 				},
-				{ type: "AttributeValue", name: ":c1" },
-				{ type: "AttributeValue", name: ":c2" },
+				expect.objectContaining({ type: "AttributeValue", name: ":c1" }),
+				expect.objectContaining({ type: "AttributeValue", name: ":c2" }),
 			],
 		});
 	});
@@ -126,7 +126,10 @@ describe("parseCondition", () => {
 								expect.objectContaining({ type: "Alias", name: "#s" }),
 							],
 						},
-						{ type: "AttributeValue", name: ":prefix" },
+						expect.objectContaining({
+							type: "AttributeValue",
+							name: ":prefix",
+						}),
 					],
 					attrType: "BOOL",
 				},
@@ -142,7 +145,10 @@ describe("parseCondition", () => {
 										expect.objectContaining({ type: "Alias", name: "#p" }),
 									],
 								},
-								{ type: "AttributeValue", name: ":val" },
+								expect.objectContaining({
+									type: "AttributeValue",
+									name: ":val",
+								}),
 							],
 						},
 						{
@@ -160,7 +166,10 @@ describe("parseCondition", () => {
 												}),
 											],
 										},
-										{ type: "AttributeValue", name: ":c" },
+										expect.objectContaining({
+											type: "AttributeValue",
+											name: ":c",
+										}),
 									],
 								},
 							],
