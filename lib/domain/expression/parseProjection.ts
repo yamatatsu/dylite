@@ -1,5 +1,5 @@
 import type { QueryCommandInput } from "@aws-sdk/client-dynamodb";
-import type { PathExpression } from "./PathExpression";
+import type { PathExpression } from "./ast/PathExpression";
 import type { Context } from "./context";
 import projectionParser from "./grammar-projection";
 

@@ -1,7 +1,7 @@
 import { compare } from "../compare";
-import type { AttributeValue } from "../types";
-import type { AliasAttributeValue } from "./AttributeValue";
-import type { PathExpression } from "./PathExpression";
+import type { Value } from "../types";
+import type { AttributeValue } from "./ast/AttributeValue";
+import type { PathExpression } from "./ast/PathExpression";
 import type { Context } from "./context";
 import conditionParser from "./grammar-condition";
 
@@ -40,16 +40,16 @@ type RedundantParensNode = {
 // Union type for all possible AST nodes
 type ASTNode =
 	| PathExpression
-	| AliasAttributeValue
+	| AttributeValue
 	| FunctionNode
 	| OperatorNode
 	| RedundantParensNode
-	| AttributeValue; // Resolved attribute value
+	| Value; // Resolved attribute value
 
 type ValidationContext = {
 	attrNames: Record<string, string> | undefined;
-	attrVals: Record<string, AttributeValue> | undefined;
-	compare: (comp: string, x: AttributeValue, y: AttributeValue) => boolean;
+	attrVals: Record<string, Value> | undefined;
+	compare: (comp: string, x: Value, y: Value) => boolean;
 };
 
 type ValidationErrors = {
@@ -68,7 +68,7 @@ export function parseCondition(
 	expression: string,
 	options: {
 		ExpressionAttributeNames: Record<string, string> | undefined;
-		ExpressionAttributeValues: Record<string, AttributeValue> | undefined;
+		ExpressionAttributeValues: Record<string, Value> | undefined;
 	},
 ) {
 	// Parse the expression to get raw AST with context
@@ -82,9 +82,9 @@ export function parseCondition(
 	const validationContext: ValidationContext = {
 		attrNames: options.ExpressionAttributeNames,
 		attrVals: options.ExpressionAttributeValues as
-			| Record<string, AttributeValue>
+			| Record<string, Value>
 			| undefined,
-		compare: (comp: string, x: AttributeValue, y: AttributeValue) => {
+		compare: (comp: string, x: Value, y: Value) => {
 			return compare(comp, x as Attr, [y as Attr]);
 		},
 	};
@@ -246,7 +246,7 @@ function processNode(
 }
 
 // Type guards
-function isAttributeValueNode(node: unknown): node is AliasAttributeValue {
+function isAttributeValueNode(node: unknown): node is AttributeValue {
 	return (
 		typeof node === "object" &&
 		node !== null &&
@@ -305,7 +305,7 @@ function isRedundantParensNode(node: unknown): node is RedundantParensNode {
 	);
 }
 
-function isAttributeValue(node: unknown): node is AttributeValue {
+function isAttributeValue(node: unknown): node is Value {
 	if (typeof node !== "object" || node === null || Array.isArray(node)) {
 		return false;
 	}
@@ -325,9 +325,9 @@ function isAttributeValue(node: unknown): node is AttributeValue {
 }
 
 function resolveAttrVal(
-	alias: AliasAttributeValue,
+	alias: AttributeValue,
 	errors: ValidationErrors,
-): AttributeValue | undefined {
+): Value | undefined {
 	if (errors.attrNameVal) {
 		return undefined;
 	}
@@ -403,12 +403,12 @@ function validateFunction(
 			}
 
 			// Resolve AttributeValueNode to actual value for validation
-			let attrVal = args[1] as AttributeValue;
+			let attrVal = args[1] as Value;
 			if (isAttributeValueNode(args[1])) {
 				const tempErrors: ValidationErrors = {};
 				const resolved = resolveAttrVal(args[1], tempErrors);
 				if (tempErrors.attrNameVal) return undefined;
-				attrVal = resolved as AttributeValue;
+				attrVal = resolved as Value;
 			}
 
 			if (
@@ -525,17 +525,17 @@ function checkBetweenArgs(
 	const type2 = getImmediateType(yResolved);
 	if (type1 && type2) {
 		if (type1 !== type2) {
-			const xVal = xResolved as AttributeValue;
-			const yVal = yResolved as AttributeValue;
-			errors.function = `The BETWEEN operator requires same data type for lower and upper bounds; lower bound operand: AttributeValue: {${type1}:${xVal[type1 as keyof AttributeValue]}}, upper bound operand: AttributeValue: {${type2}:${yVal[type2 as keyof AttributeValue]}}`;
+			const xVal = xResolved as Value;
+			const yVal = yResolved as Value;
+			errors.function = `The BETWEEN operator requires same data type for lower and upper bounds; lower bound operand: AttributeValue: {${type1}:${xVal[type1 as keyof Value]}}, upper bound operand: AttributeValue: {${type2}:${yVal[type2 as keyof Value]}}`;
 		} else if (
 			isAttributeValue(xResolved) &&
 			isAttributeValue(yResolved) &&
 			context.compare("GT", xResolved, yResolved)
 		) {
-			const xVal = xResolved as AttributeValue;
-			const yVal = yResolved as AttributeValue;
-			errors.function = `The BETWEEN operator requires upper bound to be greater than or equal to lower bound; lower bound operand: AttributeValue: {${type1}:${xVal[type1 as keyof AttributeValue]}}, upper bound operand: AttributeValue: {${type2}:${yVal[type2 as keyof AttributeValue]}}`;
+			const xVal = xResolved as Value;
+			const yVal = yResolved as Value;
+			errors.function = `The BETWEEN operator requires upper bound to be greater than or equal to lower bound; lower bound operand: AttributeValue: {${type1}:${xVal[type1 as keyof Value]}}, upper bound operand: AttributeValue: {${type2}:${yVal[type2 as keyof Value]}}`;
 		}
 	}
 }

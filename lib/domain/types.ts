@@ -1,4 +1,4 @@
-export type AttributeType =
+export type ValueType =
 	| "S"
 	| "N"
 	| "B"
@@ -10,16 +10,16 @@ export type AttributeType =
 	| "BOOL"
 	| "NULL";
 
-export interface AttributeValue {
+export interface Value {
 	S?: string;
 	N?: string;
 	B?: string;
 	SS?: string[];
 	NS?: string[];
 	BS?: string[];
-	M?: Record<string, AttributeValue>;
-	L?: AttributeValue[];
+	M?: Record<string, Value>;
+	L?: Value[];
 	NULL?: boolean;
 	BOOL?: boolean;
-	Value?: AttributeValue;
+	Value?: Value;
 }

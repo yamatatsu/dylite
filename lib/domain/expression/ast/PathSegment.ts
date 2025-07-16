@@ -1,5 +1,4 @@
-import type { Context } from "./context";
-import isReserved from "./isReserved";
+import isReserved from "../isReserved";
 
 export type PathSegment =
 	| IdentifierPathSegment

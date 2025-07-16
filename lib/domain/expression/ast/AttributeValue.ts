@@ -1,14 +1,14 @@
-import type { AttributeValue } from "../types";
+import type { Value } from "../../types";
 
-export class AliasAttributeValue {
+export class AttributeValue {
 	public readonly type = "AttributeValue" as const;
 
 	constructor(
 		private readonly name: string,
-		private attrValMap: Record<string, AttributeValue>,
+		private attrValMap: Record<string, Value>,
 	) {}
 
-	value(): AttributeValue | undefined {
+	value(): Value | undefined {
 		return this.attrValMap[this.name];
 	}
 

@@ -1,12 +1,12 @@
-import type { AttributeValue } from "../types";
-import { AliasAttributeValue } from "./AttributeValue";
-import type { PathExpression } from "./PathExpression";
+import type { Value } from "../types";
+import { AttributeValue } from "./ast/AttributeValue";
+import type { PathExpression } from "./ast/PathExpression";
 import type { Context } from "./context";
 import updateParser from "./grammar-update";
 
 type Operand =
 	| PathExpression
-	| AliasAttributeValue
+	| AttributeValue
 	| FunctionCall
 	| ArithmeticExpression;
 
@@ -37,13 +37,13 @@ type RemoveExpression = {
 type AddExpression = {
 	type: "AddExpression";
 	path: PathExpression;
-	value: AliasAttributeValue;
+	value: AttributeValue;
 };
 
 type DeleteExpression = {
 	type: "DeleteExpression";
 	path: PathExpression;
-	value: AliasAttributeValue;
+	value: AttributeValue;
 };
 
 type Section = {
@@ -65,7 +65,7 @@ export function parseUpdate(
 	expression: string,
 	options: {
 		ExpressionAttributeNames: Record<string, string> | undefined;
-		ExpressionAttributeValues: Record<string, AttributeValue> | undefined;
+		ExpressionAttributeValues: Record<string, Value> | undefined;
 	},
 ) {
 	const context: Context = {
@@ -352,9 +352,9 @@ function checkFunction(
 }
 
 function resolveAttrVal(
-	alias: AliasAttributeValue,
+	alias: AttributeValue,
 	errors: Record<string, string>,
-): AttributeValue | undefined {
+): Value | undefined {
 	if (errors.attrVal) {
 		return undefined;
 	}
@@ -443,7 +443,7 @@ function getType(val: unknown, context?: ValidationContext): string | null {
 		return (val as { attrType: string }).attrType;
 	}
 	// For AttributeValueNode, resolve the actual value to get its type
-	if (val instanceof AliasAttributeValue) {
+	if (val instanceof AttributeValue) {
 		const errors: Record<string, string> = {};
 		const resolved = resolveAttrVal(val, errors);
 		if (resolved && !errors.attrVal) {

@@ -1,6 +1,6 @@
 import { Big } from "big.js";
 import { toLexiStr } from "./toLexiStr";
-import type { AttributeType, AttributeValue } from "./types";
+import type { Value, ValueType } from "./types";
 
 type AttrVal = string | boolean | string[];
 type Attr = Record<string, AttrVal>;
@@ -27,8 +27,8 @@ export function compare(comp: string, val: Attr, compVals: Attr[]): boolean {
 				(attrType === "N" &&
 					!new Big(attrVal as string).lte(compVal as string)) ||
 				(attrType !== "N" &&
-					toLexiStr(attrVal as string, attrType as AttributeType) >
-						toLexiStr(compVal as string, attrType as AttributeType))
+					toLexiStr(attrVal as string, attrType as ValueType) >
+						toLexiStr(compVal as string, attrType as ValueType))
 			)
 				return false;
 			break;
@@ -39,8 +39,8 @@ export function compare(comp: string, val: Attr, compVals: Attr[]): boolean {
 				(attrType === "N" &&
 					!new Big(attrVal as string).lt(compVal as string)) ||
 				(attrType !== "N" &&
-					toLexiStr(attrVal as string, attrType as AttributeType) >=
-						toLexiStr(compVal as string, attrType as AttributeType))
+					toLexiStr(attrVal as string, attrType as ValueType) >=
+						toLexiStr(compVal as string, attrType as ValueType))
 			)
 				return false;
 			break;
@@ -51,8 +51,8 @@ export function compare(comp: string, val: Attr, compVals: Attr[]): boolean {
 				(attrType === "N" &&
 					!new Big(attrVal as string).gte(compVal as string)) ||
 				(attrType !== "N" &&
-					toLexiStr(attrVal as string, attrType as AttributeType) <
-						toLexiStr(compVal as string, attrType as AttributeType))
+					toLexiStr(attrVal as string, attrType as ValueType) <
+						toLexiStr(compVal as string, attrType as ValueType))
 			)
 				return false;
 			break;
@@ -63,8 +63,8 @@ export function compare(comp: string, val: Attr, compVals: Attr[]): boolean {
 				(attrType === "N" &&
 					!new Big(attrVal as string).gt(compVal as string)) ||
 				(attrType !== "N" &&
-					toLexiStr(attrVal as string, attrType as AttributeType) <=
-						toLexiStr(compVal as string, attrType as AttributeType))
+					toLexiStr(attrVal as string, attrType as ValueType) <=
+						toLexiStr(compVal as string, attrType as ValueType))
 			)
 				return false;
 			break;
@@ -103,7 +103,7 @@ export function compare(comp: string, val: Attr, compVals: Attr[]): boolean {
 			if (
 				!compVals.some((compVal) => {
 					const compType = Object.keys(compVal)[0];
-					const compValValue = compVal[compType as keyof AttributeValue];
+					const compValValue = compVal[compType as keyof Value];
 					return compType === attrType && valsEqual(attrVal, compValValue);
 				})
 			)
@@ -118,12 +118,12 @@ export function compare(comp: string, val: Attr, compVals: Attr[]): boolean {
 					(!new Big(attrVal as string).gte(compVal as string) ||
 						!new Big(attrVal as string).lte(compVals[1].N as string))) ||
 				(attrType !== "N" &&
-					(toLexiStr(attrVal as string, attrType as AttributeType) <
-						toLexiStr(compVal as string, attrType as AttributeType) ||
-						toLexiStr(attrVal as string, attrType as AttributeType) >
+					(toLexiStr(attrVal as string, attrType as ValueType) <
+						toLexiStr(compVal as string, attrType as ValueType) ||
+						toLexiStr(attrVal as string, attrType as ValueType) >
 							toLexiStr(
-								compVals[1][compType as keyof AttributeValue] as string,
-								attrType as AttributeType,
+								compVals[1][compType as keyof Value] as string,
+								attrType as ValueType,
 							)))
 			)
 				return false;
@@ -146,14 +146,14 @@ function contains(
 		if (attrType === "SS")
 			return (attrVal as string[]).some((val) => val === compVal);
 		if (attrType === "L")
-			return (attrVal as AttributeValue[]).some((val) => val?.S === compVal);
+			return (attrVal as Value[]).some((val) => val?.S === compVal);
 		return false;
 	}
 	if (compType === "N") {
 		if (attrType === "NS")
 			return (attrVal as string[]).some((val) => val === compVal);
 		if (attrType === "L")
-			return (attrVal as AttributeValue[]).some((val) => val?.N === compVal);
+			return (attrVal as Value[]).some((val) => val?.N === compVal);
 		return false;
 	}
 	if (compType === "B") {
@@ -166,10 +166,10 @@ function contains(
 		return (attrVal as string[]).some((val) => {
 			if (attrType !== "L")
 				return compValString === Buffer.from(val, "base64").toString();
-			if (attrType === "L" && (val as AttributeValue).B)
+			if (attrType === "L" && (val as Value).B)
 				return (
 					compValString ===
-					Buffer.from((val as AttributeValue).B as string, "base64").toString()
+					Buffer.from((val as Value).B as string, "base64").toString()
 				);
 			return false;
 		});

@@ -1,14 +1,14 @@
 import Big from "big.js";
-import type { AttributeType, AttributeValue } from "./types";
+import type { Value, ValueType } from "./types";
 
-export function toLexiStrFromAttributeValue(attrValue: AttributeValue): string {
-	const type = Object.keys(attrValue)[0] as AttributeType;
+export function toLexiStrFromAttributeValue(attrValue: Value): string {
+	const type = Object.keys(attrValue)[0] as ValueType;
 	const keyPiece = attrValue[type] as string;
 	return toLexiStr(keyPiece, type);
 }
 export function toLexiStr(
 	val: string | number | string[] | undefined,
-	type: AttributeType,
+	type: ValueType,
 ): string {
 	if (val == null) return "";
 
