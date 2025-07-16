@@ -2,7 +2,7 @@ import type { AttributeValue } from "../types";
 import { AliasAttributeValue } from "./AttributeValue";
 import type { PathExpression } from "./PathExpression";
 import type { Context } from "./context";
-import updateParser from "./update-grammar";
+import updateParser from "./grammar-update";
 
 type Operand =
 	| PathExpression

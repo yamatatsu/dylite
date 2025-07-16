@@ -2,8 +2,8 @@ import { compare } from "../compare";
 import type { AttributeValue } from "../types";
 import type { AliasAttributeValue } from "./AttributeValue";
 import type { PathExpression } from "./PathExpression";
-import conditionParser from "./condition-grammar";
 import type { Context } from "./context";
+import conditionParser from "./grammar-condition";
 
 // Type for compare function
 type AttrVal = string | boolean | string[];
