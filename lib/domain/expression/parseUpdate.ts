@@ -1,5 +1,5 @@
 import type { AttributeValue } from "../types";
-import type { AliasAttributeValue } from "./AttributeValue";
+import { AliasAttributeValue } from "./AttributeValue";
 import type { PathExpression } from "./PathExpression";
 import type { Context } from "./context";
 import updateParser from "./update-grammar";
@@ -135,15 +135,11 @@ export function parseUpdate(
 				}
 				case "AddExpression": {
 					// Validate value but keep AST structure
-					validateValue(expr.value, validationContext, errors);
+					resolveAttrVal(expr.value, errors);
 					if (errors.attrVal) break;
 
 					// For type checking, we need the resolved value
-					const resolvedValue = resolveValue(
-						expr.value,
-						validationContext,
-						errors,
-					);
+					const resolvedValue = resolveAttrVal(expr.value, errors);
 					const attrType = checkOperator(
 						"ADD",
 						resolvedValue,
@@ -162,15 +158,11 @@ export function parseUpdate(
 				}
 				case "DeleteExpression": {
 					// Validate value but keep AST structure
-					validateValue(expr.value, validationContext, errors);
+					resolveAttrVal(expr.value, errors);
 					if (errors.attrVal) break;
 
 					// For type checking, we need the resolved value
-					const resolvedValue = resolveValue(
-						expr.value,
-						validationContext,
-						errors,
-					);
+					const resolvedValue = resolveAttrVal(expr.value, errors);
 					const attrType = checkOperator(
 						"DELETE",
 						resolvedValue,
@@ -237,7 +229,7 @@ function resolveOperand(
 	}
 	if (operand.type === "AttributeValue") {
 		// Keep AttributeValue as AST, but validate it
-		validateValue(operand as AliasAttributeValue, context, errors);
+		resolveAttrVal(operand, errors);
 		return operand;
 	}
 	if (operand.type === "FunctionCall") {
@@ -266,40 +258,6 @@ function resolveOperand(
 		};
 	}
 	return operand;
-}
-
-function validateValue(
-	value: AliasAttributeValue,
-	context: ValidationContext,
-	errors: Record<string, string>,
-): void {
-	if (
-		value &&
-		typeof value === "object" &&
-		"type" in value &&
-		value.type === "AttributeValue"
-	) {
-		const attrValue = value as { type: "AttributeValue"; name: string };
-		// Validate that the attribute value exists
-		resolveAttrVal(attrValue.name, context, errors);
-	}
-}
-
-function resolveValue(
-	value: AliasAttributeValue,
-	context: ValidationContext,
-	errors: Record<string, string>,
-): unknown {
-	if (
-		value &&
-		typeof value === "object" &&
-		"type" in value &&
-		value.type === "AttributeValue"
-	) {
-		const attrValue = value as { type: "AttributeValue"; name: string };
-		return resolveAttrVal(attrValue.name, context, errors);
-	}
-	return value;
 }
 
 function resolveFunction(
@@ -394,18 +352,18 @@ function checkFunction(
 }
 
 function resolveAttrVal(
-	name: string,
-	context: ValidationContext,
+	alias: AliasAttributeValue,
 	errors: Record<string, string>,
-): unknown {
+): AttributeValue | undefined {
 	if (errors.attrVal) {
-		return null;
+		return undefined;
 	}
-	if (!context.attrVals || !context.attrVals[name]) {
-		errors.attrVal = `An expression attribute value used in expression is not defined; attribute value: ${name}`;
-		return null;
+	const resolved = alias.value();
+	if (!resolved) {
+		errors.attrVal = `An expression attribute value used in expression is not defined; attribute value: ${alias}`;
+		return undefined;
 	}
-	return context.attrVals[name];
+	return resolved;
 }
 
 function checkPath(
@@ -485,16 +443,9 @@ function getType(val: unknown, context?: ValidationContext): string | null {
 		return (val as { attrType: string }).attrType;
 	}
 	// For AttributeValueNode, resolve the actual value to get its type
-	if (
-		val &&
-		typeof val === "object" &&
-		"type" in val &&
-		val.type === "AttributeValue" &&
-		context
-	) {
-		const attrValue = val as { type: "AttributeValue"; name: string };
+	if (val instanceof AliasAttributeValue) {
 		const errors: Record<string, string> = {};
-		const resolved = resolveAttrVal(attrValue.name, context, errors);
+		const resolved = resolveAttrVal(val, errors);
 		if (resolved && !errors.attrVal) {
 			return getImmediateType(resolved);
 		}

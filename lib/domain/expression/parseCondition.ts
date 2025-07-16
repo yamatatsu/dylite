@@ -156,7 +156,7 @@ function processNode(
 	// Handle attribute values - keep AST structure, validate internally
 	if (isAttributeValueNode(node)) {
 		// Validate that the attribute value exists
-		resolveAttrVal(node.name, context, errors);
+		resolveAttrVal(node, errors);
 
 		// Return the original AST structure
 		return node;
@@ -327,18 +327,18 @@ function isAttributeValue(node: unknown): node is AttributeValue {
 }
 
 function resolveAttrVal(
-	name: string,
-	context: ValidationContext,
+	alias: AliasAttributeValue,
 	errors: ValidationErrors,
 ): AttributeValue | undefined {
 	if (errors.attrNameVal) {
 		return undefined;
 	}
-	if (!context.attrVals || !context.attrVals[name]) {
-		errors.attrNameVal = `An expression attribute value used in expression is not defined; attribute value: ${name}`;
+	const resolved = alias.value();
+	if (!resolved) {
+		errors.attrNameVal = `An expression attribute value used in expression is not defined; attribute value: ${alias}`;
 		return undefined;
 	}
-	return context.attrVals[name];
+	return resolved;
 }
 
 function validateFunction(
@@ -408,7 +408,7 @@ function validateFunction(
 			let attrVal = args[1] as AttributeValue;
 			if (isAttributeValueNode(args[1])) {
 				const tempErrors: ValidationErrors = {};
-				const resolved = resolveAttrVal(args[1].name, context, tempErrors);
+				const resolved = resolveAttrVal(args[1], tempErrors);
 				if (tempErrors.attrNameVal) return undefined;
 				attrVal = resolved as AttributeValue;
 			}
@@ -511,14 +511,14 @@ function checkBetweenArgs(
 
 	if (isAttributeValueNode(x)) {
 		const tempErrors: ValidationErrors = {};
-		const resolved = resolveAttrVal(x.name, context, tempErrors);
+		const resolved = resolveAttrVal(x, tempErrors);
 		if (tempErrors.attrNameVal || !resolved) return;
 		xResolved = resolved as ASTNode;
 	}
 
 	if (isAttributeValueNode(y)) {
 		const tempErrors: ValidationErrors = {};
-		const resolved = resolveAttrVal(y.name, context, tempErrors);
+		const resolved = resolveAttrVal(y, tempErrors);
 		if (tempErrors.attrNameVal || !resolved) return;
 		yResolved = resolved as ASTNode;
 	}
@@ -548,7 +548,7 @@ function getType(val: ASTNode, context?: ValidationContext): string | null {
 	// For AttributeValueNode, resolve the actual value to get its type
 	if (isAttributeValueNode(val) && context) {
 		const errors: ValidationErrors = {};
-		const resolved = resolveAttrVal(val.name, context, errors);
+		const resolved = resolveAttrVal(val, errors);
 		if (resolved && !errors.attrNameVal) {
 			return getImmediateType(resolved);
 		}
