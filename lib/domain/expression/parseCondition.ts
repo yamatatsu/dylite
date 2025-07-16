@@ -44,9 +44,7 @@ type ASTNode =
 	| FunctionNode
 	| OperatorNode
 	| RedundantParensNode
-	| AttributeValue // Resolved attribute value
-	| string // Identifier
-	| number; // Array index
+	| AttributeValue; // Resolved attribute value
 
 type ValidationContext = {
 	attrNames: Record<string, string> | undefined;
