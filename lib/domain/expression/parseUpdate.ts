@@ -19,11 +19,6 @@ export function parseUpdate(
 		attrValMap: options.ExpressionAttributeValues ?? {},
 	};
 
-	const validationContext = {
-		attrNames: options.ExpressionAttributeNames,
-		attrVals: options.ExpressionAttributeValues,
-	};
-
 	// Parse to AST
 	const ast: UpdateExpression = updateParser.parse(expression, { context });
 
@@ -66,14 +61,10 @@ export function parseUpdate(
 
 			switch (expr.type) {
 				case "SetAction": {
-					const resolvedValue = resolveOperand(
-						expr.value,
-						validationContext,
-						errors,
-					);
+					const resolvedValue = resolveOperand(expr.value, errors);
 					if (hasError(errors)) break;
 
-					const attrType = getType(resolvedValue, validationContext);
+					const attrType = getType(resolvedValue);
 					processedExpr = {
 						type: "set",
 						path: expr.path,
@@ -92,12 +83,7 @@ export function parseUpdate(
 				case "AddAction": {
 					// For type checking, we need the resolved value
 					const resolvedValue = resolveAttrVal(expr.value, errors);
-					const attrType = checkOperator(
-						"ADD",
-						resolvedValue,
-						validationContext,
-						errors,
-					);
+					const attrType = checkOperator("ADD", resolvedValue, errors);
 					if (hasError(errors)) break;
 
 					processedExpr = {
@@ -111,12 +97,7 @@ export function parseUpdate(
 				case "DeleteAction": {
 					// For type checking, we need the resolved value
 					const resolvedValue = resolveAttrVal(expr.value, errors);
-					const attrType = checkOperator(
-						"DELETE",
-						resolvedValue,
-						validationContext,
-						errors,
-					);
+					const attrType = checkOperator("DELETE", resolvedValue, errors);
 					if (hasError(errors)) break;
 
 					processedExpr = {
@@ -144,14 +125,8 @@ export function parseUpdate(
 	return processedSections;
 }
 
-type ValidationContext = {
-	attrNames?: Record<string, string>;
-	attrVals?: Record<string, unknown>;
-};
-
 function resolveOperand(
 	operand: Operand,
-	context: ValidationContext,
 	errors: Record<string, string>,
 ): unknown {
 	if (operand.type === "PathExpression") {
@@ -161,22 +136,17 @@ function resolveOperand(
 		return operand;
 	}
 	if (operand.type === "FunctionCall") {
-		return resolveFunction(operand, context, errors);
+		return resolveFunction(operand, errors);
 	}
 	if (operand.type === "ArithmeticExpression") {
 		const arithExpr = operand;
-		const left = resolveOperand(arithExpr.left, context, errors);
+		const left = resolveOperand(arithExpr.left, errors);
 		if (hasError(errors)) return null;
 
-		const right = resolveOperand(arithExpr.right, context, errors);
+		const right = resolveOperand(arithExpr.right, errors);
 		if (hasError(errors)) return null;
 
-		const attrType = checkFunction(
-			arithExpr.operator,
-			[left, right],
-			context,
-			errors,
-		);
+		const attrType = checkFunction(arithExpr.operator, [left, right], errors);
 		if (hasError(errors)) return null;
 
 		return {
@@ -190,18 +160,17 @@ function resolveOperand(
 
 function resolveFunction(
 	func: FunctionForUpdate,
-	context: ValidationContext,
 	errors: Record<string, string>,
 ): unknown {
 	const resolvedArgs: unknown[] = [];
 
 	for (const arg of func.args) {
-		const resolved = resolveOperand(arg, context, errors);
+		const resolved = resolveOperand(arg, errors);
 		if (hasError(errors)) return null;
 		resolvedArgs.push(resolved);
 	}
 
-	const attrType = checkFunction(func.name, resolvedArgs, context, errors);
+	const attrType = checkFunction(func.name, resolvedArgs, errors);
 	if (hasError(errors)) return null;
 
 	return {
@@ -215,7 +184,6 @@ function resolveFunction(
 function checkFunction(
 	name: string,
 	args: unknown[],
-	context: ValidationContext,
 	errors: Record<string, string>,
 ): string | null {
 	if (errors.function) {
@@ -246,10 +214,10 @@ function checkFunction(
 				errors.function = `Operator or function requires a document path; operator or function: ${name}`;
 				return null;
 			}
-			return getType(args[1], context);
+			return getType(args[1]);
 		case "list_append":
 			for (let i = 0; i < args.length; i++) {
-				const type = getType(args[i], context);
+				const type = getType(args[i]);
 				if (type && type !== "L") {
 					errors.function = `Incorrect operand type for operator or function; operator or function: ${name}, operand type: ${type}`;
 					return null;
@@ -259,7 +227,7 @@ function checkFunction(
 		case "+":
 		case "-":
 			for (let i = 0; i < args.length; i++) {
-				const type = getType(args[i], context);
+				const type = getType(args[i]);
 				if (type && type !== "N") {
 					errors.function = `Incorrect operand type for operator or function; operator or function: ${name}, operand type: ${type}`;
 					return null;
@@ -313,7 +281,6 @@ function checkPath(
 function checkOperator(
 	operator: string,
 	val: unknown,
-	context: ValidationContext,
 	errors: Record<string, string>,
 ): string | null {
 	if (errors.operand || !val) {
@@ -331,7 +298,7 @@ function checkOperator(
 		NS: "NUMBER_SET",
 		BS: "BINARY_SET",
 	};
-	const type = getType(val, context);
+	const type = getType(val);
 	if (type && typeMappings[type] && !(operator === "ADD" && type === "N")) {
 		if (operator === "DELETE" && !type.endsWith("S")) {
 			errors.operand = `Incorrect operand type for operator or function; operator: ${operator}, operand type: ${typeMappings[type]}`;
@@ -342,7 +309,7 @@ function checkOperator(
 	return type;
 }
 
-function getType(val: unknown, context?: ValidationContext): string | null {
+function getType(val: unknown): string | null {
 	if (!val || typeof val !== "object" || Array.isArray(val)) return null;
 	if (val && typeof val === "object" && "attrType" in val) {
 		return (val as { attrType: string }).attrType;
