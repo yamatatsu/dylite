@@ -63,18 +63,12 @@ export function parseUpdate(
 				case "RemoveAction": {
 					break;
 				}
-				case "AddAction": {
-					// For type checking, we need the resolved value
-					const resolvedValue = resolveAttrVal(expr.value, errors);
-					checkOperator("ADD", resolvedValue, errors);
+				case "AddAction":
+					checkOperator("ADD", expr.value, errors);
 					break;
-				}
-				case "DeleteAction": {
-					// For type checking, we need the resolved value
-					const resolvedValue = resolveAttrVal(expr.value, errors);
-					checkOperator("DELETE", resolvedValue, errors);
+				case "DeleteAction":
+					checkOperator("DELETE", expr.value, errors);
 					break;
-				}
 			}
 
 			if (hasError(errors)) break;
@@ -203,24 +197,9 @@ function checkFunction(
 	return null;
 }
 
-function resolveAttrVal(
-	alias: AttributeValue,
-	errors: Record<string, string>,
-): Value | undefined {
-	if (errors.attrVal) {
-		return undefined;
-	}
-	const resolved = alias.value();
-	if (!resolved) {
-		errors.attrVal = `An expression attribute value used in expression is not defined; attribute value: ${alias}`;
-		return undefined;
-	}
-	return resolved;
-}
-
 function checkOperator(
 	operator: string,
-	val: unknown,
+	val: AttributeValue,
 	errors: Record<string, string>,
 ): void {
 	if (errors.operand || !val) {
@@ -238,7 +217,7 @@ function checkOperator(
 		NS: "NUMBER_SET",
 		BS: "BINARY_SET",
 	};
-	const type = getType(val);
+	const type = getType(val.value());
 	if (type && typeMappings[type] && !(operator === "ADD" && type === "N")) {
 		if (operator === "DELETE" && !type.endsWith("S")) {
 			errors.operand = `Incorrect operand type for operator or function; operator: ${operator}, operand type: ${typeMappings[type]}`;
@@ -256,7 +235,7 @@ function getType(val: unknown): string | null {
 	// For AttributeValueNode, resolve the actual value to get its type
 	if (val instanceof AttributeValue) {
 		const errors: Record<string, string> = {};
-		const resolved = resolveAttrVal(val, errors);
+		const resolved = val.value();
 		if (resolved && !errors.attrVal) {
 			return getImmediateType(resolved);
 		}
