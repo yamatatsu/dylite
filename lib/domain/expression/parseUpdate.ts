@@ -23,7 +23,6 @@ export function parseUpdate(
 
 	// Process AST: resolve aliases and validate
 	const errors: Record<string, string> = {};
-	const processedSections: unknown[] = [];
 
 	const reservedWord = ast.findReservedWord();
 	if (reservedWord) {
@@ -55,68 +54,33 @@ export function parseUpdate(
 	}
 
 	for (const section of ast.sections) {
-		const processedExpressions: unknown[] = [];
-
 		for (const expr of section.expressions) {
-			let processedExpr: unknown;
-
 			switch (expr.type) {
 				case "SetAction": {
-					const resolvedValue = resolveOperand(expr.value, errors);
-					if (hasError(errors)) break;
-
-					const attrType = getType(resolvedValue);
-					processedExpr = {
-						type: "set",
-						path: expr.path,
-						val: resolvedValue,
-						attrType: attrType,
-					};
+					resolveOperand(expr.value, errors);
 					break;
 				}
 				case "RemoveAction": {
-					processedExpr = {
-						type: "remove",
-						path: expr.path,
-					};
 					break;
 				}
 				case "AddAction": {
 					// For type checking, we need the resolved value
 					const resolvedValue = resolveAttrVal(expr.value, errors);
-					const attrType = checkOperator("ADD", resolvedValue, errors);
-					if (hasError(errors)) break;
-
-					processedExpr = {
-						type: "add",
-						path: expr.path,
-						val: expr.value,
-						attrType: attrType,
-					};
+					checkOperator("ADD", resolvedValue, errors);
 					break;
 				}
 				case "DeleteAction": {
 					// For type checking, we need the resolved value
 					const resolvedValue = resolveAttrVal(expr.value, errors);
-					const attrType = checkOperator("DELETE", resolvedValue, errors);
-					if (hasError(errors)) break;
-
-					processedExpr = {
-						type: "delete",
-						path: expr.path,
-						val: expr.value,
-						attrType: attrType,
-					};
+					checkOperator("DELETE", resolvedValue, errors);
 					break;
 				}
 			}
 
 			if (hasError(errors)) break;
-			processedExpressions.push(processedExpr);
 		}
 
 		if (hasError(errors)) break;
-		processedSections.push(...processedExpressions);
 	}
 
 	// Check for errors
@@ -258,9 +222,9 @@ function checkOperator(
 	operator: string,
 	val: unknown,
 	errors: Record<string, string>,
-): string | null {
+): void {
 	if (errors.operand || !val) {
-		return null;
+		return;
 	}
 	const typeMappings: Record<string, string> = {
 		S: "STRING",
@@ -282,7 +246,6 @@ function checkOperator(
 			errors.operand = `Incorrect operand type for operator or function; operator: ${operator}, operand type: ${typeMappings[type]}`;
 		}
 	}
-	return type;
 }
 
 function getType(val: unknown): string | null {
