@@ -1,11 +1,20 @@
-import type { PathSegment } from "./PathSegment";
+import type {
+	AliasPathSegment,
+	IdentifierPathSegment,
+	PathSegment,
+} from "./PathSegment";
+import type { IASTNode } from "./interfaces";
 
-export class PathExpression {
+export class PathExpression implements IASTNode {
 	public readonly type = "PathExpression";
 
 	constructor(private readonly segments: PathSegment[]) {}
 
-	getReservedWord(): PathSegment | undefined {
+	findReservedWord(): string | undefined {
+		return this.getReservedWord()?.value();
+	}
+
+	getReservedWord(): IdentifierPathSegment | undefined {
 		for (const segment of this.segments) {
 			if (segment.type === "Identifier" && segment.isReserved()) {
 				return segment;
@@ -13,7 +22,7 @@ export class PathExpression {
 		}
 	}
 
-	getUnresolvableAlias(): PathSegment | undefined {
+	getUnresolvableAlias(): AliasPathSegment | undefined {
 		for (const segment of this.segments) {
 			if (segment.type === "Alias" && segment.isUnresolvable()) {
 				return segment;

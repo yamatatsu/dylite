@@ -2,11 +2,64 @@ import type { AddSection } from "./AddSection";
 import type { DeleteSection } from "./DeleteSection";
 import type { RemoveSection } from "./RemoveSection";
 import type { SetSection } from "./SetSection";
+import type {
+	IASTNode,
+	IUnknownFunctionHolder,
+	IUnresolvableValueHolder,
+} from "./interfaces";
 
 export type Section = SetSection | RemoveSection | AddSection | DeleteSection;
 
-export class UpdateExpression {
+export class UpdateExpression
+	implements IASTNode, IUnknownFunctionHolder, IUnresolvableValueHolder
+{
 	readonly type = "UpdateExpression";
 
 	constructor(public readonly sections: Section[]) {}
+
+	findReservedWord(): string | undefined {
+		for (const section of this.sections) {
+			const reserved = section.findReservedWord();
+			if (reserved) {
+				return reserved;
+			}
+		}
+		return undefined;
+	}
+
+	findUnknownFunction(): string | undefined {
+		for (const section of this.sections) {
+			if (section.type !== "SET") {
+				continue;
+			}
+			const unknownFunction = section.findUnknownFunction();
+			if (unknownFunction) {
+				return unknownFunction;
+			}
+		}
+		return undefined;
+	}
+
+	findDuplicateSection(): string | undefined {
+		const sectionSet = new Set<string>();
+		for (const section of this.sections) {
+			if (sectionSet.has(section.type)) {
+				return section.type;
+			}
+			sectionSet.add(section.type);
+		}
+		return undefined;
+	}
+
+	findUnresolvableValue(): string | undefined {
+		for (const section of this.sections) {
+			if ("findUnresolvableValue" in section) {
+				const unresolvable = section.findUnresolvableValue();
+				if (unresolvable) {
+					return unresolvable;
+				}
+			}
+		}
+		return undefined;
+	}
 }

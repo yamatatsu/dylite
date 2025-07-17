@@ -29,26 +29,31 @@ export function parseUpdate(
 
 	// Process AST: resolve aliases and validate
 	const errors: Record<string, string> = {};
-	const sections: Record<string, boolean> = {};
 	const paths: PathExpression[] = [];
 	const processedSections: unknown[] = [];
 
-	for (const section of ast.sections) {
-		// Check for duplicate sections
-		if (sections[section.type]) {
-			errors.section = `The "${section.type}" section can only be used once in an update expression;`;
-			break;
-		}
-		sections[section.type] = true;
+	const reservedWord = ast.findReservedWord();
+	if (reservedWord) {
+		return `Attribute name is a reserved keyword; reserved keyword: ${reservedWord}`;
+	}
+	const unknownFunction = ast.findUnknownFunction();
+	if (unknownFunction) {
+		return `Invalid function name; function: ${unknownFunction}`;
+	}
+	const duplicateSection = ast.findDuplicateSection();
+	if (duplicateSection) {
+		return `The "${duplicateSection}" section can only be used once in an update expression;`;
+	}
+	const unresolvableValue = ast.findUnresolvableValue();
+	if (unresolvableValue) {
+		return `An expression attribute name used in the document path is not defined; attribute name: ${unresolvableValue}`;
+	}
 
+	for (const section of ast.sections) {
 		const processedExpressions: unknown[] = [];
 
 		for (const expr of section.expressions) {
 			let processedExpr: unknown;
-
-			// Validate path and check for errors, but keep AST structure
-			validatePath(expr.path, errors);
-			if (errors.attrName || errors.reserved) break;
 
 			// Check path conflicts
 			checkPath(expr.path, paths, errors);
@@ -147,30 +152,12 @@ type ValidationContext = {
 	attrVals?: Record<string, unknown>;
 };
 
-function validatePath(
-	path: PathExpression,
-	errors: Record<string, string>,
-): void {
-	const reserved = path.getReservedWord();
-	if (reserved) {
-		errors.reserved ??= `Attribute name is a reserved keyword; reserved keyword: ${reserved}`;
-	}
-	if (errors.reserved) return;
-
-	const unresolvableAlias = path.getUnresolvableAlias();
-	if (unresolvableAlias) {
-		errors.attrName ??= `An expression attribute name used in the document path is not defined; attribute name: ${unresolvableAlias}`;
-	}
-}
-
 function resolveOperand(
 	operand: Operand,
 	context: ValidationContext,
 	errors: Record<string, string>,
 ): unknown {
 	if (operand.type === "PathExpression") {
-		// Keep PathExpression as AST, but validate it
-		validatePath(operand as PathExpression, errors);
 		return operand;
 	}
 	if (operand.type === "AttributeValue") {
@@ -236,7 +223,7 @@ function checkFunction(
 	context: ValidationContext,
 	errors: Record<string, string>,
 ): string | null {
-	if (errors.unknownFunction) {
+	if (errors.function) {
 		return null;
 	}
 
@@ -248,15 +235,6 @@ function checkFunction(
 	};
 
 	const numOperands = functions[name];
-	if (numOperands == null) {
-		errors.unknownFunction = `Invalid function name; function: ${name}`;
-		return null;
-	}
-
-	if (errors.function) {
-		return null;
-	}
-
 	if (numOperands !== args.length) {
 		errors.function = `Incorrect number of operands for operator or function; operator or function: ${name}, number of operands: ${args.length}`;
 		return null;
@@ -406,10 +384,6 @@ function getImmediateType(val: unknown): string | null {
 
 function checkErrors(errors: Record<string, string>): string | null {
 	const errorOrder = [
-		"reserved",
-		"unknownFunction",
-		"section",
-		"attrName",
 		"attrVal",
 		"pathOverlap",
 		"pathConflict",
