@@ -6,6 +6,7 @@ import type {
 	IASTNode,
 	IUnknownFunctionHolder,
 	IUnresolvableNameHolder,
+	IUnresolvableValueHolder,
 } from "./interfaces";
 
 export type Operand =
@@ -15,7 +16,11 @@ export type Operand =
 	| ArithmeticExpression;
 
 export class SetAction
-	implements IASTNode, IUnknownFunctionHolder, IUnresolvableNameHolder
+	implements
+		IASTNode,
+		IUnknownFunctionHolder,
+		IUnresolvableNameHolder,
+		IUnresolvableValueHolder
 {
 	readonly type = "SetAction";
 
@@ -42,5 +47,15 @@ export class SetAction
 
 	findUnresolvableName(): string | undefined {
 		return this.path.getUnresolvableAlias()?.toString();
+	}
+
+	findUnresolvableValue(): string | undefined {
+		if (this.value.type === "AttributeValue") {
+			const resolved = this.value.value();
+			if (!resolved) {
+				return this.value.toString();
+			}
+		}
+		return undefined;
 	}
 }

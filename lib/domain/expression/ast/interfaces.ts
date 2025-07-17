@@ -9,3 +9,7 @@ export interface IUnknownFunctionHolder {
 export interface IUnresolvableNameHolder {
 	findUnresolvableName(): string | undefined;
 }
+
+export interface IUnresolvableValueHolder {
+	findUnresolvableValue(): string | undefined;
+}

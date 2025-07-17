@@ -1,8 +1,14 @@
 import type { AttributeValue } from "./AttributeValue";
 import type { PathExpression } from "./PathExpression";
-import type { IASTNode, IUnresolvableNameHolder } from "./interfaces";
+import type {
+	IASTNode,
+	IUnresolvableNameHolder,
+	IUnresolvableValueHolder,
+} from "./interfaces";
 
-export class DeleteAction implements IASTNode, IUnresolvableNameHolder {
+export class DeleteAction
+	implements IASTNode, IUnresolvableNameHolder, IUnresolvableValueHolder
+{
 	readonly type = "DeleteAction";
 
 	constructor(
@@ -16,5 +22,13 @@ export class DeleteAction implements IASTNode, IUnresolvableNameHolder {
 
 	findUnresolvableName(): string | undefined {
 		return this.path.getUnresolvableAlias()?.value();
+	}
+
+	findUnresolvableValue(): string | undefined {
+		const resolved = this.value.value();
+		if (!resolved) {
+			return this.value.toString();
+		}
+		return undefined;
 	}
 }

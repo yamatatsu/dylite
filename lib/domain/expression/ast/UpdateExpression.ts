@@ -6,12 +6,17 @@ import type {
 	IASTNode,
 	IUnknownFunctionHolder,
 	IUnresolvableNameHolder,
+	IUnresolvableValueHolder,
 } from "./interfaces";
 
 export type Section = SetSection | RemoveSection | AddSection | DeleteSection;
 
 export class UpdateExpression
-	implements IASTNode, IUnknownFunctionHolder, IUnresolvableNameHolder
+	implements
+		IASTNode,
+		IUnknownFunctionHolder,
+		IUnresolvableNameHolder,
+		IUnresolvableValueHolder
 {
 	readonly type = "UpdateExpression";
 
@@ -55,6 +60,18 @@ export class UpdateExpression
 		for (const section of this.sections) {
 			if ("findUnresolvableName" in section) {
 				const unresolvable = section.findUnresolvableName();
+				if (unresolvable) {
+					return unresolvable;
+				}
+			}
+		}
+		return undefined;
+	}
+
+	findUnresolvableValue(): string | undefined {
+		for (const section of this.sections) {
+			if ("findUnresolvableValue" in section) {
+				const unresolvable = section.findUnresolvableValue();
 				if (unresolvable) {
 					return unresolvable;
 				}

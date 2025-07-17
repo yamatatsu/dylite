@@ -1,7 +1,13 @@
 import type { DeleteAction } from "./DeleteAction";
-import type { IASTNode, IUnresolvableNameHolder } from "./interfaces";
+import type {
+	IASTNode,
+	IUnresolvableNameHolder,
+	IUnresolvableValueHolder,
+} from "./interfaces";
 
-export class DeleteSection implements IASTNode, IUnresolvableNameHolder {
+export class DeleteSection
+	implements IASTNode, IUnresolvableNameHolder, IUnresolvableValueHolder
+{
 	readonly type = "DELETE";
 
 	constructor(public readonly expressions: DeleteAction[]) {}
@@ -19,6 +25,16 @@ export class DeleteSection implements IASTNode, IUnresolvableNameHolder {
 	findUnresolvableName(): string | undefined {
 		for (const expr of this.expressions) {
 			const unresolvable = expr.findUnresolvableName();
+			if (unresolvable) {
+				return unresolvable;
+			}
+		}
+		return undefined;
+	}
+
+	findUnresolvableValue(): string | undefined {
+		for (const expr of this.expressions) {
+			const unresolvable = expr.findUnresolvableValue();
 			if (unresolvable) {
 				return unresolvable;
 			}

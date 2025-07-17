@@ -49,6 +49,11 @@ export function parseUpdate(
 		return `An expression attribute name used in the document path is not defined; attribute name: ${unresolvableName}`;
 	}
 
+	const unresolvableValue = ast.findUnresolvableValue();
+	if (unresolvableValue) {
+		return `An expression attribute value used in expression is not defined; attribute value: ${unresolvableValue}`;
+	}
+
 	for (const section of ast.sections) {
 		const processedExpressions: unknown[] = [];
 
@@ -85,10 +90,6 @@ export function parseUpdate(
 					break;
 				}
 				case "AddAction": {
-					// Validate value but keep AST structure
-					resolveAttrVal(expr.value, errors);
-					if (errors.attrVal) break;
-
 					// For type checking, we need the resolved value
 					const resolvedValue = resolveAttrVal(expr.value, errors);
 					const attrType = checkOperator(
@@ -108,10 +109,6 @@ export function parseUpdate(
 					break;
 				}
 				case "DeleteAction": {
-					// Validate value but keep AST structure
-					resolveAttrVal(expr.value, errors);
-					if (errors.attrVal) break;
-
 					// For type checking, we need the resolved value
 					const resolvedValue = resolveAttrVal(expr.value, errors);
 					const attrType = checkOperator(
@@ -161,8 +158,6 @@ function resolveOperand(
 		return operand;
 	}
 	if (operand.type === "AttributeValue") {
-		// Keep AttributeValue as AST, but validate it
-		resolveAttrVal(operand, errors);
 		return operand;
 	}
 	if (operand.type === "FunctionCall") {
@@ -383,13 +378,7 @@ function getImmediateType(val: unknown): string | null {
 }
 
 function checkErrors(errors: Record<string, string>): string | null {
-	const errorOrder = [
-		"attrVal",
-		"pathOverlap",
-		"pathConflict",
-		"operand",
-		"function",
-	];
+	const errorOrder = ["pathOverlap", "pathConflict", "operand", "function"];
 	for (let i = 0; i < errorOrder.length; i++) {
 		if (errors[errorOrder[i]]) return errors[errorOrder[i]];
 	}
