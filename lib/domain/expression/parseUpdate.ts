@@ -375,7 +375,6 @@ function checkPath(
 		return;
 	}
 	for (let i = 0; i < paths.length; i++) {
-		// checkPaths(paths[i], path, errors);
 		const path1 = paths[i];
 		const path2 = path;
 
@@ -390,19 +389,6 @@ function checkPath(
 		}
 	}
 	paths.push(path);
-}
-
-function checkPaths(
-	path1: PathExpression,
-	path2: PathExpression,
-	errors: Record<string, string>,
-) {
-	if (path1.isOverlappedOf(path2)) {
-		errors.pathOverlap = `Two document paths overlap with each other; must remove or rewrite one of these paths; path one: ${path1}, path two: ${path2}`;
-	}
-	if (path1.isConflictWith(path2)) {
-		errors.pathConflict = `Two document paths conflict with each other; must remove or rewrite one of these paths; path one: ${path1}, path two: ${path2}`;
-	}
 }
 
 function checkOperator(
