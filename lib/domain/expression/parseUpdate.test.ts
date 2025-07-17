@@ -9,26 +9,44 @@ describe("parseUpdate", () => {
 				":c": { S: "blue" },
 			},
 		});
-		expect(result).toEqual([
-			{
-				type: "set",
-				path: {
-					type: "PathExpression",
-					segments: [expect.objectContaining({ type: "Alias", name: "#p" })],
-				},
-				val: expect.objectContaining({ type: "AttributeValue", name: ":p" }),
-				attrType: "N",
-			},
-			{
-				type: "set",
-				path: {
-					type: "PathExpression",
-					segments: [expect.objectContaining({ type: "Alias", name: "#c" })],
-				},
-				val: expect.objectContaining({ type: "AttributeValue", name: ":c" }),
-				attrType: "S",
-			},
-		]);
+		expect(result).toEqual(
+			expect.objectContaining({
+				type: "UpdateExpression",
+				sections: [
+					expect.objectContaining({
+						type: "SET",
+						expressions: [
+							expect.objectContaining({
+								type: "SetAction",
+								path: expect.objectContaining({
+									type: "PathExpression",
+									segments: [
+										expect.objectContaining({ type: "Alias", name: "#p" }),
+									],
+								}),
+								value: expect.objectContaining({
+									type: "AttributeValue",
+									name: ":p",
+								}),
+							}),
+							expect.objectContaining({
+								type: "SetAction",
+								path: expect.objectContaining({
+									type: "PathExpression",
+									segments: [
+										expect.objectContaining({ type: "Alias", name: "#c" }),
+									],
+								}),
+								value: expect.objectContaining({
+									type: "AttributeValue",
+									name: ":c",
+								}),
+							}),
+						],
+					}),
+				],
+			}),
+		);
 	});
 
 	it("should parse a SET action with if_not_exists", () => {
@@ -36,30 +54,43 @@ describe("parseUpdate", () => {
 			ExpressionAttributeNames: { "#p": "Price" },
 			ExpressionAttributeValues: { ":p": { N: "100" } },
 		});
-		expect(result).toEqual([
-			{
-				type: "set",
-				path: {
-					type: "PathExpression",
-					segments: [expect.objectContaining({ type: "Alias", name: "#p" })],
-				},
-				val: {
-					type: "function",
-					name: "if_not_exists",
-					args: [
-						{
-							type: "PathExpression",
-							segments: [
-								expect.objectContaining({ type: "Alias", name: "#p" }),
-							],
-						},
-						expect.objectContaining({ type: "AttributeValue", name: ":p" }),
-					],
-					attrType: "N",
-				},
-				attrType: "N",
-			},
-		]);
+		expect(result).toEqual(
+			expect.objectContaining({
+				type: "UpdateExpression",
+				sections: [
+					expect.objectContaining({
+						type: "SET",
+						expressions: [
+							expect.objectContaining({
+								type: "SetAction",
+								path: expect.objectContaining({
+									type: "PathExpression",
+									segments: [
+										expect.objectContaining({ type: "Alias", name: "#p" }),
+									],
+								}),
+								value: expect.objectContaining({
+									type: "FunctionCall",
+									name: "if_not_exists",
+									args: [
+										expect.objectContaining({
+											type: "PathExpression",
+											segments: [
+												expect.objectContaining({ type: "Alias", name: "#p" }),
+											],
+										}),
+										expect.objectContaining({
+											type: "AttributeValue",
+											name: ":p",
+										}),
+									],
+								}),
+							}),
+						],
+					}),
+				],
+			}),
+		);
 	});
 
 	it("should parse a REMOVE action", () => {
@@ -67,22 +98,36 @@ describe("parseUpdate", () => {
 			ExpressionAttributeNames: { "#s": "InStock", "#d": "Description" },
 			ExpressionAttributeValues: undefined,
 		});
-		expect(result).toEqual([
-			{
-				type: "remove",
-				path: {
-					type: "PathExpression",
-					segments: [expect.objectContaining({ type: "Alias", name: "#s" })],
-				},
-			},
-			{
-				type: "remove",
-				path: {
-					type: "PathExpression",
-					segments: [expect.objectContaining({ type: "Alias", name: "#d" })],
-				},
-			},
-		]);
+		expect(result).toEqual(
+			expect.objectContaining({
+				type: "UpdateExpression",
+				sections: [
+					expect.objectContaining({
+						type: "REMOVE",
+						expressions: [
+							expect.objectContaining({
+								type: "RemoveAction",
+								path: expect.objectContaining({
+									type: "PathExpression",
+									segments: [
+										expect.objectContaining({ type: "Alias", name: "#s" }),
+									],
+								}),
+							}),
+							expect.objectContaining({
+								type: "RemoveAction",
+								path: expect.objectContaining({
+									type: "PathExpression",
+									segments: [
+										expect.objectContaining({ type: "Alias", name: "#d" }),
+									],
+								}),
+							}),
+						],
+					}),
+				],
+			}),
+		);
 	});
 
 	it("should parse an ADD action", () => {
@@ -90,17 +135,31 @@ describe("parseUpdate", () => {
 			ExpressionAttributeNames: { "#q": "Quantity" },
 			ExpressionAttributeValues: { ":v": { N: "1" } },
 		});
-		expect(result).toEqual([
-			{
-				type: "add",
-				path: {
-					type: "PathExpression",
-					segments: [expect.objectContaining({ type: "Alias", name: "#q" })],
-				},
-				val: expect.objectContaining({ type: "AttributeValue", name: ":v" }),
-				attrType: "N",
-			},
-		]);
+		expect(result).toEqual(
+			expect.objectContaining({
+				type: "UpdateExpression",
+				sections: [
+					expect.objectContaining({
+						type: "ADD",
+						expressions: [
+							expect.objectContaining({
+								type: "AddAction",
+								path: expect.objectContaining({
+									type: "PathExpression",
+									segments: [
+										expect.objectContaining({ type: "Alias", name: "#q" }),
+									],
+								}),
+								value: expect.objectContaining({
+									type: "AttributeValue",
+									name: ":v",
+								}),
+							}),
+						],
+					}),
+				],
+			}),
+		);
 	});
 
 	it("should parse a DELETE action", () => {
@@ -108,17 +167,31 @@ describe("parseUpdate", () => {
 			ExpressionAttributeNames: { "#c": "Colors" },
 			ExpressionAttributeValues: { ":v": { SS: ["red"] } },
 		});
-		expect(result).toEqual([
-			{
-				type: "delete",
-				path: {
-					type: "PathExpression",
-					segments: [expect.objectContaining({ type: "Alias", name: "#c" })],
-				},
-				val: expect.objectContaining({ type: "AttributeValue", name: ":v" }),
-				attrType: "SS",
-			},
-		]);
+		expect(result).toEqual(
+			expect.objectContaining({
+				type: "UpdateExpression",
+				sections: [
+					expect.objectContaining({
+						type: "DELETE",
+						expressions: [
+							expect.objectContaining({
+								type: "DeleteAction",
+								path: expect.objectContaining({
+									type: "PathExpression",
+									segments: [
+										expect.objectContaining({ type: "Alias", name: "#c" }),
+									],
+								}),
+								value: expect.objectContaining({
+									type: "AttributeValue",
+									name: ":v",
+								}),
+							}),
+						],
+					}),
+				],
+			}),
+		);
 	});
 
 	it("should parse multiple actions", () => {
@@ -126,35 +199,66 @@ describe("parseUpdate", () => {
 			ExpressionAttributeNames: { "#p": "Price", "#q": "Quantity" },
 			ExpressionAttributeValues: { ":p": { N: "100" }, ":v": { N: "1" } },
 		});
-		expect(result).toEqual([
-			{
-				type: "set",
-				path: {
-					type: "PathExpression",
-					segments: [expect.objectContaining({ type: "Alias", name: "#p" })],
-				},
-				val: expect.objectContaining({ type: "AttributeValue", name: ":p" }),
-				attrType: "N",
-			},
-			{
-				type: "remove",
-				path: {
-					type: "PathExpression",
-					segments: [
-						expect.objectContaining({ type: "Identifier", name: "OldAttr" }),
-					],
-				},
-			},
-			{
-				type: "add",
-				path: {
-					type: "PathExpression",
-					segments: [expect.objectContaining({ type: "Alias", name: "#q" })],
-				},
-				val: expect.objectContaining({ type: "AttributeValue", name: ":v" }),
-				attrType: "N",
-			},
-		]);
+		expect(result).toEqual(
+			expect.objectContaining({
+				type: "UpdateExpression",
+				sections: [
+					expect.objectContaining({
+						type: "SET",
+						expressions: [
+							expect.objectContaining({
+								type: "SetAction",
+								path: expect.objectContaining({
+									type: "PathExpression",
+									segments: [
+										expect.objectContaining({ type: "Alias", name: "#p" }),
+									],
+								}),
+								value: expect.objectContaining({
+									type: "AttributeValue",
+									name: ":p",
+								}),
+							}),
+						],
+					}),
+					expect.objectContaining({
+						type: "REMOVE",
+						expressions: [
+							expect.objectContaining({
+								type: "RemoveAction",
+								path: expect.objectContaining({
+									type: "PathExpression",
+									segments: [
+										expect.objectContaining({
+											type: "Identifier",
+											name: "OldAttr",
+										}),
+									],
+								}),
+							}),
+						],
+					}),
+					expect.objectContaining({
+						type: "ADD",
+						expressions: [
+							expect.objectContaining({
+								type: "AddAction",
+								path: expect.objectContaining({
+									type: "PathExpression",
+									segments: [
+										expect.objectContaining({ type: "Alias", name: "#q" }),
+									],
+								}),
+								value: expect.objectContaining({
+									type: "AttributeValue",
+									name: ":v",
+								}),
+							}),
+						],
+					}),
+				],
+			}),
+		);
 	});
 
 	it("should return an error for an update with a reserved word", () => {

@@ -123,7 +123,7 @@ export function parseUpdate(
 	const error = checkErrors(errors);
 	if (error) return error;
 
-	return processedSections;
+	return ast;
 }
 
 function resolveOperand(
