@@ -1,4 +1,4 @@
-export interface IASTNode {
+export interface IReservedWordHolder {
 	findReservedWord(): string | undefined;
 }
 

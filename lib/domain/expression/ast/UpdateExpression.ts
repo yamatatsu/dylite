@@ -3,7 +3,7 @@ import type { DeleteSection } from "./DeleteSection";
 import type { RemoveSection } from "./RemoveSection";
 import type { SetSection } from "./SetSection";
 import type {
-	IASTNode,
+	IReservedWordHolder,
 	IUnknownFunctionHolder,
 	IUnresolvableNameHolder,
 	IUnresolvableValueHolder,
@@ -13,7 +13,7 @@ export type Section = SetSection | RemoveSection | AddSection | DeleteSection;
 
 export class UpdateExpression
 	implements
-		IASTNode,
+		IReservedWordHolder,
 		IUnknownFunctionHolder,
 		IUnresolvableNameHolder,
 		IUnresolvableValueHolder

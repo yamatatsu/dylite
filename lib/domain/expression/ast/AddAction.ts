@@ -1,13 +1,16 @@
 import type { AttributeValue } from "./AttributeValue";
 import type { PathExpression } from "./PathExpression";
 import type {
-	IASTNode,
+	IReservedWordHolder,
 	IUnresolvableNameHolder,
 	IUnresolvableValueHolder,
 } from "./interfaces";
 
 export class AddAction
-	implements IASTNode, IUnresolvableNameHolder, IUnresolvableValueHolder
+	implements
+		IReservedWordHolder,
+		IUnresolvableNameHolder,
+		IUnresolvableValueHolder
 {
 	readonly type = "AddAction";
 

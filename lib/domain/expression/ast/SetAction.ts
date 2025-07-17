@@ -3,7 +3,7 @@ import type { AttributeValue } from "./AttributeValue";
 import type { FunctionForUpdate } from "./FunctionForUpdate";
 import type { PathExpression } from "./PathExpression";
 import type {
-	IASTNode,
+	IReservedWordHolder,
 	IUnknownFunctionHolder,
 	IUnresolvableNameHolder,
 	IUnresolvableValueHolder,
@@ -17,7 +17,7 @@ export type Operand =
 
 export class SetAction
 	implements
-		IASTNode,
+		IReservedWordHolder,
 		IUnknownFunctionHolder,
 		IUnresolvableNameHolder,
 		IUnresolvableValueHolder

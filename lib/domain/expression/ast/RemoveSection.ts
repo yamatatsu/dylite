@@ -1,7 +1,7 @@
 import type { RemoveAction } from "./RemoveAction";
-import type { IASTNode } from "./interfaces.js";
+import type { IReservedWordHolder } from "./interfaces.js";
 
-export class RemoveSection implements IASTNode {
+export class RemoveSection implements IReservedWordHolder {
 	readonly type = "REMOVE";
 
 	constructor(public readonly expressions: RemoveAction[]) {}

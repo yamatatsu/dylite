@@ -1,12 +1,15 @@
 import type { DeleteAction } from "./DeleteAction";
 import type {
-	IASTNode,
+	IReservedWordHolder,
 	IUnresolvableNameHolder,
 	IUnresolvableValueHolder,
 } from "./interfaces";
 
 export class DeleteSection
-	implements IASTNode, IUnresolvableNameHolder, IUnresolvableValueHolder
+	implements
+		IReservedWordHolder,
+		IUnresolvableNameHolder,
+		IUnresolvableValueHolder
 {
 	readonly type = "DELETE";
 

@@ -1,12 +1,15 @@
 import type { AddAction } from "./AddAction";
 import type {
-	IASTNode,
+	IReservedWordHolder,
 	IUnresolvableNameHolder,
 	IUnresolvableValueHolder,
 } from "./interfaces";
 
 export class AddSection
-	implements IASTNode, IUnresolvableNameHolder, IUnresolvableValueHolder
+	implements
+		IReservedWordHolder,
+		IUnresolvableNameHolder,
+		IUnresolvableValueHolder
 {
 	readonly type = "ADD";
 

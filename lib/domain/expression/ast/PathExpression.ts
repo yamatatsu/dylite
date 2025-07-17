@@ -3,9 +3,9 @@ import type {
 	IdentifierPathSegment,
 	PathSegment,
 } from "./PathSegment";
-import type { IASTNode } from "./interfaces";
+import type { IReservedWordHolder } from "./interfaces";
 
-export class PathExpression implements IASTNode {
+export class PathExpression implements IReservedWordHolder {
 	public readonly type = "PathExpression";
 
 	constructor(private readonly segments: PathSegment[]) {}

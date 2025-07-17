@@ -1,6 +1,6 @@
 import type { SetAction } from "./SetAction";
 import type {
-	IASTNode,
+	IReservedWordHolder,
 	IUnknownFunctionHolder,
 	IUnresolvableNameHolder,
 	IUnresolvableValueHolder,
@@ -8,7 +8,7 @@ import type {
 
 export class SetSection
 	implements
-		IASTNode,
+		IReservedWordHolder,
 		IUnknownFunctionHolder,
 		IUnresolvableNameHolder,
 		IUnresolvableValueHolder
