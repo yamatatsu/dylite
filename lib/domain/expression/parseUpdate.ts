@@ -1,65 +1,11 @@
 import type { Value } from "../types";
 import { AttributeValue } from "./ast/AttributeValue";
+import type { FunctionForUpdate } from "./ast/FunctionForUpdate";
 import type { PathExpression } from "./ast/PathExpression";
+import type { Operand } from "./ast/SetAction";
+import type { UpdateExpression } from "./ast/UpdateExpression";
 import type { Context } from "./context";
 import updateParser from "./grammar-update";
-
-type Operand =
-	| PathExpression
-	| AttributeValue
-	| FunctionCall
-	| ArithmeticExpression;
-
-type FunctionCall = {
-	type: "FunctionCall";
-	name: string;
-	args: Operand[];
-};
-
-type ArithmeticExpression = {
-	type: "ArithmeticExpression";
-	operator: "+" | "-";
-	left: Operand;
-	right: Operand;
-};
-
-type SetExpression = {
-	type: "SetExpression";
-	path: PathExpression;
-	value: Operand;
-};
-
-type RemoveExpression = {
-	type: "RemoveExpression";
-	path: PathExpression;
-};
-
-type AddExpression = {
-	type: "AddExpression";
-	path: PathExpression;
-	value: AttributeValue;
-};
-
-type DeleteExpression = {
-	type: "DeleteExpression";
-	path: PathExpression;
-	value: AttributeValue;
-};
-
-type Section = {
-	type: "SET" | "REMOVE" | "ADD" | "DELETE";
-	expressions: (
-		| SetExpression
-		| RemoveExpression
-		| AddExpression
-		| DeleteExpression
-	)[];
-};
-
-type UpdateExpressionAST = {
-	type: "UpdateExpression";
-	sections: Section[];
-};
 
 export function parseUpdate(
 	expression: string,
@@ -79,7 +25,7 @@ export function parseUpdate(
 	};
 
 	// Parse to AST
-	const ast: UpdateExpressionAST = updateParser.parse(expression, { context });
+	const ast: UpdateExpression = updateParser.parse(expression, { context });
 
 	// Process AST: resolve aliases and validate
 	const errors: Record<string, string> = {};
@@ -109,7 +55,7 @@ export function parseUpdate(
 			if (errors.pathOverlap || errors.pathConflict) break;
 
 			switch (expr.type) {
-				case "SetExpression": {
+				case "SetAction": {
 					const resolvedValue = resolveOperand(
 						expr.value,
 						validationContext,
@@ -126,14 +72,14 @@ export function parseUpdate(
 					};
 					break;
 				}
-				case "RemoveExpression": {
+				case "RemoveAction": {
 					processedExpr = {
 						type: "remove",
 						path: expr.path,
 					};
 					break;
 				}
-				case "AddExpression": {
+				case "AddAction": {
 					// Validate value but keep AST structure
 					resolveAttrVal(expr.value, errors);
 					if (errors.attrVal) break;
@@ -156,7 +102,7 @@ export function parseUpdate(
 					};
 					break;
 				}
-				case "DeleteExpression": {
+				case "DeleteAction": {
 					// Validate value but keep AST structure
 					resolveAttrVal(expr.value, errors);
 					if (errors.attrVal) break;
@@ -233,10 +179,10 @@ function resolveOperand(
 		return operand;
 	}
 	if (operand.type === "FunctionCall") {
-		return resolveFunction(operand as FunctionCall, context, errors);
+		return resolveFunction(operand, context, errors);
 	}
 	if (operand.type === "ArithmeticExpression") {
-		const arithExpr = operand as ArithmeticExpression;
+		const arithExpr = operand;
 		const left = resolveOperand(arithExpr.left, context, errors);
 		if (hasError(errors)) return null;
 
@@ -261,7 +207,7 @@ function resolveOperand(
 }
 
 function resolveFunction(
-	func: FunctionCall,
+	func: FunctionForUpdate,
 	context: ValidationContext,
 	errors: Record<string, string>,
 ): unknown {
