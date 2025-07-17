@@ -5,7 +5,7 @@ import type { PathExpression } from "./PathExpression";
 import type {
 	IASTNode,
 	IUnknownFunctionHolder,
-	IUnresolvableValueHolder,
+	IUnresolvableNameHolder,
 } from "./interfaces";
 
 export type Operand =
@@ -15,7 +15,7 @@ export type Operand =
 	| ArithmeticExpression;
 
 export class SetAction
-	implements IASTNode, IUnknownFunctionHolder, IUnresolvableValueHolder
+	implements IASTNode, IUnknownFunctionHolder, IUnresolvableNameHolder
 {
 	readonly type = "SetAction";
 
@@ -40,7 +40,7 @@ export class SetAction
 		return this.value.findUnknownFunction();
 	}
 
-	findUnresolvableValue(): string | undefined {
+	findUnresolvableName(): string | undefined {
 		return this.path.getUnresolvableAlias()?.toString();
 	}
 }

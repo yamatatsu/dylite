@@ -44,9 +44,9 @@ export function parseUpdate(
 	if (duplicateSection) {
 		return `The "${duplicateSection}" section can only be used once in an update expression;`;
 	}
-	const unresolvableValue = ast.findUnresolvableValue();
-	if (unresolvableValue) {
-		return `An expression attribute name used in the document path is not defined; attribute name: ${unresolvableValue}`;
+	const unresolvableName = ast.findUnresolvableName();
+	if (unresolvableName) {
+		return `An expression attribute name used in the document path is not defined; attribute name: ${unresolvableName}`;
 	}
 
 	for (const section of ast.sections) {

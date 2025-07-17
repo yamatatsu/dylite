@@ -1,7 +1,7 @@
 import type { AddAction } from "./AddAction";
-import type { IASTNode, IUnresolvableValueHolder } from "./interfaces";
+import type { IASTNode, IUnresolvableNameHolder } from "./interfaces";
 
-export class AddSection implements IASTNode, IUnresolvableValueHolder {
+export class AddSection implements IASTNode, IUnresolvableNameHolder {
 	readonly type = "ADD";
 
 	constructor(public readonly expressions: AddAction[]) {}
@@ -16,9 +16,9 @@ export class AddSection implements IASTNode, IUnresolvableValueHolder {
 		return undefined;
 	}
 
-	findUnresolvableValue(): string | undefined {
+	findUnresolvableName(): string | undefined {
 		for (const expr of this.expressions) {
-			const unresolvable = expr.findUnresolvableValue();
+			const unresolvable = expr.findUnresolvableName();
 			if (unresolvable) {
 				return unresolvable;
 			}

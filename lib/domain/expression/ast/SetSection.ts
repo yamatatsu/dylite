@@ -2,11 +2,11 @@ import type { SetAction } from "./SetAction";
 import type {
 	IASTNode,
 	IUnknownFunctionHolder,
-	IUnresolvableValueHolder,
+	IUnresolvableNameHolder,
 } from "./interfaces.js";
 
 export class SetSection
-	implements IASTNode, IUnknownFunctionHolder, IUnresolvableValueHolder
+	implements IASTNode, IUnknownFunctionHolder, IUnresolvableNameHolder
 {
 	readonly type = "SET";
 
@@ -32,9 +32,9 @@ export class SetSection
 		return undefined;
 	}
 
-	findUnresolvableValue(): string | undefined {
+	findUnresolvableName(): string | undefined {
 		for (const expr of this.expressions) {
-			const unresolvable = expr.findUnresolvableValue();
+			const unresolvable = expr.findUnresolvableName();
 			if (unresolvable) {
 				return unresolvable;
 			}

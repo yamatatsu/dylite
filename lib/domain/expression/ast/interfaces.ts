@@ -6,6 +6,6 @@ export interface IUnknownFunctionHolder {
 	findUnknownFunction(): string | undefined;
 }
 
-export interface IUnresolvableValueHolder {
-	findUnresolvableValue(): string | undefined;
+export interface IUnresolvableNameHolder {
+	findUnresolvableName(): string | undefined;
 }

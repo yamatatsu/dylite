@@ -5,13 +5,13 @@ import type { SetSection } from "./SetSection";
 import type {
 	IASTNode,
 	IUnknownFunctionHolder,
-	IUnresolvableValueHolder,
+	IUnresolvableNameHolder,
 } from "./interfaces";
 
 export type Section = SetSection | RemoveSection | AddSection | DeleteSection;
 
 export class UpdateExpression
-	implements IASTNode, IUnknownFunctionHolder, IUnresolvableValueHolder
+	implements IASTNode, IUnknownFunctionHolder, IUnresolvableNameHolder
 {
 	readonly type = "UpdateExpression";
 
@@ -51,10 +51,10 @@ export class UpdateExpression
 		return undefined;
 	}
 
-	findUnresolvableValue(): string | undefined {
+	findUnresolvableName(): string | undefined {
 		for (const section of this.sections) {
-			if ("findUnresolvableValue" in section) {
-				const unresolvable = section.findUnresolvableValue();
+			if ("findUnresolvableName" in section) {
+				const unresolvable = section.findUnresolvableName();
 				if (unresolvable) {
 					return unresolvable;
 				}
