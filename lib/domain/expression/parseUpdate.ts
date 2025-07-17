@@ -1,7 +1,6 @@
 import type { Value } from "../types";
 import { AttributeValue } from "./ast/AttributeValue";
 import type { FunctionForUpdate } from "./ast/FunctionForUpdate";
-import type { PathExpression } from "./ast/PathExpression";
 import type { Operand } from "./ast/SetAction";
 import type { UpdateExpression } from "./ast/UpdateExpression";
 import type { Context } from "./context";
@@ -24,7 +23,6 @@ export function parseUpdate(
 
 	// Process AST: resolve aliases and validate
 	const errors: Record<string, string> = {};
-	const paths: PathExpression[] = [];
 	const processedSections: unknown[] = [];
 
 	const reservedWord = ast.findReservedWord();
@@ -43,10 +41,17 @@ export function parseUpdate(
 	if (unresolvableName) {
 		return `An expression attribute name used in the document path is not defined; attribute name: ${unresolvableName}`;
 	}
-
 	const unresolvableValue = ast.findUnresolvableValue();
 	if (unresolvableValue) {
 		return `An expression attribute value used in expression is not defined; attribute value: ${unresolvableValue}`;
+	}
+	const overlappedPath = ast.findOverlappedPath();
+	if (overlappedPath) {
+		return `Two document paths overlap with each other; must remove or rewrite one of these paths; path one: ${overlappedPath[0]}, path two: ${overlappedPath[1]}`;
+	}
+	const pathConflict = ast.findPathConflict();
+	if (pathConflict) {
+		return `Two document paths conflict with each other; must remove or rewrite one of these paths; path one: ${pathConflict[0]}, path two: ${pathConflict[1]}`;
 	}
 
 	for (const section of ast.sections) {
@@ -54,10 +59,6 @@ export function parseUpdate(
 
 		for (const expr of section.expressions) {
 			let processedExpr: unknown;
-
-			// Check path conflicts
-			checkPath(expr.path, paths, errors);
-			if (errors.pathOverlap || errors.pathConflict) break;
 
 			switch (expr.type) {
 				case "SetAction": {
@@ -253,31 +254,6 @@ function resolveAttrVal(
 	return resolved;
 }
 
-function checkPath(
-	path: PathExpression,
-	paths: PathExpression[],
-	errors: Record<string, string>,
-) {
-	if (errors.pathOverlap || errors.pathConflict) {
-		return;
-	}
-	for (let i = 0; i < paths.length; i++) {
-		const path1 = paths[i];
-		const path2 = path;
-
-		if (path1.isOverlappedOf(path2)) {
-			errors.pathOverlap = `Two document paths overlap with each other; must remove or rewrite one of these paths; path one: ${path1}, path two: ${path2}`;
-		}
-		if (path1.isConflictWith(path2)) {
-			errors.pathConflict = `Two document paths conflict with each other; must remove or rewrite one of these paths; path one: ${path1}, path two: ${path2}`;
-		}
-		if (errors.pathOverlap || errors.pathConflict) {
-			return;
-		}
-	}
-	paths.push(path);
-}
-
 function checkOperator(
 	operator: string,
 	val: unknown,
@@ -345,7 +321,7 @@ function getImmediateType(val: unknown): string | null {
 }
 
 function checkErrors(errors: Record<string, string>): string | null {
-	const errorOrder = ["pathOverlap", "pathConflict", "operand", "function"];
+	const errorOrder = ["operand", "function"];
 	for (let i = 0; i < errorOrder.length; i++) {
 		if (errors[errorOrder[i]]) return errors[errorOrder[i]];
 	}

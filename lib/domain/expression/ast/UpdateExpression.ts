@@ -1,8 +1,11 @@
 import type { AddSection } from "./AddSection";
 import type { DeleteSection } from "./DeleteSection";
+import type { PathExpression } from "./PathExpression";
 import type { RemoveSection } from "./RemoveSection";
 import type { SetSection } from "./SetSection";
 import type {
+	IOverlappedPathHolder,
+	IPathConflictHolder,
 	IReservedWordHolder,
 	IUnknownFunctionHolder,
 	IUnresolvableNameHolder,
@@ -16,7 +19,9 @@ export class UpdateExpression
 		IReservedWordHolder,
 		IUnknownFunctionHolder,
 		IUnresolvableNameHolder,
-		IUnresolvableValueHolder
+		IUnresolvableValueHolder,
+		IOverlappedPathHolder,
+		IPathConflictHolder
 {
 	readonly type = "UpdateExpression";
 
@@ -53,6 +58,46 @@ export class UpdateExpression
 			}
 			sectionSet.add(section.type);
 		}
+		return undefined;
+	}
+
+	findOverlappedPath(): [PathExpression, PathExpression] | undefined {
+		const paths: PathExpression[] = [];
+
+		for (const section of this.sections) {
+			for (const expr of section.expressions) {
+				const currentPath = expr.path;
+
+				for (const existingPath of paths) {
+					if (existingPath.isOverlappedOf(currentPath)) {
+						return [existingPath, currentPath];
+					}
+				}
+
+				paths.push(currentPath);
+			}
+		}
+
+		return undefined;
+	}
+
+	findPathConflict(): [PathExpression, PathExpression] | undefined {
+		const paths: PathExpression[] = [];
+
+		for (const section of this.sections) {
+			for (const expr of section.expressions) {
+				const currentPath = expr.path;
+
+				for (const existingPath of paths) {
+					if (existingPath.isConflictWith(currentPath)) {
+						return [existingPath, currentPath];
+					}
+				}
+
+				paths.push(currentPath);
+			}
+		}
+
 		return undefined;
 	}
 
