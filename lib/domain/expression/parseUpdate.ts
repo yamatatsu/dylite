@@ -1,6 +1,8 @@
 import type { Value } from "../types";
+import type { ArithmeticExpression } from "./ast/ArithmeticExpression";
 import { AttributeValue } from "./ast/AttributeValue";
 import type { FunctionForUpdate } from "./ast/FunctionForUpdate";
+import type { PathExpression } from "./ast/PathExpression";
 import type { Operand } from "./ast/SetAction";
 import type { UpdateExpression } from "./ast/UpdateExpression";
 import type { Context } from "./context";
@@ -87,66 +89,41 @@ export function parseUpdate(
 function resolveOperand(
 	operand: Operand,
 	errors: Record<string, string>,
-): unknown {
-	if (operand.type === "PathExpression") {
-		return operand;
-	}
-	if (operand.type === "AttributeValue") {
-		return operand;
-	}
+): void {
 	if (operand.type === "FunctionCall") {
-		return resolveFunction(operand, errors);
+		resolveFunction(operand, errors);
+		return;
 	}
 	if (operand.type === "ArithmeticExpression") {
-		const arithExpr = operand;
-		const left = resolveOperand(arithExpr.left, errors);
-		if (hasError(errors)) return null;
+		resolveOperand(operand.left, errors);
+		if (hasError(errors)) return;
 
-		const right = resolveOperand(arithExpr.right, errors);
-		if (hasError(errors)) return null;
+		resolveOperand(operand.right, errors);
+		if (hasError(errors)) return;
 
-		const attrType = checkFunction(arithExpr.operator, [left, right], errors);
-		if (hasError(errors)) return null;
-
-		return {
-			type: arithExpr.operator === "+" ? "add" : "subtract",
-			args: [left, right],
-			attrType: attrType,
-		};
+		checkFunction(operand.operator, [operand.left, operand.right], errors);
 	}
-	return operand;
 }
 
 function resolveFunction(
 	func: FunctionForUpdate,
 	errors: Record<string, string>,
-): unknown {
-	const resolvedArgs: unknown[] = [];
-
+): void {
 	for (const arg of func.args) {
-		const resolved = resolveOperand(arg, errors);
-		if (hasError(errors)) return null;
-		resolvedArgs.push(resolved);
+		resolveOperand(arg, errors);
+		if (hasError(errors)) return;
 	}
 
-	const attrType = checkFunction(func.name, resolvedArgs, errors);
-	if (hasError(errors)) return null;
-
-	return {
-		type: "function",
-		name: func.name,
-		args: resolvedArgs,
-		attrType: attrType,
-	};
+	checkFunction(func.name, func.args, errors);
 }
 
 function checkFunction(
 	name: string,
-	args: unknown[],
+	args: (PathExpression | AttributeValue | FunctionForUpdate)[],
 	errors: Record<string, string>,
-): string | null {
+): void {
 	if (errors.function) {
-		return null;
+		return;
 	}
 
 	const functions: Record<string, number> = {
@@ -159,7 +136,7 @@ function checkFunction(
 	const numOperands = functions[name];
 	if (numOperands !== args.length) {
 		errors.function = `Incorrect number of operands for operator or function; operator or function: ${name}, number of operands: ${args.length}`;
-		return null;
+		return;
 	}
 
 	switch (name) {
@@ -171,32 +148,29 @@ function checkFunction(
 				args[0].type !== "PathExpression"
 			) {
 				errors.function = `Operator or function requires a document path; operator or function: ${name}`;
-				return null;
 			}
-			return getType(args[1]);
+			return;
 		case "list_append":
 			for (let i = 0; i < args.length; i++) {
 				const type = getType(args[i]);
 				if (type && type !== "L") {
 					errors.function = `Incorrect operand type for operator or function; operator or function: ${name}, operand type: ${type}`;
-					return null;
+					return;
 				}
 			}
-			return "L";
+			return;
 		case "+":
 		case "-":
 			for (let i = 0; i < args.length; i++) {
 				const type = getType(args[i]);
 				if (type && type !== "N") {
 					errors.function = `Incorrect operand type for operator or function; operator or function: ${name}, operand type: ${type}`;
-					return null;
+					return;
 				}
 			}
-			return "N";
+			return;
 	}
-	return null;
 }
-
 function checkOperator(
 	operator: string,
 	val: AttributeValue,
@@ -227,7 +201,9 @@ function checkOperator(
 	}
 }
 
-function getType(val: unknown): string | null {
+function getType(
+	val: PathExpression | AttributeValue | FunctionForUpdate | Value | undefined,
+): string | null {
 	if (!val || typeof val !== "object" || Array.isArray(val)) return null;
 	if (val && typeof val === "object" && "attrType" in val) {
 		return (val as { attrType: string }).attrType;
@@ -244,7 +220,9 @@ function getType(val: unknown): string | null {
 	return getImmediateType(val);
 }
 
-function getImmediateType(val: unknown): string | null {
+function getImmediateType(
+	val: PathExpression | FunctionForUpdate | Value,
+): string | null {
 	if (!val || typeof val !== "object" || Array.isArray(val)) return null;
 	if (val && typeof val === "object" && "attrType" in val) return null;
 

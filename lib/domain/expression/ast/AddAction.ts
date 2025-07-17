@@ -1,3 +1,4 @@
+import type { Value } from "../../types";
 import type { AttributeValue } from "./AttributeValue";
 import type { PathExpression } from "./PathExpression";
 import type {
@@ -34,4 +35,15 @@ export class AddAction
 		}
 		return undefined;
 	}
+
+	// findInvalidValueType(): Value | undefined {
+	// 	const resolved = this.value.value();
+	// 	if (resolved === undefined) {
+	// 		return this.value.toString();
+	// 	}
+	// 	if (typeof resolved !== "number" && typeof resolved !== "string") {
+	// 		return resolved;
+	// 	}
+	// 	return undefined;
+	// }
 }
