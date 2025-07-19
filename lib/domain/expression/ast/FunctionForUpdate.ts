@@ -20,4 +20,21 @@ export class FunctionForUpdate implements IUnknownFunctionHolder {
 		}
 		return this.name;
 	}
+
+	valueType(): string | null {
+		switch (this.name) {
+			case "if_not_exists":
+				switch (this.args[1].type) {
+					case "AttributeValue":
+						return this.args[1].value()?.type ?? null;
+					case "FunctionCall":
+						return this.args[1].valueType();
+					default:
+						return null;
+				}
+			case "list_append":
+				return "L";
+		}
+		return null;
+	}
 }

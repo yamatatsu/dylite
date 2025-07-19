@@ -1,6 +1,7 @@
+import { instance } from "valibot";
+import { type PlainValue, type Value, ValueBase } from "../Value";
 import { compare } from "../compare";
-import type { Value } from "../types";
-import type { AttributeValue } from "./ast/AttributeValue";
+import { AttributeValue } from "./ast/AttributeValue";
 import type { PathExpression } from "./ast/PathExpression";
 import type { Context } from "./context";
 import conditionParser from "./grammar-condition";
@@ -48,8 +49,7 @@ type ASTNode =
 
 type ValidationContext = {
 	attrNames: Record<string, string> | undefined;
-	attrVals: Record<string, Value> | undefined;
-	compare: (comp: string, x: Value, y: Value) => boolean;
+	attrVals: Record<string, PlainValue.Value> | undefined;
 };
 
 type ValidationErrors = {
@@ -68,7 +68,7 @@ export function parseCondition(
 	expression: string,
 	options: {
 		ExpressionAttributeNames: Record<string, string> | undefined;
-		ExpressionAttributeValues: Record<string, Value> | undefined;
+		ExpressionAttributeValues: Record<string, PlainValue.Value> | undefined;
 	},
 ) {
 	// Parse the expression to get raw AST with context
@@ -82,11 +82,8 @@ export function parseCondition(
 	const validationContext: ValidationContext = {
 		attrNames: options.ExpressionAttributeNames,
 		attrVals: options.ExpressionAttributeValues as
-			| Record<string, Value>
+			| Record<string, PlainValue.Value>
 			| undefined,
-		compare: (comp: string, x: Value, y: Value) => {
-			return compare(comp, x as Attr, [y as Attr]);
-		},
 	};
 
 	const errors: ValidationErrors = {};
@@ -305,23 +302,8 @@ function isRedundantParensNode(node: unknown): node is RedundantParensNode {
 	);
 }
 
-function isAttributeValue(node: unknown): node is Value {
-	if (typeof node !== "object" || node === null || Array.isArray(node)) {
-		return false;
-	}
-	const attributeTypes = [
-		"S",
-		"N",
-		"B",
-		"SS",
-		"NS",
-		"BS",
-		"M",
-		"L",
-		"NULL",
-		"BOOL",
-	];
-	return attributeTypes.some((type) => type in node);
+function isAttributeValue(node: unknown): node is AttributeValue {
+	return node instanceof AttributeValue;
 }
 
 function resolveAttrVal(
@@ -403,22 +385,24 @@ function validateFunction(
 			}
 
 			// Resolve AttributeValueNode to actual value for validation
-			let attrVal = args[1] as Value;
+
 			if (isAttributeValueNode(args[1])) {
 				const tempErrors: ValidationErrors = {};
-				const resolved = resolveAttrVal(args[1], tempErrors);
-				if (tempErrors.attrNameVal) return undefined;
-				attrVal = resolved as Value;
+				resolveAttrVal(args[1], tempErrors);
+				const val = args[1].value();
+				if (!val) return undefined;
+				const attrVal = val;
+				if (
+					attrVal.type === "S" &&
+					!["S", "N", "B", "NULL", "SS", "BOOL", "L", "BS", "NS", "M"].includes(
+						attrVal.value || "",
+					)
+				) {
+					errors.function = `Invalid attribute type name found; type: ${attrVal.value}, valid types: {B,NULL,SS,BOOL,L,BS,N,NS,S,M}`;
+					return undefined;
+				}
 			}
 
-			if (
-				!["S", "N", "B", "NULL", "SS", "BOOL", "L", "BS", "NS", "M"].includes(
-					attrVal.S || "",
-				)
-			) {
-				errors.function = `Invalid attribute type name found; type: ${attrVal.S}, valid types: {B,NULL,SS,BOOL,L,BS,N,NS,S,M}`;
-				return undefined;
-			}
 			return "BOOL";
 		}
 		case "size": {
@@ -524,18 +508,16 @@ function checkBetweenArgs(
 	const type1 = getImmediateType(xResolved);
 	const type2 = getImmediateType(yResolved);
 	if (type1 && type2) {
+		const xVal = xResolved as Value;
+		const yVal = yResolved as Value;
 		if (type1 !== type2) {
-			const xVal = xResolved as Value;
-			const yVal = yResolved as Value;
-			errors.function = `The BETWEEN operator requires same data type for lower and upper bounds; lower bound operand: AttributeValue: {${type1}:${xVal[type1 as keyof Value]}}, upper bound operand: AttributeValue: {${type2}:${yVal[type2 as keyof Value]}}`;
+			errors.function = `The BETWEEN operator requires same data type for lower and upper bounds; lower bound operand: AttributeValue: {${type1}:${xVal.value}}, upper bound operand: AttributeValue: {${type2}:${yVal.value}}`;
 		} else if (
 			isAttributeValue(xResolved) &&
 			isAttributeValue(yResolved) &&
-			context.compare("GT", xResolved, yResolved)
+			xVal.gt(yVal)
 		) {
-			const xVal = xResolved as Value;
-			const yVal = yResolved as Value;
-			errors.function = `The BETWEEN operator requires upper bound to be greater than or equal to lower bound; lower bound operand: AttributeValue: {${type1}:${xVal[type1 as keyof Value]}}, upper bound operand: AttributeValue: {${type2}:${yVal[type2 as keyof Value]}}`;
+			errors.function = `The BETWEEN operator requires upper bound to be greater than or equal to lower bound; lower bound operand: AttributeValue: {${type1}:${xVal.value}}, upper bound operand: AttributeValue: {${type2}:${yVal.value}}`;
 		}
 	}
 }
@@ -564,26 +546,14 @@ function getImmediateType(val: ASTNode): string | null {
 	)
 		return null;
 
-	if (!isAttributeValue(val)) {
-		return null;
+	if (isAttributeValue(val)) {
+		return val.value()?.type ?? null;
 	}
 
-	const types = [
-		"S",
-		"N",
-		"B",
-		"NULL",
-		"BOOL",
-		"SS",
-		"NS",
-		"BS",
-		"L",
-		"M",
-	] as const;
-
-	for (const type of types) {
-		if (type in val && val[type] != null) return type;
+	if (val instanceof ValueBase) {
+		return val.type;
 	}
+
 	return null;
 }
 

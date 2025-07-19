@@ -1,12 +1,20 @@
-import type { Value } from "../../types";
+import { type PlainValue, type Value, plainToValue } from "../../Value";
 
 export class AttributeValue {
 	public readonly type = "AttributeValue" as const;
+	private attrValMap: Record<string, Value>;
 
 	constructor(
 		private readonly name: string,
-		private attrValMap: Record<string, Value>,
-	) {}
+		attrValMap: Record<string, PlainValue.Value>,
+	) {
+		this.attrValMap = Object.fromEntries(
+			Object.entries(attrValMap).map(([key, value]) => [
+				key,
+				plainToValue(value),
+			]),
+		);
+	}
 
 	value(): Value | undefined {
 		return this.attrValMap[this.name];

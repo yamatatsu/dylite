@@ -1,8 +1,7 @@
 import type { Value } from "../types";
-import type { ArithmeticExpression } from "./ast/ArithmeticExpression";
-import { AttributeValue } from "./ast/AttributeValue";
-import type { FunctionForUpdate } from "./ast/FunctionForUpdate";
-import type { PathExpression } from "./ast/PathExpression";
+import type { AttributeValue } from "./ast/AttributeValue";
+import { FunctionForUpdate } from "./ast/FunctionForUpdate";
+import { PathExpression } from "./ast/PathExpression";
 import type { Operand } from "./ast/SetAction";
 import type { UpdateExpression } from "./ast/UpdateExpression";
 import type { Context } from "./context";
@@ -191,7 +190,7 @@ function checkOperator(
 		NS: "NUMBER_SET",
 		BS: "BINARY_SET",
 	};
-	const type = getType(val.value());
+	const type = val.value()?.type;
 	if (type && typeMappings[type] && !(operator === "ADD" && type === "N")) {
 		if (operator === "DELETE" && !type.endsWith("S")) {
 			errors.operand = `Incorrect operand type for operator or function; operator: ${operator}, operand type: ${typeMappings[type]}`;
@@ -202,42 +201,11 @@ function checkOperator(
 }
 
 function getType(
-	val: PathExpression | AttributeValue | FunctionForUpdate | Value | undefined,
+	val: PathExpression | AttributeValue | FunctionForUpdate,
 ): string | null {
-	if (!val || typeof val !== "object" || Array.isArray(val)) return null;
-	if (val && typeof val === "object" && "attrType" in val) {
-		return (val as { attrType: string }).attrType;
-	}
-	// For AttributeValueNode, resolve the actual value to get its type
-	if (val instanceof AttributeValue) {
-		const errors: Record<string, string> = {};
-		const resolved = val.value();
-		if (resolved && !errors.attrVal) {
-			return getImmediateType(resolved);
-		}
-		return null;
-	}
-	return getImmediateType(val);
-}
-
-function getImmediateType(
-	val: PathExpression | FunctionForUpdate | Value,
-): string | null {
-	if (!val || typeof val !== "object" || Array.isArray(val)) return null;
-	if (val && typeof val === "object" && "attrType" in val) return null;
-
-	const types = ["S", "N", "B", "NULL", "BOOL", "SS", "NS", "BS", "L", "M"];
-	for (let i = 0; i < types.length; i++) {
-		if (
-			val &&
-			typeof val === "object" &&
-			types[i] in val &&
-			(val as Record<string, unknown>)[types[i]] != null
-		) {
-			return types[i];
-		}
-	}
-	return null;
+	if (val instanceof PathExpression) return null;
+	if (val instanceof FunctionForUpdate) return val.valueType();
+	return val.value()?.type ?? null;
 }
 
 function checkErrors(errors: Record<string, string>): string | null {
