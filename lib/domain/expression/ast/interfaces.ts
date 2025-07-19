@@ -1,3 +1,5 @@
+import type { AddAction } from "./AddAction";
+import type { DeleteAction } from "./DeleteAction";
 import type { PathExpression } from "./PathExpression";
 
 export interface IReservedWordHolder {
@@ -22,4 +24,8 @@ export interface IOverlappedPathHolder {
 
 export interface IPathConflictHolder {
 	findPathConflict(): [PathExpression, PathExpression] | undefined;
+}
+
+export interface IIncorrectOperandActionHolder {
+	findIncorrectOperandAction(): AddAction | DeleteAction | undefined;
 }

@@ -1,5 +1,6 @@
 import type { AddAction } from "./AddAction";
 import type {
+	IIncorrectOperandActionHolder,
 	IReservedWordHolder,
 	IUnresolvableNameHolder,
 	IUnresolvableValueHolder,
@@ -9,7 +10,8 @@ export class AddSection
 	implements
 		IReservedWordHolder,
 		IUnresolvableNameHolder,
-		IUnresolvableValueHolder
+		IUnresolvableValueHolder,
+		IIncorrectOperandActionHolder
 {
 	readonly type = "ADD";
 
@@ -40,6 +42,16 @@ export class AddSection
 			const unresolvable = expr.findUnresolvableValue();
 			if (unresolvable) {
 				return unresolvable;
+			}
+		}
+		return undefined;
+	}
+
+	findIncorrectOperandAction(): AddAction | undefined {
+		for (const expr of this.expressions) {
+			const incorrectAction = expr.findIncorrectOperandAction();
+			if (incorrectAction) {
+				return incorrectAction;
 			}
 		}
 		return undefined;

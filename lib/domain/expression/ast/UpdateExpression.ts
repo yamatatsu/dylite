@@ -1,9 +1,12 @@
+import type { AddAction } from "./AddAction";
 import type { AddSection } from "./AddSection";
+import type { DeleteAction } from "./DeleteAction";
 import type { DeleteSection } from "./DeleteSection";
 import type { PathExpression } from "./PathExpression";
 import type { RemoveSection } from "./RemoveSection";
 import type { SetSection } from "./SetSection";
 import type {
+	IIncorrectOperandActionHolder,
 	IOverlappedPathHolder,
 	IPathConflictHolder,
 	IReservedWordHolder,
@@ -21,7 +24,8 @@ export class UpdateExpression
 		IUnresolvableNameHolder,
 		IUnresolvableValueHolder,
 		IOverlappedPathHolder,
-		IPathConflictHolder
+		IPathConflictHolder,
+		IIncorrectOperandActionHolder
 {
 	readonly type = "UpdateExpression";
 
@@ -119,6 +123,18 @@ export class UpdateExpression
 				const unresolvable = section.findUnresolvableValue();
 				if (unresolvable) {
 					return unresolvable;
+				}
+			}
+		}
+		return undefined;
+	}
+
+	findIncorrectOperandAction(): AddAction | DeleteAction | undefined {
+		for (const section of this.sections) {
+			if (section.type === "ADD" || section.type === "DELETE") {
+				const incorrectAction = section.findIncorrectOperandAction();
+				if (incorrectAction) {
+					return incorrectAction;
 				}
 			}
 		}

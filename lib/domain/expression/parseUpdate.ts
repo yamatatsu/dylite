@@ -53,6 +53,28 @@ export function parseUpdate(
 	if (pathConflict) {
 		return `Two document paths conflict with each other; must remove or rewrite one of these paths; path one: ${pathConflict[0]}, path two: ${pathConflict[1]}`;
 	}
+	const incorrectOperandAction = ast.findIncorrectOperandAction();
+	if (incorrectOperandAction) {
+		const resolved = incorrectOperandAction.value.value();
+		if (resolved) {
+			const typeMappings: Record<string, string> = {
+				S: "STRING",
+				N: "NUMBER",
+				B: "BINARY",
+				SS: "STRING SET",
+				NS: "NUMBER SET",
+				BS: "BINARY SET",
+				M: "MAP",
+				L: "LIST",
+				NULL: "NULL",
+				BOOL: "BOOLEAN",
+			};
+			const operandTypeString = typeMappings[resolved.type] || resolved.type;
+			const operator =
+				incorrectOperandAction.type === "AddAction" ? "ADD" : "DELETE";
+			return `Incorrect operand type for operator or function; operator: ${operator}, operand type: ${operandTypeString}`;
+		}
+	}
 
 	for (const section of ast.sections) {
 		for (const expr of section.expressions) {
@@ -65,10 +87,8 @@ export function parseUpdate(
 					break;
 				}
 				case "AddAction":
-					checkOperator("ADD", expr.value, errors);
-					break;
 				case "DeleteAction":
-					checkOperator("DELETE", expr.value, errors);
+					// Operator type validation is now handled by findIncorrectOperandType
 					break;
 			}
 
@@ -170,35 +190,6 @@ function checkFunction(
 			return;
 	}
 }
-function checkOperator(
-	operator: string,
-	val: AttributeValue,
-	errors: Record<string, string>,
-): void {
-	if (errors.operand || !val) {
-		return;
-	}
-	const typeMappings: Record<string, string> = {
-		S: "STRING",
-		N: "NUMBER",
-		B: "BINARY",
-		NULL: "NULL",
-		BOOL: "BOOLEAN",
-		L: "LIST",
-		M: "MAP",
-		SS: "STRING_SET",
-		NS: "NUMBER_SET",
-		BS: "BINARY_SET",
-	};
-	const type = val.value()?.type;
-	if (type && typeMappings[type] && !(operator === "ADD" && type === "N")) {
-		if (operator === "DELETE" && !type.endsWith("S")) {
-			errors.operand = `Incorrect operand type for operator or function; operator: ${operator}, operand type: ${typeMappings[type]}`;
-		} else if (operator === "ADD" && type !== "N") {
-			errors.operand = `Incorrect operand type for operator or function; operator: ${operator}, operand type: ${typeMappings[type]}`;
-		}
-	}
-}
 
 function getType(
 	val: PathExpression | AttributeValue | FunctionForUpdate,
@@ -209,7 +200,7 @@ function getType(
 }
 
 function checkErrors(errors: Record<string, string>): string | null {
-	const errorOrder = ["operand", "function"];
+	const errorOrder = ["function"];
 	for (let i = 0; i < errorOrder.length; i++) {
 		if (errors[errorOrder[i]]) return errors[errorOrder[i]];
 	}

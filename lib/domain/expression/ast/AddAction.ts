@@ -2,6 +2,7 @@ import type { Value } from "../../types";
 import type { AttributeValue } from "./AttributeValue";
 import type { PathExpression } from "./PathExpression";
 import type {
+	IIncorrectOperandActionHolder,
 	IReservedWordHolder,
 	IUnresolvableNameHolder,
 	IUnresolvableValueHolder,
@@ -11,7 +12,8 @@ export class AddAction
 	implements
 		IReservedWordHolder,
 		IUnresolvableNameHolder,
-		IUnresolvableValueHolder
+		IUnresolvableValueHolder,
+		IIncorrectOperandActionHolder
 {
 	readonly type = "AddAction";
 
@@ -36,14 +38,15 @@ export class AddAction
 		return undefined;
 	}
 
-	// findInvalidValueType(): Value | undefined {
-	// 	const resolved = this.value.value();
-	// 	if (resolved === undefined) {
-	// 		return this.value.toString();
-	// 	}
-	// 	if (typeof resolved !== "number" && typeof resolved !== "string") {
-	// 		return resolved;
-	// 	}
-	// 	return undefined;
-	// }
+	findIncorrectOperandAction(): AddAction | undefined {
+		const resolved = this.value.value();
+		if (resolved === undefined) {
+			return undefined; // Unresolvable value is handled by findUnresolvableValue
+		}
+		// ADD operation only supports number (N), and set (SS, NS, BS) types
+		if (!["N", "SS", "NS", "BS"].includes(resolved.type)) {
+			return this;
+		}
+		return undefined;
+	}
 }
