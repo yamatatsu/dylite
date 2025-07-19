@@ -1,8 +1,13 @@
 import type { AttributeValue } from "./AttributeValue";
 import type { PathExpression } from "./PathExpression";
-import type { IUnknownFunctionHolder } from "./interfaces";
+import type {
+	IIncorrectOperandArithmeticHolder,
+	IUnknownFunctionHolder,
+} from "./interfaces";
 
-export class FunctionForUpdate implements IUnknownFunctionHolder {
+export class FunctionForUpdate
+	implements IUnknownFunctionHolder, IIncorrectOperandArithmeticHolder
+{
 	public readonly type = "FunctionCall" as const;
 
 	constructor(
@@ -36,5 +41,9 @@ export class FunctionForUpdate implements IUnknownFunctionHolder {
 				return "L";
 		}
 		return null;
+	}
+
+	findIncorrectOperandArithmetic(): undefined {
+		return undefined;
 	}
 }

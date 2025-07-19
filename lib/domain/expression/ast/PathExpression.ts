@@ -3,15 +3,24 @@ import type {
 	IdentifierPathSegment,
 	PathSegment,
 } from "./PathSegment";
-import type { IReservedWordHolder } from "./interfaces";
+import type {
+	IIncorrectOperandArithmeticHolder,
+	IReservedWordHolder,
+} from "./interfaces";
 
-export class PathExpression implements IReservedWordHolder {
+export class PathExpression
+	implements IReservedWordHolder, IIncorrectOperandArithmeticHolder
+{
 	public readonly type = "PathExpression";
 
 	constructor(private readonly segments: PathSegment[]) {}
 
 	findReservedWord(): string | undefined {
 		return this.getReservedWord()?.value();
+	}
+
+	findIncorrectOperandArithmetic(): undefined {
+		return undefined;
 	}
 
 	getReservedWord(): IdentifierPathSegment | undefined {

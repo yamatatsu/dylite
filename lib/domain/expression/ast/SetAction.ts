@@ -3,6 +3,7 @@ import type { AttributeValue } from "./AttributeValue";
 import type { FunctionForUpdate } from "./FunctionForUpdate";
 import type { PathExpression } from "./PathExpression";
 import type {
+	IIncorrectOperandArithmeticHolder,
 	IReservedWordHolder,
 	IUnknownFunctionHolder,
 	IUnresolvableNameHolder,
@@ -20,7 +21,8 @@ export class SetAction
 		IReservedWordHolder,
 		IUnknownFunctionHolder,
 		IUnresolvableNameHolder,
-		IUnresolvableValueHolder
+		IUnresolvableValueHolder,
+		IIncorrectOperandArithmeticHolder
 {
 	readonly type = "SetAction";
 
@@ -57,5 +59,9 @@ export class SetAction
 			}
 		}
 		return undefined;
+	}
+
+	findIncorrectOperandArithmetic(): ArithmeticExpression | undefined {
+		return this.value.findIncorrectOperandArithmetic();
 	}
 }

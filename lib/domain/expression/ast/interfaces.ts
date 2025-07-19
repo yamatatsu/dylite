@@ -1,4 +1,5 @@
 import type { AddAction } from "./AddAction";
+import type { ArithmeticExpression } from "./ArithmeticExpression";
 import type { DeleteAction } from "./DeleteAction";
 import type { PathExpression } from "./PathExpression";
 
@@ -28,4 +29,8 @@ export interface IPathConflictHolder {
 
 export interface IIncorrectOperandActionHolder {
 	findIncorrectOperandAction(): AddAction | DeleteAction | undefined;
+}
+
+export interface IIncorrectOperandArithmeticHolder {
+	findIncorrectOperandArithmetic(): ArithmeticExpression | undefined;
 }

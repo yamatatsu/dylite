@@ -1,6 +1,7 @@
 import { type PlainValue, type Value, plainToValue } from "../../Value";
+import type { IIncorrectOperandArithmeticHolder } from "./interfaces";
 
-export class AttributeValue {
+export class AttributeValue implements IIncorrectOperandArithmeticHolder {
 	public readonly type = "AttributeValue" as const;
 	private attrValMap: Record<string, Value>;
 
@@ -14,6 +15,10 @@ export class AttributeValue {
 				plainToValue(value),
 			]),
 		);
+	}
+
+	findIncorrectOperandArithmetic(): undefined {
+		return undefined;
 	}
 
 	value(): Value | undefined {

@@ -1,5 +1,6 @@
 import type { AddAction } from "./AddAction";
 import type { AddSection } from "./AddSection";
+import type { ArithmeticExpression } from "./ArithmeticExpression";
 import type { DeleteAction } from "./DeleteAction";
 import type { DeleteSection } from "./DeleteSection";
 import type { PathExpression } from "./PathExpression";
@@ -7,6 +8,7 @@ import type { RemoveSection } from "./RemoveSection";
 import type { SetSection } from "./SetSection";
 import type {
 	IIncorrectOperandActionHolder,
+	IIncorrectOperandArithmeticHolder,
 	IOverlappedPathHolder,
 	IPathConflictHolder,
 	IReservedWordHolder,
@@ -25,7 +27,8 @@ export class UpdateExpression
 		IUnresolvableValueHolder,
 		IOverlappedPathHolder,
 		IPathConflictHolder,
-		IIncorrectOperandActionHolder
+		IIncorrectOperandActionHolder,
+		IIncorrectOperandArithmeticHolder
 {
 	readonly type = "UpdateExpression";
 
@@ -135,6 +138,18 @@ export class UpdateExpression
 				const incorrectAction = section.findIncorrectOperandAction();
 				if (incorrectAction) {
 					return incorrectAction;
+				}
+			}
+		}
+		return undefined;
+	}
+
+	findIncorrectOperandArithmetic(): ArithmeticExpression | undefined {
+		for (const section of this.sections) {
+			if (section.type === "SET") {
+				const incorrectArithmetic = section.findIncorrectOperandArithmetic();
+				if (incorrectArithmetic) {
+					return incorrectArithmetic;
 				}
 			}
 		}

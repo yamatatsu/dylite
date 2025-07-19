@@ -75,6 +75,14 @@ export function parseUpdate(
 			return `Incorrect operand type for operator or function; operator: ${operator}, operand type: ${operandTypeString}`;
 		}
 	}
+	const incorrectOperandArithmetic = ast.findIncorrectOperandArithmetic();
+	if (incorrectOperandArithmetic) {
+		const operand = incorrectOperandArithmetic.getIncorrectOperand();
+		const type =
+			operand &&
+			("valueType" in operand ? operand.valueType() : operand.value()?.type);
+		return `Incorrect operand type for operator or function; operator or function: ${incorrectOperandArithmetic.operator}, operand type: ${type}`;
+	}
 
 	for (const section of ast.sections) {
 		for (const expr of section.expressions) {
@@ -173,16 +181,6 @@ function checkFunction(
 			for (let i = 0; i < args.length; i++) {
 				const type = getType(args[i]);
 				if (type && type !== "L") {
-					errors.function = `Incorrect operand type for operator or function; operator or function: ${name}, operand type: ${type}`;
-					return;
-				}
-			}
-			return;
-		case "+":
-		case "-":
-			for (let i = 0; i < args.length; i++) {
-				const type = getType(args[i]);
-				if (type && type !== "N") {
 					errors.function = `Incorrect operand type for operator or function; operator or function: ${name}, operand type: ${type}`;
 					return;
 				}

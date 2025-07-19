@@ -1,5 +1,7 @@
+import type { ArithmeticExpression } from "./ArithmeticExpression";
 import type { SetAction } from "./SetAction";
 import type {
+	IIncorrectOperandArithmeticHolder,
 	IReservedWordHolder,
 	IUnknownFunctionHolder,
 	IUnresolvableNameHolder,
@@ -11,7 +13,8 @@ export class SetSection
 		IReservedWordHolder,
 		IUnknownFunctionHolder,
 		IUnresolvableNameHolder,
-		IUnresolvableValueHolder
+		IUnresolvableValueHolder,
+		IIncorrectOperandArithmeticHolder
 {
 	readonly type = "SET";
 
@@ -52,6 +55,16 @@ export class SetSection
 			const unresolvable = expr.findUnresolvableValue();
 			if (unresolvable) {
 				return unresolvable;
+			}
+		}
+		return undefined;
+	}
+
+	findIncorrectOperandArithmetic(): ArithmeticExpression | undefined {
+		for (const expr of this.expressions) {
+			const incorrectArithmetic = expr.findIncorrectOperandArithmetic();
+			if (incorrectArithmetic) {
+				return incorrectArithmetic;
 			}
 		}
 		return undefined;
