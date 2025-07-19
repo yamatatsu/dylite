@@ -46,12 +46,12 @@ describe("get-item (API spec)", () => {
 		const res = await ddb.getItem({
 			TableName: tableName,
 			Key: { pk: item.pk },
-			ProjectionExpression: "pk,key3",
+			ProjectionExpression: "pk,key_S",
 		});
 
 		// THEN
 		expect(res).toEqual({
-			Item: { pk: item.pk, key3: item.key3 },
+			Item: { pk: item.pk, key_S: item.key_S },
 			$metadata: expect.any(Object),
 		});
 		expect(res.$metadata.httpStatusCode).toBe(200);
@@ -63,13 +63,13 @@ describe("get-item (API spec)", () => {
 		const res = await ddb.getItem({
 			TableName: tableName,
 			Key: { pk: item.pk },
-			ProjectionExpression: "#k1,pk",
-			ExpressionAttributeNames: { "#k1": "key1" },
+			ProjectionExpression: "pk,#k1",
+			ExpressionAttributeNames: { "#k1": "key_N" },
 		});
 
 		// THEN
 		expect(res).toEqual({
-			Item: { pk: item.pk, key1: item.key1 },
+			Item: { pk: item.pk, key_N: item.key_N },
 			$metadata: expect.any(Object),
 		});
 		expect(res.$metadata.httpStatusCode).toBe(200);
