@@ -13,8 +13,14 @@ export class ArithmeticExpression implements IAstNode {
 		public readonly right: FunctionForUpdate | AttributeValue | PathExpression,
 	) {}
 
-	traverse(visitor: (node: this) => void): void {
+	traverse(
+		visitor: (
+			node: this | FunctionForUpdate | AttributeValue | PathExpression,
+		) => void,
+	): void {
 		visitor(this);
+		this.left.traverse(visitor);
+		this.right.traverse(visitor);
 	}
 
 	assertValidUsage(): void {

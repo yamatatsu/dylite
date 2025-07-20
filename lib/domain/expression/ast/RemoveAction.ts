@@ -1,12 +1,13 @@
 import type { PathExpression } from "./PathExpression";
-import type { IReservedWordHolder } from "./interfaces.js";
+import type { IAstNode } from "./interfaces.js";
 
-export class RemoveAction implements IReservedWordHolder {
+export class RemoveAction implements IAstNode {
 	readonly type = "RemoveAction";
 
 	constructor(public readonly path: PathExpression) {}
 
-	findReservedWord(): string | undefined {
-		return this.path.findReservedWord();
+	traverse(visitor: (node: this | PathExpression) => void): void {
+		visitor(this);
+		this.path.traverse(visitor);
 	}
 }

@@ -2,12 +2,13 @@ import {
 	DocumentPathRequiredError,
 	IncorrectOperandTypeError,
 	NumberOfOperandsError,
+	UnknownFunctionError,
 } from "./AstError";
 import type { AttributeValue } from "./AttributeValue";
 import type { PathExpression } from "./PathExpression";
-import type { IAstNode, IUnknownFunctionHolder } from "./interfaces";
+import type { IAstNode } from "./interfaces";
 
-export class FunctionForUpdate implements IUnknownFunctionHolder, IAstNode {
+export class FunctionForUpdate implements IAstNode {
 	public readonly type = "FunctionCall" as const;
 
 	constructor(
@@ -19,15 +20,21 @@ export class FunctionForUpdate implements IUnknownFunctionHolder, IAstNode {
 		)[],
 	) {}
 
-	traverse(visitor: (node: this) => void): void {
+	traverse(
+		visitor: (
+			node: this | FunctionForUpdate | AttributeValue | PathExpression,
+		) => void,
+	): void {
 		visitor(this);
+		for (const arg of this.args) {
+			arg.traverse(visitor);
+		}
 	}
 
-	findUnknownFunction(): string | undefined {
-		if (this.name === "if_not_exists" || this.name === "list_append") {
-			return undefined;
+	assertUnknownFunction(): void {
+		if (this.name !== "if_not_exists" && this.name !== "list_append") {
+			throw new UnknownFunctionError(this.name);
 		}
-		return this.name;
 	}
 
 	valueType(): string | undefined {

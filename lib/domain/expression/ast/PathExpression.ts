@@ -1,11 +1,15 @@
+import {
+	ReservedKeywordError,
+	UnresolvableAttributeNameError,
+} from "./AstError";
 import type {
 	AliasPathSegment,
 	IdentifierPathSegment,
 	PathSegment,
 } from "./PathSegment";
-import type { IAstNode, IReservedWordHolder } from "./interfaces";
+import type { IAstNode } from "./interfaces";
 
-export class PathExpression implements IReservedWordHolder, IAstNode {
+export class PathExpression implements IAstNode {
 	public readonly type = "PathExpression";
 
 	constructor(private readonly segments: PathSegment[]) {}
@@ -14,8 +18,20 @@ export class PathExpression implements IReservedWordHolder, IAstNode {
 		visitor(this);
 	}
 
-	findReservedWord(): string | undefined {
-		return this.getReservedWord()?.value();
+	assertReservedKeyword(): void {
+		for (const segment of this.segments) {
+			if (segment.type === "Identifier" && segment.isReserved()) {
+				throw new ReservedKeywordError(segment.value());
+			}
+		}
+	}
+
+	assertResolvable(): void {
+		for (const segment of this.segments) {
+			if (segment.type === "Alias" && segment.isUnresolvable()) {
+				throw new UnresolvableAttributeNameError(segment.toString());
+			}
+		}
 	}
 
 	getReservedWord(): IdentifierPathSegment | undefined {

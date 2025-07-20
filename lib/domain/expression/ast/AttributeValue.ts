@@ -1,4 +1,5 @@
 import { type PlainValue, type Value, plainToValue } from "../../Value";
+import { UnresolvableAttributeValueError } from "./AstError";
 import type { IAstNode } from "./interfaces";
 
 export class AttributeValue implements IAstNode {
@@ -19,6 +20,12 @@ export class AttributeValue implements IAstNode {
 
 	traverse(visitor: (node: this) => void): void {
 		visitor(this);
+	}
+
+	assertResolvable(): void {
+		if (!this.value()) {
+			throw new UnresolvableAttributeValueError(this.name);
+		}
 	}
 
 	valueType(): string | undefined {

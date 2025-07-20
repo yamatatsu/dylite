@@ -5,11 +5,43 @@ export class AstError extends Error {
 	}
 }
 
+export class ReservedKeywordError extends AstError {
+	public readonly name = "ReservedKeywordError";
+	constructor(keyword: string) {
+		super(`Attribute name is a reserved keyword; reserved keyword: ${keyword}`);
+	}
+}
+
+export class UnknownFunctionError extends AstError {
+	public readonly name = "UnknownFunctionError";
+	constructor(functionName: string) {
+		super(`Invalid function name; function: ${functionName}`);
+	}
+}
+
 export class DuplicateSectionError extends AstError {
 	public readonly name = "DuplicateSectionError";
 	constructor(section: string) {
 		super(
 			`The "${section}" section can only be used once in an update expression;`,
+		);
+	}
+}
+
+export class UnresolvableAttributeNameError extends AstError {
+	public readonly name = "UnresolvableAttributeNameError";
+	constructor(alias: string) {
+		super(
+			`An expression attribute name used in the document path is not defined; attribute name: ${alias}`,
+		);
+	}
+}
+
+export class UnresolvableAttributeValueError extends AstError {
+	public readonly name = "UnresolvableAttributeValueError";
+	constructor(alias: string) {
+		super(
+			`An expression attribute value used in expression is not defined; attribute value: ${alias}`,
 		);
 	}
 }

@@ -18,28 +18,28 @@ export function parseUpdate(
 
 	const ast: UpdateExpression = updateParser.parse(expression, { context });
 
-	const reservedWord = ast.findReservedWord();
-	if (reservedWord) {
-		return `Attribute name is a reserved keyword; reserved keyword: ${reservedWord}`;
-	}
-	const unknownFunction = ast.findUnknownFunction();
-	if (unknownFunction) {
-		return `Invalid function name; function: ${unknownFunction}`;
-	}
-	const duplicateSection = ast.findDuplicateSection();
-	if (duplicateSection) {
-		return `The "${duplicateSection}" section can only be used once in an update expression;`;
-	}
-	const unresolvableName = ast.findUnresolvableName();
-	if (unresolvableName) {
-		return `An expression attribute name used in the document path is not defined; attribute name: ${unresolvableName}`;
-	}
-	const unresolvableValue = ast.findUnresolvableValue();
-	if (unresolvableValue) {
-		return `An expression attribute value used in expression is not defined; attribute value: ${unresolvableValue}`;
-	}
-
 	try {
+		ast.traverse((node) => {
+			if (node.type === "PathExpression") {
+				node.assertReservedKeyword();
+			}
+		});
+		ast.traverse((node) => {
+			if (node.type === "FunctionCall") {
+				node.assertUnknownFunction();
+			}
+		});
+		ast.assertDuplicateSection();
+		ast.traverse((node) => {
+			if (node.type === "PathExpression") {
+				node.assertResolvable();
+			}
+		});
+		ast.traverse((node) => {
+			if (node.type === "AttributeValue") {
+				node.assertResolvable();
+			}
+		});
 		ast.assertOverlappedPath();
 		ast.assertPathConflict();
 		ast.traverse((node) => {
