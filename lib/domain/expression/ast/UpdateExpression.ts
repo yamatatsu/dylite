@@ -1,12 +1,16 @@
 import type { AddAction } from "./AddAction";
 import type { AddSection } from "./AddSection";
 import type { ArithmeticExpression } from "./ArithmeticExpression";
+import type { AttributeValue } from "./AttributeValue";
 import type { DeleteAction } from "./DeleteAction";
 import type { DeleteSection } from "./DeleteSection";
+import type { FunctionForUpdate } from "./FunctionForUpdate";
 import type { PathExpression } from "./PathExpression";
 import type { RemoveSection } from "./RemoveSection";
+import type { SetAction } from "./SetAction";
 import type { SetSection } from "./SetSection";
 import type {
+	IAstNode,
 	IIncorrectOperandActionHolder,
 	IIncorrectOperandArithmeticHolder,
 	IOverlappedPathHolder,
@@ -21,6 +25,7 @@ export type Section = SetSection | RemoveSection | AddSection | DeleteSection;
 
 export class UpdateExpression
 	implements
+		IAstNode,
 		IReservedWordHolder,
 		IUnknownFunctionHolder,
 		IUnresolvableNameHolder,
@@ -33,6 +38,22 @@ export class UpdateExpression
 	readonly type = "UpdateExpression";
 
 	constructor(public readonly sections: Section[]) {}
+
+	traverse(
+		visitor: (
+			node:
+				| SetSection
+				| SetAction
+				| PathExpression
+				| AttributeValue
+				| FunctionForUpdate
+				| ArithmeticExpression,
+		) => void,
+	): void {
+		for (const section of this.sections) {
+			section.traverse(visitor);
+		}
+	}
 
 	findReservedWord(): string | undefined {
 		for (const section of this.sections) {

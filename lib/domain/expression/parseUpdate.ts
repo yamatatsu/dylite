@@ -1,8 +1,5 @@
 import type { Value } from "../types";
-import type { AttributeValue } from "./ast/AttributeValue";
-import { FunctionForUpdate } from "./ast/FunctionForUpdate";
-import { PathExpression } from "./ast/PathExpression";
-import type { Operand } from "./ast/SetAction";
+import { AstError } from "./ast/AstError";
 import type { UpdateExpression } from "./ast/UpdateExpression";
 import type { Context } from "./context";
 import updateParser from "./grammar-update";
@@ -83,102 +80,16 @@ export function parseUpdate(
 			("valueType" in operand ? operand.valueType() : operand.value()?.type);
 		return `Incorrect operand type for operator or function; operator or function: ${incorrectOperandArithmetic.operator}, operand type: ${type}`;
 	}
-
-	for (const section of ast.sections) {
-		for (const expr of section.expressions) {
-			switch (expr.type) {
-				case "SetAction": {
-					resolveOperand(expr.value, errors);
-					break;
-				}
-			}
-
-			if (hasError(errors)) break;
+	try {
+		ast.traverse((node) => {
+			if (node.type === "FunctionCall") node.assertValidUsage();
+		});
+	} catch (error) {
+		if (error instanceof AstError) {
+			return error.message;
 		}
-
-		if (hasError(errors)) break;
+		throw error; // Re-throw unexpected errors
 	}
-
-	// Check for errors
-	const error = checkErrors(errors);
-	if (error) return error;
 
 	return ast;
-}
-
-function resolveOperand(
-	operand: Operand,
-	errors: Record<string, string>,
-): void {
-	if (operand.type === "FunctionCall") {
-		for (const arg of operand.args) {
-			resolveOperand(arg, errors);
-			if (hasError(errors)) return;
-		}
-
-		checkFunction(operand.name, operand.args, errors);
-	}
-}
-
-function checkFunction(
-	name: string,
-	args: (PathExpression | AttributeValue | FunctionForUpdate)[],
-	errors: Record<string, string>,
-): void {
-	if (errors.function) {
-		return;
-	}
-
-	const functions: Record<string, number> = {
-		if_not_exists: 2,
-		list_append: 2,
-	};
-
-	const numOperands = functions[name];
-	if (numOperands !== args.length) {
-		errors.function = `Incorrect number of operands for operator or function; operator or function: ${name}, number of operands: ${args.length}`;
-		return;
-	}
-
-	switch (name) {
-		case "if_not_exists":
-			if (
-				!args[0] ||
-				typeof args[0] !== "object" ||
-				!("type" in args[0]) ||
-				args[0].type !== "PathExpression"
-			) {
-				errors.function = `Operator or function requires a document path; operator or function: ${name}`;
-			}
-			return;
-		case "list_append":
-			for (let i = 0; i < args.length; i++) {
-				const type = getType(args[i]);
-				if (type && type !== "L") {
-					errors.function = `Incorrect operand type for operator or function; operator or function: ${name}, operand type: ${type}`;
-					return;
-				}
-			}
-			return;
-	}
-}
-
-function getType(
-	val: PathExpression | AttributeValue | FunctionForUpdate,
-): string | null {
-	if (val instanceof PathExpression) return null;
-	if (val instanceof FunctionForUpdate) return val.valueType();
-	return val.value()?.type ?? null;
-}
-
-function checkErrors(errors: Record<string, string>): string | null {
-	const errorOrder = ["function"];
-	for (let i = 0; i < errorOrder.length; i++) {
-		if (errors[errorOrder[i]]) return errors[errorOrder[i]];
-	}
-	return null;
-}
-
-function hasError(errors: Record<string, string>): boolean {
-	return Object.keys(errors).length > 0;
 }

@@ -1,5 +1,6 @@
 import type { DeleteAction } from "./DeleteAction";
 import type {
+	IAstNode,
 	IIncorrectOperandActionHolder,
 	IReservedWordHolder,
 	IUnresolvableNameHolder,
@@ -8,6 +9,7 @@ import type {
 
 export class DeleteSection
 	implements
+		IAstNode,
 		IReservedWordHolder,
 		IUnresolvableNameHolder,
 		IUnresolvableValueHolder,
@@ -16,6 +18,10 @@ export class DeleteSection
 	readonly type = "DELETE";
 
 	constructor(public readonly expressions: DeleteAction[]) {}
+
+	traverse(visitor: unknown): void {
+		// TODO: implement me
+	}
 
 	findReservedWord(): string | undefined {
 		for (const expression of this.expressions) {

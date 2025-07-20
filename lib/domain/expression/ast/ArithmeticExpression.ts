@@ -1,9 +1,11 @@
 import type { AttributeValue } from "./AttributeValue";
 import type { FunctionForUpdate } from "./FunctionForUpdate";
 import type { PathExpression } from "./PathExpression";
-import type { IIncorrectOperandArithmeticHolder } from "./interfaces";
+import type { IAstNode, IIncorrectOperandArithmeticHolder } from "./interfaces";
 
-export class ArithmeticExpression implements IIncorrectOperandArithmeticHolder {
+export class ArithmeticExpression
+	implements IIncorrectOperandArithmeticHolder, IAstNode
+{
 	public readonly type = "ArithmeticExpression" as const;
 
 	constructor(
@@ -11,6 +13,10 @@ export class ArithmeticExpression implements IIncorrectOperandArithmeticHolder {
 		public readonly left: FunctionForUpdate | AttributeValue | PathExpression,
 		public readonly right: FunctionForUpdate | AttributeValue | PathExpression,
 	) {}
+
+	traverse(visitor: (node: this) => void): void {
+		visitor(this);
+	}
 
 	findIncorrectOperandArithmetic(): ArithmeticExpression | undefined {
 		const operand = this.getIncorrectOperand();

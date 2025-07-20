@@ -3,6 +3,10 @@ import type { ArithmeticExpression } from "./ArithmeticExpression";
 import type { DeleteAction } from "./DeleteAction";
 import type { PathExpression } from "./PathExpression";
 
+export interface IAstNode {
+	traverse(visitor: (node: unknown) => void): void;
+}
+
 export interface IReservedWordHolder {
 	findReservedWord(): string | undefined;
 }

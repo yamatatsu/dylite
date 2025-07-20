@@ -1,7 +1,9 @@
 import { type PlainValue, type Value, plainToValue } from "../../Value";
-import type { IIncorrectOperandArithmeticHolder } from "./interfaces";
+import type { IAstNode, IIncorrectOperandArithmeticHolder } from "./interfaces";
 
-export class AttributeValue implements IIncorrectOperandArithmeticHolder {
+export class AttributeValue
+	implements IIncorrectOperandArithmeticHolder, IAstNode
+{
 	public readonly type = "AttributeValue" as const;
 	private attrValMap: Record<string, Value>;
 
@@ -15,6 +17,10 @@ export class AttributeValue implements IIncorrectOperandArithmeticHolder {
 				plainToValue(value),
 			]),
 		);
+	}
+
+	traverse(visitor: (node: this) => void): void {
+		visitor(this);
 	}
 
 	findIncorrectOperandArithmetic(): undefined {

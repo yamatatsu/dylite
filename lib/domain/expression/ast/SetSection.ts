@@ -1,6 +1,10 @@
 import type { ArithmeticExpression } from "./ArithmeticExpression";
+import type { AttributeValue } from "./AttributeValue";
+import type { FunctionForUpdate } from "./FunctionForUpdate";
+import type { PathExpression } from "./PathExpression";
 import type { SetAction } from "./SetAction";
 import type {
+	IAstNode,
 	IIncorrectOperandArithmeticHolder,
 	IReservedWordHolder,
 	IUnknownFunctionHolder,
@@ -10,6 +14,7 @@ import type {
 
 export class SetSection
 	implements
+		IAstNode,
 		IReservedWordHolder,
 		IUnknownFunctionHolder,
 		IUnresolvableNameHolder,
@@ -20,6 +25,22 @@ export class SetSection
 
 	constructor(public readonly expressions: SetAction[]) {}
 
+	traverse(
+		visitor: (
+			node:
+				| this
+				| SetAction
+				| PathExpression
+				| AttributeValue
+				| FunctionForUpdate
+				| ArithmeticExpression,
+		) => void,
+	): void {
+		visitor(this);
+		for (const expression of this.expressions) {
+			expression.traverse(visitor);
+		}
+	}
 	findReservedWord(): string | undefined {
 		for (const expression of this.expressions) {
 			const reserved = expression.findReservedWord();

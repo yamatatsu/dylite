@@ -446,7 +446,7 @@ describe("parseUpdate", () => {
 			},
 		});
 		expect(result).toBe(
-			"Operator or function requires a document path; operator or function: if_not_exists",
+			"Invalid UpdateExpression: Operator or function requires a document path; operator or function: if_not_exists",
 		);
 	});
 

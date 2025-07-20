@@ -3,6 +3,7 @@ import type { AttributeValue } from "./AttributeValue";
 import type { FunctionForUpdate } from "./FunctionForUpdate";
 import type { PathExpression } from "./PathExpression";
 import type {
+	IAstNode,
 	IIncorrectOperandArithmeticHolder,
 	IReservedWordHolder,
 	IUnknownFunctionHolder,
@@ -18,6 +19,7 @@ export type Operand =
 
 export class SetAction
 	implements
+		IAstNode,
 		IReservedWordHolder,
 		IUnknownFunctionHolder,
 		IUnresolvableNameHolder,
@@ -30,6 +32,12 @@ export class SetAction
 		public readonly path: PathExpression,
 		public readonly value: Operand,
 	) {}
+
+	traverse(visitor: (node: this | Operand) => void): void {
+		visitor(this);
+		this.path.traverse(visitor);
+		this.value.traverse(visitor);
+	}
 
 	findReservedWord(): string | undefined {
 		return (

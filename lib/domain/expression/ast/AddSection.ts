@@ -1,5 +1,6 @@
 import type { AddAction } from "./AddAction";
 import type {
+	IAstNode,
 	IIncorrectOperandActionHolder,
 	IReservedWordHolder,
 	IUnresolvableNameHolder,
@@ -8,6 +9,7 @@ import type {
 
 export class AddSection
 	implements
+		IAstNode,
 		IReservedWordHolder,
 		IUnresolvableNameHolder,
 		IUnresolvableValueHolder,
@@ -16,6 +18,10 @@ export class AddSection
 	readonly type = "ADD";
 
 	constructor(public readonly expressions: AddAction[]) {}
+
+	traverse(visitor: unknown): void {
+		// TODO: implement me
+	}
 
 	findReservedWord(): string | undefined {
 		for (const expression of this.expressions) {

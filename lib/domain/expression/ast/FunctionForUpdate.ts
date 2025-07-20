@@ -1,12 +1,18 @@
+import {
+	DocumentPathRequiredError,
+	IncorrectOperandTypeError,
+	NumberOfOperandsError,
+} from "./AstError";
 import type { AttributeValue } from "./AttributeValue";
 import type { PathExpression } from "./PathExpression";
 import type {
+	IAstNode,
 	IIncorrectOperandArithmeticHolder,
 	IUnknownFunctionHolder,
 } from "./interfaces";
 
 export class FunctionForUpdate
-	implements IUnknownFunctionHolder, IIncorrectOperandArithmeticHolder
+	implements IUnknownFunctionHolder, IIncorrectOperandArithmeticHolder, IAstNode
 {
 	public readonly type = "FunctionCall" as const;
 
@@ -18,6 +24,10 @@ export class FunctionForUpdate
 			| PathExpression
 		)[],
 	) {}
+
+	traverse(visitor: (node: this) => void): void {
+		visitor(this);
+	}
 
 	findUnknownFunction(): string | undefined {
 		if (this.name === "if_not_exists" || this.name === "list_append") {
@@ -45,5 +55,27 @@ export class FunctionForUpdate
 
 	findIncorrectOperandArithmetic(): undefined {
 		return undefined;
+	}
+
+	assertValidUsage(): void {
+		if (this.args.length < 2) {
+			throw new NumberOfOperandsError(this.name, this.args.length);
+		}
+		if (
+			this.name === "if_not_exists" &&
+			this.args[0].type !== "PathExpression"
+		) {
+			throw new DocumentPathRequiredError(this.name);
+		}
+		if (this.name === "list_append") {
+			for (const arg of this.args) {
+				const type =
+					(arg.type === "AttributeValue" && arg.value()?.type) ||
+					(arg.type === "FunctionCall" && arg.valueType());
+				if (type && type !== "L") {
+					throw new IncorrectOperandTypeError(this.name, type);
+				}
+			}
+		}
 	}
 }
