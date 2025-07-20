@@ -1,7 +1,6 @@
 import type { AddAction } from "./AddAction";
 import type {
 	IAstNode,
-	IIncorrectOperandActionHolder,
 	IReservedWordHolder,
 	IUnresolvableNameHolder,
 	IUnresolvableValueHolder,
@@ -12,15 +11,17 @@ export class AddSection
 		IAstNode,
 		IReservedWordHolder,
 		IUnresolvableNameHolder,
-		IUnresolvableValueHolder,
-		IIncorrectOperandActionHolder
+		IUnresolvableValueHolder
 {
 	readonly type = "ADD";
 
 	constructor(public readonly expressions: AddAction[]) {}
 
-	traverse(visitor: unknown): void {
-		// TODO: implement me
+	traverse(visitor: (node: this | AddAction) => void): void {
+		visitor(this);
+		for (const expr of this.expressions) {
+			visitor(expr);
+		}
 	}
 
 	findReservedWord(): string | undefined {
@@ -48,16 +49,6 @@ export class AddSection
 			const unresolvable = expr.findUnresolvableValue();
 			if (unresolvable) {
 				return unresolvable;
-			}
-		}
-		return undefined;
-	}
-
-	findIncorrectOperandAction(): AddAction | undefined {
-		for (const expr of this.expressions) {
-			const incorrectAction = expr.findIncorrectOperandAction();
-			if (incorrectAction) {
-				return incorrectAction;
 			}
 		}
 		return undefined;

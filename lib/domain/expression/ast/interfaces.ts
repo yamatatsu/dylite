@@ -1,6 +1,3 @@
-import type { AddAction } from "./AddAction";
-import type { ArithmeticExpression } from "./ArithmeticExpression";
-import type { DeleteAction } from "./DeleteAction";
 import type { PathExpression } from "./PathExpression";
 
 export interface IAstNode {
@@ -29,8 +26,4 @@ export interface IOverlappedPathHolder {
 
 export interface IPathConflictHolder {
 	findPathConflict(): [PathExpression, PathExpression] | undefined;
-}
-
-export interface IIncorrectOperandActionHolder {
-	findIncorrectOperandAction(): AddAction | DeleteAction | undefined;
 }

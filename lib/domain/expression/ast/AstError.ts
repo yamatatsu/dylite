@@ -40,3 +40,25 @@ export class IncorrectOperandTypeError extends AstError {
 		);
 	}
 }
+
+export class IncorrectActionOperandTypeError extends AstError {
+	public readonly name = "IncorrectActionOperandTypeError";
+	constructor(label: string, type: string) {
+		const typeMappings: Record<string, string> = {
+			S: "STRING",
+			N: "NUMBER",
+			B: "BINARY",
+			SS: "STRING SET",
+			NS: "NUMBER SET",
+			BS: "BINARY SET",
+			M: "MAP",
+			L: "LIST",
+			NULL: "NULL",
+			BOOL: "BOOLEAN",
+		};
+
+		super(
+			`Invalid UpdateExpression: Incorrect operand type for operator or function; operator: ${label}, operand type: ${typeMappings[type]}, typeSet: ALLOWED_FOR_${label}_OPERAND`,
+		);
+	}
+}

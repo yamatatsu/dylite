@@ -1,7 +1,8 @@
+import { IncorrectActionOperandTypeError } from "./AstError";
 import type { AttributeValue } from "./AttributeValue";
 import type { PathExpression } from "./PathExpression";
 import type {
-	IIncorrectOperandActionHolder,
+	IAstNode,
 	IReservedWordHolder,
 	IUnresolvableNameHolder,
 	IUnresolvableValueHolder,
@@ -9,10 +10,10 @@ import type {
 
 export class DeleteAction
 	implements
+		IAstNode,
 		IReservedWordHolder,
 		IUnresolvableNameHolder,
-		IUnresolvableValueHolder,
-		IIncorrectOperandActionHolder
+		IUnresolvableValueHolder
 {
 	readonly type = "DeleteAction";
 
@@ -20,6 +21,18 @@ export class DeleteAction
 		public readonly path: PathExpression,
 		public readonly value: AttributeValue,
 	) {}
+
+	traverse(visitor: (node: this) => void): void {
+		visitor(this);
+		// TODO: need to visit child nodes
+	}
+
+	assertOperandType(): void {
+		const resolved = this.value.value();
+		if (resolved && !["SS", "NS", "BS"].includes(resolved.type)) {
+			throw new IncorrectActionOperandTypeError("DELETE", resolved.type);
+		}
+	}
 
 	findReservedWord(): string | undefined {
 		return this.path.findReservedWord();
@@ -33,18 +46,6 @@ export class DeleteAction
 		const resolved = this.value.value();
 		if (!resolved) {
 			return this.value.toString();
-		}
-		return undefined;
-	}
-
-	findIncorrectOperandAction(): DeleteAction | undefined {
-		const resolved = this.value.value();
-		if (resolved === undefined) {
-			return undefined; // Unresolvable value is handled by findUnresolvableValue
-		}
-		// DELETE operation only supports set types (SS, NS, BS)
-		if (!["SS", "NS", "BS"].includes(resolved.type)) {
-			return this;
 		}
 		return undefined;
 	}

@@ -306,7 +306,7 @@ describe("parseUpdate", () => {
 			ExpressionAttributeValues: { ":v": { S: "1" } },
 		});
 		expect(result).toBe(
-			"Incorrect operand type for operator or function; operator: ADD, operand type: STRING",
+			"Invalid UpdateExpression: Incorrect operand type for operator or function; operator: ADD, operand type: STRING, typeSet: ALLOWED_FOR_ADD_OPERAND",
 		);
 	});
 
@@ -433,7 +433,7 @@ describe("parseUpdate", () => {
 			ExpressionAttributeValues: { ":v": { N: "1" } },
 		});
 		expect(result).toBe(
-			"Incorrect operand type for operator or function; operator: DELETE, operand type: NUMBER",
+			"Invalid UpdateExpression: Incorrect operand type for operator or function; operator: DELETE, operand type: NUMBER, typeSet: ALLOWED_FOR_DELETE_OPERAND",
 		);
 	});
 

@@ -50,30 +50,12 @@ export function parseUpdate(
 	if (pathConflict) {
 		return `Two document paths conflict with each other; must remove or rewrite one of these paths; path one: ${pathConflict[0]}, path two: ${pathConflict[1]}`;
 	}
-	const incorrectOperandAction = ast.findIncorrectOperandAction();
-	if (incorrectOperandAction) {
-		const resolved = incorrectOperandAction.value.value();
-		if (resolved) {
-			const typeMappings: Record<string, string> = {
-				S: "STRING",
-				N: "NUMBER",
-				B: "BINARY",
-				SS: "STRING SET",
-				NS: "NUMBER SET",
-				BS: "BINARY SET",
-				M: "MAP",
-				L: "LIST",
-				NULL: "NULL",
-				BOOL: "BOOLEAN",
-			};
-			const operandTypeString = typeMappings[resolved.type] || resolved.type;
-			const operator =
-				incorrectOperandAction.type === "AddAction" ? "ADD" : "DELETE";
-			return `Incorrect operand type for operator or function; operator: ${operator}, operand type: ${operandTypeString}`;
-		}
-	}
 
 	try {
+		ast.traverse((node) => {
+			if (node.type === "AddAction" || node.type === "DeleteAction")
+				node.assertOperandType();
+		});
 		ast.traverse((node) => {
 			if (node.type === "ArithmeticExpression") node.assertValidUsage();
 		});

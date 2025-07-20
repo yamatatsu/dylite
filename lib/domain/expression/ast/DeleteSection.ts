@@ -1,7 +1,6 @@
 import type { DeleteAction } from "./DeleteAction";
 import type {
 	IAstNode,
-	IIncorrectOperandActionHolder,
 	IReservedWordHolder,
 	IUnresolvableNameHolder,
 	IUnresolvableValueHolder,
@@ -12,15 +11,17 @@ export class DeleteSection
 		IAstNode,
 		IReservedWordHolder,
 		IUnresolvableNameHolder,
-		IUnresolvableValueHolder,
-		IIncorrectOperandActionHolder
+		IUnresolvableValueHolder
 {
 	readonly type = "DELETE";
 
 	constructor(public readonly expressions: DeleteAction[]) {}
 
-	traverse(visitor: unknown): void {
-		// TODO: implement me
+	traverse(visitor: (node: this | DeleteAction) => void): void {
+		visitor(this);
+		for (const expr of this.expressions) {
+			visitor(expr);
+		}
 	}
 
 	findReservedWord(): string | undefined {
@@ -48,16 +49,6 @@ export class DeleteSection
 			const unresolvable = expr.findUnresolvableValue();
 			if (unresolvable) {
 				return unresolvable;
-			}
-		}
-		return undefined;
-	}
-
-	findIncorrectOperandAction(): DeleteAction | undefined {
-		for (const expr of this.expressions) {
-			const incorrectAction = expr.findIncorrectOperandAction();
-			if (incorrectAction) {
-				return incorrectAction;
 			}
 		}
 		return undefined;

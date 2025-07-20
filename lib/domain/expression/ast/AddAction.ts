@@ -1,8 +1,8 @@
-import type { Value } from "../../types";
+import { IncorrectActionOperandTypeError } from "./AstError";
 import type { AttributeValue } from "./AttributeValue";
 import type { PathExpression } from "./PathExpression";
 import type {
-	IIncorrectOperandActionHolder,
+	IAstNode,
 	IReservedWordHolder,
 	IUnresolvableNameHolder,
 	IUnresolvableValueHolder,
@@ -10,10 +10,10 @@ import type {
 
 export class AddAction
 	implements
+		IAstNode,
 		IReservedWordHolder,
 		IUnresolvableNameHolder,
-		IUnresolvableValueHolder,
-		IIncorrectOperandActionHolder
+		IUnresolvableValueHolder
 {
 	readonly type = "AddAction";
 
@@ -21,6 +21,18 @@ export class AddAction
 		public readonly path: PathExpression,
 		public readonly value: AttributeValue,
 	) {}
+
+	traverse(visitor: (node: this) => void): void {
+		visitor(this);
+		// TODO: need to visit child nodes
+	}
+
+	assertOperandType(): void {
+		const resolved = this.value.value();
+		if (resolved && !["N", "SS", "NS", "BS"].includes(resolved.type)) {
+			throw new IncorrectActionOperandTypeError("ADD", resolved.type);
+		}
+	}
 
 	findReservedWord(): string | undefined {
 		return this.path.findReservedWord();
@@ -34,18 +46,6 @@ export class AddAction
 		const resolved = this.value.value();
 		if (!resolved) {
 			return this.value.toString();
-		}
-		return undefined;
-	}
-
-	findIncorrectOperandAction(): AddAction | undefined {
-		const resolved = this.value.value();
-		if (resolved === undefined) {
-			return undefined; // Unresolvable value is handled by findUnresolvableValue
-		}
-		// ADD operation only supports number (N), and set (SS, NS, BS) types
-		if (!["N", "SS", "NS", "BS"].includes(resolved.type)) {
-			return this;
 		}
 		return undefined;
 	}

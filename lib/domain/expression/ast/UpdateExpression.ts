@@ -11,7 +11,6 @@ import type { SetAction } from "./SetAction";
 import type { SetSection } from "./SetSection";
 import type {
 	IAstNode,
-	IIncorrectOperandActionHolder,
 	IOverlappedPathHolder,
 	IPathConflictHolder,
 	IReservedWordHolder,
@@ -30,8 +29,7 @@ export class UpdateExpression
 		IUnresolvableNameHolder,
 		IUnresolvableValueHolder,
 		IOverlappedPathHolder,
-		IPathConflictHolder,
-		IIncorrectOperandActionHolder
+		IPathConflictHolder
 {
 	readonly type = "UpdateExpression";
 
@@ -42,6 +40,10 @@ export class UpdateExpression
 			node:
 				| SetSection
 				| SetAction
+				| AddSection
+				| AddAction
+				| DeleteSection
+				| DeleteAction
 				| PathExpression
 				| AttributeValue
 				| FunctionForUpdate
@@ -145,18 +147,6 @@ export class UpdateExpression
 				const unresolvable = section.findUnresolvableValue();
 				if (unresolvable) {
 					return unresolvable;
-				}
-			}
-		}
-		return undefined;
-	}
-
-	findIncorrectOperandAction(): AddAction | DeleteAction | undefined {
-		for (const section of this.sections) {
-			if (section.type === "ADD" || section.type === "DELETE") {
-				const incorrectAction = section.findIncorrectOperandAction();
-				if (incorrectAction) {
-					return incorrectAction;
 				}
 			}
 		}
