@@ -34,7 +34,3 @@ export interface IPathConflictHolder {
 export interface IIncorrectOperandActionHolder {
 	findIncorrectOperandAction(): AddAction | DeleteAction | undefined;
 }
-
-export interface IIncorrectOperandArithmeticHolder {
-	findIncorrectOperandArithmetic(): ArithmeticExpression | undefined;
-}

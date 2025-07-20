@@ -12,7 +12,6 @@ import type { SetSection } from "./SetSection";
 import type {
 	IAstNode,
 	IIncorrectOperandActionHolder,
-	IIncorrectOperandArithmeticHolder,
 	IOverlappedPathHolder,
 	IPathConflictHolder,
 	IReservedWordHolder,
@@ -32,8 +31,7 @@ export class UpdateExpression
 		IUnresolvableValueHolder,
 		IOverlappedPathHolder,
 		IPathConflictHolder,
-		IIncorrectOperandActionHolder,
-		IIncorrectOperandArithmeticHolder
+		IIncorrectOperandActionHolder
 {
 	readonly type = "UpdateExpression";
 
@@ -159,18 +157,6 @@ export class UpdateExpression
 				const incorrectAction = section.findIncorrectOperandAction();
 				if (incorrectAction) {
 					return incorrectAction;
-				}
-			}
-		}
-		return undefined;
-	}
-
-	findIncorrectOperandArithmetic(): ArithmeticExpression | undefined {
-		for (const section of this.sections) {
-			if (section.type === "SET") {
-				const incorrectArithmetic = section.findIncorrectOperandArithmetic();
-				if (incorrectArithmetic) {
-					return incorrectArithmetic;
 				}
 			}
 		}

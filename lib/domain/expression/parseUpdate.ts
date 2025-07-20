@@ -72,12 +72,11 @@ export function parseUpdate(
 			return `Incorrect operand type for operator or function; operator: ${operator}, operand type: ${operandTypeString}`;
 		}
 	}
-	const incorrectOperandArithmetic = ast.findIncorrectOperandArithmetic();
-	if (incorrectOperandArithmetic) {
-		const operand = incorrectOperandArithmetic.getIncorrectOperand();
-		return `Incorrect operand type for operator or function; operator or function: ${incorrectOperandArithmetic.operator}, operand type: ${operand?.valueType()}`;
-	}
+
 	try {
+		ast.traverse((node) => {
+			if (node.type === "ArithmeticExpression") node.assertValidUsage();
+		});
 		ast.traverse((node) => {
 			if (node.type === "FunctionCall") node.assertValidUsage();
 		});

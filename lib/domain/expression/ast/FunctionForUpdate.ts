@@ -5,15 +5,9 @@ import {
 } from "./AstError";
 import type { AttributeValue } from "./AttributeValue";
 import type { PathExpression } from "./PathExpression";
-import type {
-	IAstNode,
-	IIncorrectOperandArithmeticHolder,
-	IUnknownFunctionHolder,
-} from "./interfaces";
+import type { IAstNode, IUnknownFunctionHolder } from "./interfaces";
 
-export class FunctionForUpdate
-	implements IUnknownFunctionHolder, IIncorrectOperandArithmeticHolder, IAstNode
-{
+export class FunctionForUpdate implements IUnknownFunctionHolder, IAstNode {
 	public readonly type = "FunctionCall" as const;
 
 	constructor(
@@ -49,10 +43,6 @@ export class FunctionForUpdate
 			case "list_append":
 				return "L";
 		}
-	}
-
-	findIncorrectOperandArithmetic(): undefined {
-		return undefined;
 	}
 
 	assertValidUsage(): void {
