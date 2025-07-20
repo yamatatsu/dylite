@@ -18,7 +18,7 @@ export class PathExpression implements IAstNode {
 		visitor(this);
 	}
 
-	assertReservedKeyword(): void {
+	validateReservedKeyword(): void {
 		for (const segment of this.segments) {
 			if (segment.type === "Identifier" && segment.isReserved()) {
 				throw new ReservedKeywordError(segment.value());
@@ -26,7 +26,7 @@ export class PathExpression implements IAstNode {
 		}
 	}
 
-	assertResolvable(): void {
+	validateResolvability(): void {
 		for (const segment of this.segments) {
 			if (segment.type === "Alias" && segment.isUnresolvable()) {
 				throw new UnresolvableAttributeNameError(segment.toString());

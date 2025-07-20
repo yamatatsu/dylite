@@ -19,7 +19,7 @@ export class AddAction implements IAstNode {
 		this.value.traverse(visitor);
 	}
 
-	assertOperandType(): void {
+	validateOperandType(): void {
 		const resolved = this.value.value();
 		if (resolved && !["N", "SS", "NS", "BS"].includes(resolved.type)) {
 			throw new IncorrectActionOperandTypeError("ADD", resolved.type);

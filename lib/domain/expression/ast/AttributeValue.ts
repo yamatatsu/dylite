@@ -22,7 +22,7 @@ export class AttributeValue implements IAstNode {
 		visitor(this);
 	}
 
-	assertResolvable(): void {
+	validateResolvability(): void {
 		if (!this.value()) {
 			throw new UnresolvableAttributeValueError(this.name);
 		}

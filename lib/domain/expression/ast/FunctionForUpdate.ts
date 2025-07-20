@@ -31,7 +31,7 @@ export class FunctionForUpdate implements IAstNode {
 		}
 	}
 
-	assertUnknownFunction(): void {
+	validateUnknownFunction(): void {
 		if (this.name !== "if_not_exists" && this.name !== "list_append") {
 			throw new UnknownFunctionError(this.name);
 		}
@@ -52,7 +52,7 @@ export class FunctionForUpdate implements IAstNode {
 		}
 	}
 
-	assertValidUsage(): void {
+	validateUsage(): void {
 		if (this.args.length < 2) {
 			throw new NumberOfOperandsError(this.name, this.args.length);
 		}

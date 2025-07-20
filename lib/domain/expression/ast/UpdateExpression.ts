@@ -46,7 +46,20 @@ export class UpdateExpression implements IAstNode {
 		}
 	}
 
-	assertDuplicateSection(): void {
+	validate(): void {
+		this.validateReservedKeywords();
+		this.validateUnknownFunctions();
+		this.validateDuplicateSection();
+		this.validatePathResolvability();
+		this.validateAttributeValueResolvability();
+		this.validateOverlappedPath();
+		this.validatePathConflict();
+		this.validateActionOperandTypes();
+		this.validateArithmeticExpressionUsage();
+		this.validateFunctionUsage();
+	}
+
+	private validateDuplicateSection(): void {
 		const sectionSet = new Set<string>();
 		for (const section of this.sections) {
 			if (sectionSet.has(section.type)) {
@@ -56,7 +69,7 @@ export class UpdateExpression implements IAstNode {
 		}
 	}
 
-	assertOverlappedPath(): void {
+	private validateOverlappedPath(): void {
 		const paths: PathExpression[] = [];
 
 		for (const section of this.sections) {
@@ -77,7 +90,7 @@ export class UpdateExpression implements IAstNode {
 		}
 	}
 
-	assertPathConflict(): void {
+	private validatePathConflict(): void {
 		const paths: PathExpression[] = [];
 
 		this.traverse((node) => {
@@ -94,6 +107,62 @@ export class UpdateExpression implements IAstNode {
 				}
 
 				paths.push(currentPath);
+			}
+		});
+	}
+
+	private validateReservedKeywords(): void {
+		this.traverse((node) => {
+			if (node.type === "PathExpression") {
+				node.validateReservedKeyword();
+			}
+		});
+	}
+
+	private validateUnknownFunctions(): void {
+		this.traverse((node) => {
+			if (node.type === "FunctionCall") {
+				node.validateUnknownFunction();
+			}
+		});
+	}
+
+	private validatePathResolvability(): void {
+		this.traverse((node) => {
+			if (node.type === "PathExpression") {
+				node.validateResolvability();
+			}
+		});
+	}
+
+	private validateAttributeValueResolvability(): void {
+		this.traverse((node) => {
+			if (node.type === "AttributeValue") {
+				node.validateResolvability();
+			}
+		});
+	}
+
+	private validateActionOperandTypes(): void {
+		this.traverse((node) => {
+			if (node.type === "AddAction" || node.type === "DeleteAction") {
+				node.validateOperandType();
+			}
+		});
+	}
+
+	private validateArithmeticExpressionUsage(): void {
+		this.traverse((node) => {
+			if (node.type === "ArithmeticExpression") {
+				node.validateUsage();
+			}
+		});
+	}
+
+	private validateFunctionUsage(): void {
+		this.traverse((node) => {
+			if (node.type === "FunctionCall") {
+				node.validateUsage();
 			}
 		});
 	}

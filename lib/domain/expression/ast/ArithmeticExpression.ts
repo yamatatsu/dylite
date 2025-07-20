@@ -23,7 +23,7 @@ export class ArithmeticExpression implements IAstNode {
 		this.right.traverse(visitor);
 	}
 
-	assertValidUsage(): void {
+	validateUsage(): void {
 		const operand = this.getIncorrectOperand();
 		if (operand) {
 			throw new IncorrectOperandTypeError(

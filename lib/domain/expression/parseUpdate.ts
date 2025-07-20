@@ -19,39 +19,7 @@ export function parseUpdate(
 	const ast: UpdateExpression = updateParser.parse(expression, { context });
 
 	try {
-		ast.traverse((node) => {
-			if (node.type === "PathExpression") {
-				node.assertReservedKeyword();
-			}
-		});
-		ast.traverse((node) => {
-			if (node.type === "FunctionCall") {
-				node.assertUnknownFunction();
-			}
-		});
-		ast.assertDuplicateSection();
-		ast.traverse((node) => {
-			if (node.type === "PathExpression") {
-				node.assertResolvable();
-			}
-		});
-		ast.traverse((node) => {
-			if (node.type === "AttributeValue") {
-				node.assertResolvable();
-			}
-		});
-		ast.assertOverlappedPath();
-		ast.assertPathConflict();
-		ast.traverse((node) => {
-			if (node.type === "AddAction" || node.type === "DeleteAction")
-				node.assertOperandType();
-		});
-		ast.traverse((node) => {
-			if (node.type === "ArithmeticExpression") node.assertValidUsage();
-		});
-		ast.traverse((node) => {
-			if (node.type === "FunctionCall") node.assertValidUsage();
-		});
+		ast.validate();
 	} catch (error) {
 		if (error instanceof AstError) {
 			return error.message;

@@ -19,7 +19,7 @@ export class DeleteAction implements IAstNode {
 		this.value.traverse(visitor);
 	}
 
-	assertOperandType(): void {
+	validateOperandType(): void {
 		const resolved = this.value.value();
 		if (resolved && !["SS", "NS", "BS"].includes(resolved.type)) {
 			throw new IncorrectActionOperandTypeError("DELETE", resolved.type);
