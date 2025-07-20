@@ -36,21 +36,19 @@ export class FunctionForUpdate
 		return this.name;
 	}
 
-	valueType(): string | null {
+	valueType(): string | undefined {
 		switch (this.name) {
 			case "if_not_exists":
 				switch (this.args[1].type) {
 					case "AttributeValue":
-						return this.args[1].value()?.type ?? null;
 					case "FunctionCall":
 						return this.args[1].valueType();
 					default:
-						return null;
+						return;
 				}
 			case "list_append":
 				return "L";
 		}
-		return null;
 	}
 
 	findIncorrectOperandArithmetic(): undefined {
@@ -69,9 +67,7 @@ export class FunctionForUpdate
 		}
 		if (this.name === "list_append") {
 			for (const arg of this.args) {
-				const type =
-					(arg.type === "AttributeValue" && arg.value()?.type) ||
-					(arg.type === "FunctionCall" && arg.valueType());
+				const type = arg.type !== "PathExpression" && arg.valueType();
 				if (type && type !== "L") {
 					throw new IncorrectOperandTypeError(this.name, type);
 				}

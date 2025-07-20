@@ -27,6 +27,10 @@ export class AttributeValue
 		return undefined;
 	}
 
+	valueType(): string | undefined {
+		return this.value()?.type;
+	}
+
 	value(): Value | undefined {
 		return this.attrValMap[this.name];
 	}

@@ -75,10 +75,7 @@ export function parseUpdate(
 	const incorrectOperandArithmetic = ast.findIncorrectOperandArithmetic();
 	if (incorrectOperandArithmetic) {
 		const operand = incorrectOperandArithmetic.getIncorrectOperand();
-		const type =
-			operand &&
-			("valueType" in operand ? operand.valueType() : operand.value()?.type);
-		return `Incorrect operand type for operator or function; operator or function: ${incorrectOperandArithmetic.operator}, operand type: ${type}`;
+		return `Incorrect operand type for operator or function; operator or function: ${incorrectOperandArithmetic.operator}, operand type: ${operand?.valueType()}`;
 	}
 	try {
 		ast.traverse((node) => {
