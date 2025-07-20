@@ -29,6 +29,22 @@ describe.skip("Update Expressions", () => {
 			expect(res.Attributes?.key_N).toEqual({ N: "124" });
 			expect(res.$metadata.httpStatusCode).toBe(200);
 		});
+
+		test("use `if_not_exists` function without path expression as first argument", async () => {
+			// WHEN
+			const promise = ddb.updateItem({
+				TableName: tableName,
+				Key: { pk: item.pk },
+				UpdateExpression: "SET key_N = key_N + if_not_exists(:n, :n)",
+				ExpressionAttributeValues: { ":n": { N: "1" } },
+				ReturnValues: "ALL_NEW",
+			});
+
+			// THEN
+			await expect(promise).rejects.toThrow(
+				"Invalid UpdateExpression: Operator or function requires a document path; operator or function: if_not_exists",
+			);
+		});
 	});
 
 	describe("ADD Action", () => {
@@ -76,6 +92,52 @@ describe.skip("Update Expressions", () => {
 				// THEN
 				await expect(promise).rejects.toThrow(
 					`Invalid UpdateExpression: Incorrect operand type for operator or function; operator: ADD, operand type: ${message_part}, typeSet: ALLOWED_FOR_ADD_OPERAND`,
+				);
+			},
+		);
+	});
+
+	describe("DELETE Action", () => {
+		test("success", async () => {
+			// WHEN
+			const res = await ddb.updateItem({
+				TableName: tableName,
+				Key: { pk: item.pk },
+				UpdateExpression: "DELETE key_SS :ss, key_NS :ns, key_BS :bs",
+				ExpressionAttributeValues: {
+					":ss": { SS: ["a"] },
+					":ns": { NS: ["1"] },
+					":bs": { BS: [toUint8Array("x")] },
+				},
+				ReturnValues: "ALL_NEW",
+			});
+
+			// THEN
+			expect(res.Attributes?.key_SS).toEqual({ SS: ["b"] });
+			expect(res.Attributes?.key_NS).toEqual({ NS: ["2"] });
+			expect(res.Attributes?.key_BS).toEqual({ BS: [toUint8Array("y")] });
+			expect(res.$metadata.httpStatusCode).toBe(200);
+		});
+
+		test.each`
+			values                                | message_part
+			${{ ":s": { S: "c" } }}               | ${"STRING"}
+			${{ ":s": { B: toUint8Array("c") } }} | ${"BINARY"}
+		`(
+			"failure when adding a $message_part",
+			async ({ values, message_part }) => {
+				// WHEN
+				const promise = ddb.updateItem({
+					TableName: tableName,
+					Key: { pk: item.pk },
+					UpdateExpression: "DELETE key_S :s",
+					ExpressionAttributeValues: values,
+					ReturnValues: "ALL_NEW",
+				});
+
+				// THEN
+				await expect(promise).rejects.toThrow(
+					`Invalid UpdateExpression: Incorrect operand type for operator or function; operator: DELETE, operand type: ${message_part}, typeSet: ALLOWED_FOR_DELETE_OPERAND`,
 				);
 			},
 		);
