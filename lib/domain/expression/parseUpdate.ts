@@ -16,11 +16,7 @@ export function parseUpdate(
 		attrValMap: options.ExpressionAttributeValues ?? {},
 	};
 
-	// Parse to AST
 	const ast: UpdateExpression = updateParser.parse(expression, { context });
-
-	// Process AST: resolve aliases and validate
-	const errors: Record<string, string> = {};
 
 	const reservedWord = ast.findReservedWord();
 	if (reservedWord) {
@@ -42,12 +38,9 @@ export function parseUpdate(
 	if (unresolvableValue) {
 		return `An expression attribute value used in expression is not defined; attribute value: ${unresolvableValue}`;
 	}
-	const overlappedPath = ast.findOverlappedPath();
-	if (overlappedPath) {
-		return `Two document paths overlap with each other; must remove or rewrite one of these paths; path one: ${overlappedPath[0]}, path two: ${overlappedPath[1]}`;
-	}
 
 	try {
+		ast.assertOverlappedPath();
 		ast.assertPathConflict();
 		ast.traverse((node) => {
 			if (node.type === "AddAction" || node.type === "DeleteAction")

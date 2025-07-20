@@ -1,5 +1,3 @@
-import type { PathExpression } from "./PathExpression";
-
 export interface IAstNode {
 	traverse(visitor: (node: unknown) => void): void;
 }
@@ -18,8 +16,4 @@ export interface IUnresolvableNameHolder {
 
 export interface IUnresolvableValueHolder {
 	findUnresolvableValue(): string | undefined;
-}
-
-export interface IOverlappedPathHolder {
-	findOverlappedPath(): [PathExpression, PathExpression] | undefined;
 }

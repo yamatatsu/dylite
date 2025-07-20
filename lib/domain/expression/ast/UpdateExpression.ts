@@ -1,7 +1,7 @@
 import type { AddAction } from "./AddAction";
 import type { AddSection } from "./AddSection";
 import type { ArithmeticExpression } from "./ArithmeticExpression";
-import { PathConflictError } from "./AstError";
+import { OverlappedPathError, PathConflictError } from "./AstError";
 import type { AttributeValue } from "./AttributeValue";
 import type { DeleteAction } from "./DeleteAction";
 import type { DeleteSection } from "./DeleteSection";
@@ -12,7 +12,6 @@ import type { SetAction } from "./SetAction";
 import type { SetSection } from "./SetSection";
 import type {
 	IAstNode,
-	IOverlappedPathHolder,
 	IReservedWordHolder,
 	IUnknownFunctionHolder,
 	IUnresolvableNameHolder,
@@ -27,8 +26,7 @@ export class UpdateExpression
 		IReservedWordHolder,
 		IUnknownFunctionHolder,
 		IUnresolvableNameHolder,
-		IUnresolvableValueHolder,
-		IOverlappedPathHolder
+		IUnresolvableValueHolder
 {
 	readonly type = "UpdateExpression";
 
@@ -88,7 +86,7 @@ export class UpdateExpression
 		return undefined;
 	}
 
-	findOverlappedPath(): [PathExpression, PathExpression] | undefined {
+	assertOverlappedPath(): void {
 		const paths: PathExpression[] = [];
 
 		for (const section of this.sections) {
@@ -97,15 +95,16 @@ export class UpdateExpression
 
 				for (const existingPath of paths) {
 					if (existingPath.isOverlappedOf(currentPath)) {
-						return [existingPath, currentPath];
+						throw new OverlappedPathError(
+							existingPath.toString(),
+							currentPath.toString(),
+						);
 					}
 				}
 
 				paths.push(currentPath);
 			}
 		}
-
-		return undefined;
 	}
 
 	assertPathConflict(): void {
