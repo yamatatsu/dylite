@@ -91,13 +91,6 @@ export function parseUpdate(
 					resolveOperand(expr.value, errors);
 					break;
 				}
-				case "RemoveAction": {
-					break;
-				}
-				case "AddAction":
-				case "DeleteAction":
-					// Operator type validation is now handled by findIncorrectOperandType
-					break;
 			}
 
 			if (hasError(errors)) break;
@@ -118,30 +111,13 @@ function resolveOperand(
 	errors: Record<string, string>,
 ): void {
 	if (operand.type === "FunctionCall") {
-		resolveFunction(operand, errors);
-		return;
+		for (const arg of operand.args) {
+			resolveOperand(arg, errors);
+			if (hasError(errors)) return;
+		}
+
+		checkFunction(operand.name, operand.args, errors);
 	}
-	if (operand.type === "ArithmeticExpression") {
-		resolveOperand(operand.left, errors);
-		if (hasError(errors)) return;
-
-		resolveOperand(operand.right, errors);
-		if (hasError(errors)) return;
-
-		checkFunction(operand.operator, [operand.left, operand.right], errors);
-	}
-}
-
-function resolveFunction(
-	func: FunctionForUpdate,
-	errors: Record<string, string>,
-): void {
-	for (const arg of func.args) {
-		resolveOperand(arg, errors);
-		if (hasError(errors)) return;
-	}
-
-	checkFunction(func.name, func.args, errors);
 }
 
 function checkFunction(
@@ -156,8 +132,6 @@ function checkFunction(
 	const functions: Record<string, number> = {
 		if_not_exists: 2,
 		list_append: 2,
-		"+": 2,
-		"-": 2,
 	};
 
 	const numOperands = functions[name];
