@@ -1,6 +1,7 @@
 import type { AddAction } from "./AddAction";
 import type { AddSection } from "./AddSection";
 import type { ArithmeticExpression } from "./ArithmeticExpression";
+import { PathConflictError } from "./AstError";
 import type { AttributeValue } from "./AttributeValue";
 import type { DeleteAction } from "./DeleteAction";
 import type { DeleteSection } from "./DeleteSection";
@@ -12,7 +13,6 @@ import type { SetSection } from "./SetSection";
 import type {
 	IAstNode,
 	IOverlappedPathHolder,
-	IPathConflictHolder,
 	IReservedWordHolder,
 	IUnknownFunctionHolder,
 	IUnresolvableNameHolder,
@@ -28,8 +28,7 @@ export class UpdateExpression
 		IUnknownFunctionHolder,
 		IUnresolvableNameHolder,
 		IUnresolvableValueHolder,
-		IOverlappedPathHolder,
-		IPathConflictHolder
+		IOverlappedPathHolder
 {
 	readonly type = "UpdateExpression";
 
@@ -109,24 +108,25 @@ export class UpdateExpression
 		return undefined;
 	}
 
-	findPathConflict(): [PathExpression, PathExpression] | undefined {
+	assertPathConflict(): void {
 		const paths: PathExpression[] = [];
 
-		for (const section of this.sections) {
-			for (const expr of section.expressions) {
-				const currentPath = expr.path;
+		this.traverse((node) => {
+			if (node.type === "PathExpression") {
+				const currentPath = node;
 
 				for (const existingPath of paths) {
 					if (existingPath.isConflictWith(currentPath)) {
-						return [existingPath, currentPath];
+						throw new PathConflictError(
+							existingPath.toString(),
+							currentPath.toString(),
+						);
 					}
 				}
 
 				paths.push(currentPath);
 			}
-		}
-
-		return undefined;
+		});
 	}
 
 	findUnresolvableName(): string | undefined {

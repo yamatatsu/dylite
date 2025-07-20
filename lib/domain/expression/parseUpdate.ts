@@ -46,12 +46,9 @@ export function parseUpdate(
 	if (overlappedPath) {
 		return `Two document paths overlap with each other; must remove or rewrite one of these paths; path one: ${overlappedPath[0]}, path two: ${overlappedPath[1]}`;
 	}
-	const pathConflict = ast.findPathConflict();
-	if (pathConflict) {
-		return `Two document paths conflict with each other; must remove or rewrite one of these paths; path one: ${pathConflict[0]}, path two: ${pathConflict[1]}`;
-	}
 
 	try {
+		ast.assertPathConflict();
 		ast.traverse((node) => {
 			if (node.type === "AddAction" || node.type === "DeleteAction")
 				node.assertOperandType();

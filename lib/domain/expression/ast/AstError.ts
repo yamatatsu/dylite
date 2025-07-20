@@ -62,3 +62,12 @@ export class IncorrectActionOperandTypeError extends AstError {
 		);
 	}
 }
+
+export class PathConflictError extends AstError {
+	public readonly name = "PathConflictError";
+	constructor(path1: string, path2: string) {
+		super(
+			`Two document paths conflict with each other; must remove or rewrite one of these paths; path one: ${path1}, path two: ${path2}`,
+		);
+	}
+}

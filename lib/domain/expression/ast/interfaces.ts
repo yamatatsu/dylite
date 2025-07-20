@@ -23,7 +23,3 @@ export interface IUnresolvableValueHolder {
 export interface IOverlappedPathHolder {
 	findOverlappedPath(): [PathExpression, PathExpression] | undefined;
 }
-
-export interface IPathConflictHolder {
-	findPathConflict(): [PathExpression, PathExpression] | undefined;
-}
