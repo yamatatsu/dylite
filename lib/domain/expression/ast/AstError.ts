@@ -1,3 +1,5 @@
+import type { Value } from "../../Value";
+
 export class AstError extends Error {
 	constructor(message: string) {
 		super(message);
@@ -109,6 +111,58 @@ export class PathConflictError extends AstError {
 	constructor(path1: string, path2: string) {
 		super(
 			`Two document paths conflict with each other; must remove or rewrite one of these paths; path one: ${path1}, path two: ${path2}`,
+		);
+	}
+}
+
+export class RedundantParensError extends AstError {
+	public readonly name = "RedundantParensError";
+	constructor() {
+		super("The expression has redundant parentheses;");
+	}
+}
+
+export class MisusedFunctionError extends AstError {
+	public readonly name = "MisusedFunctionError";
+	constructor(functionName: string) {
+		super(
+			`The function is not allowed to be used this way in an expression; function: ${functionName}`,
+		);
+	}
+}
+
+export class DistinctOperandsError extends AstError {
+	public readonly name = "DistinctOperandsError";
+	constructor(operator: string, operand: string) {
+		super(
+			`The first operand must be distinct from the remaining operands for this operator or function; operator: ${operator}, first operand: ${operand}`,
+		);
+	}
+}
+
+export class InvalidAttributeTypeError extends AstError {
+	public readonly name = "InvalidAttributeTypeError";
+	constructor(type: string) {
+		super(
+			`Invalid attribute type name found; type: ${type}, valid types: {B,NULL,SS,BOOL,L,BS,N,NS,S,M}`,
+		);
+	}
+}
+
+export class BetweenBoundsError extends AstError {
+	public readonly name = "BetweenBoundsError";
+	constructor(value1: Value, value2: Value) {
+		super(
+			`The BETWEEN operator requires upper bound to be greater than or equal to lower bound; lower bound operand: AttributeValue: {${value1.type}:${value1.value}}, upper bound operand: AttributeValue: {${value2.type}:${value2.value}}`,
+		);
+	}
+}
+
+export class BetweenOperandTypeError extends AstError {
+	public readonly name = "BetweenOperandTypeError";
+	constructor(value1: Value, value2: Value) {
+		super(
+			`The BETWEEN operator requires same data type for lower and upper bounds; lower bound operand: AttributeValue: {${value1.type}:${value1.value}}, upper bound operand: AttributeValue: {${value2.type}:${value2.value}}`,
 		);
 	}
 }

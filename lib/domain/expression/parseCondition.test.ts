@@ -6,18 +6,25 @@ describe("parseCondition", () => {
 			ExpressionAttributeNames: undefined,
 			ExpressionAttributeValues: { ":v1": { N: "5" } },
 		});
-		expect(result).toEqual({
-			type: ">",
-			args: [
-				{
-					type: "PathExpression",
-					segments: [
-						expect.objectContaining({ type: "Identifier", name: "Attr1" }),
-					],
-				},
-				expect.objectContaining({ type: "AttributeValue", name: ":v1" }),
-			],
-		});
+		expect(result).toEqual(
+			expect.objectContaining({
+				type: "ConditionExpression",
+				expression: expect.objectContaining({
+					type: "ComparisonOperator",
+					operator: ">",
+					left: expect.objectContaining({
+						type: "PathExpression",
+						segments: [
+							expect.objectContaining({ type: "Identifier", name: "Attr1" }),
+						],
+					}),
+					right: expect.objectContaining({
+						type: "AttributeValue",
+						name: ":v1",
+					}),
+				}),
+			}),
+		);
 	});
 
 	it("should parse a comparison with ExpressionAttributeNames", () => {
@@ -25,16 +32,23 @@ describe("parseCondition", () => {
 			ExpressionAttributeNames: { "#p": "Price" },
 			ExpressionAttributeValues: { ":v1": { N: "100" } },
 		});
-		expect(result).toEqual({
-			type: ">",
-			args: [
-				{
-					type: "PathExpression",
-					segments: [expect.objectContaining({ type: "Alias", name: "#p" })],
-				},
-				expect.objectContaining({ type: "AttributeValue", name: ":v1" }),
-			],
-		});
+		expect(result).toEqual(
+			expect.objectContaining({
+				type: "ConditionExpression",
+				expression: expect.objectContaining({
+					type: "ComparisonOperator",
+					operator: ">",
+					left: expect.objectContaining({
+						type: "PathExpression",
+						segments: [expect.objectContaining({ type: "Alias", name: "#p" })],
+					}),
+					right: expect.objectContaining({
+						type: "AttributeValue",
+						name: ":v1",
+					}),
+				}),
+			}),
+		);
 	});
 
 	it("should parse a BETWEEN expression", () => {
@@ -45,17 +59,26 @@ describe("parseCondition", () => {
 				":hi": { N: "10" },
 			},
 		});
-		expect(result).toEqual({
-			type: "between",
-			args: [
-				{
-					type: "PathExpression",
-					segments: [expect.objectContaining({ type: "Alias", name: "#p" })],
-				},
-				expect.objectContaining({ type: "AttributeValue", name: ":lo" }),
-				expect.objectContaining({ type: "AttributeValue", name: ":hi" }),
-			],
-		});
+		expect(result).toEqual(
+			expect.objectContaining({
+				type: "ConditionExpression",
+				expression: expect.objectContaining({
+					type: "BetweenOperator",
+					operand: expect.objectContaining({
+						type: "PathExpression",
+						segments: [expect.objectContaining({ type: "Alias", name: "#p" })],
+					}),
+					lowerBound: expect.objectContaining({
+						type: "AttributeValue",
+						name: ":lo",
+					}),
+					upperBound: expect.objectContaining({
+						type: "AttributeValue",
+						name: ":hi",
+					}),
+				}),
+			}),
+		);
 	});
 
 	it("should parse an IN expression", () => {
@@ -66,17 +89,24 @@ describe("parseCondition", () => {
 				":c2": { S: "Movie" },
 			},
 		});
-		expect(result).toEqual({
-			type: "in",
-			args: [
-				{
-					type: "PathExpression",
-					segments: [expect.objectContaining({ type: "Alias", name: "#cat" })],
-				},
-				expect.objectContaining({ type: "AttributeValue", name: ":c1" }),
-				expect.objectContaining({ type: "AttributeValue", name: ":c2" }),
-			],
-		});
+		expect(result).toEqual(
+			expect.objectContaining({
+				type: "ConditionExpression",
+				expression: expect.objectContaining({
+					type: "InOperator",
+					left: expect.objectContaining({
+						type: "PathExpression",
+						segments: [
+							expect.objectContaining({ type: "Alias", name: "#cat" }),
+						],
+					}),
+					right: [
+						expect.objectContaining({ type: "AttributeValue", name: ":c1" }),
+						expect.objectContaining({ type: "AttributeValue", name: ":c2" }),
+					],
+				}),
+			}),
+		);
 	});
 
 	it("should parse a function call", () => {
@@ -84,17 +114,23 @@ describe("parseCondition", () => {
 			ExpressionAttributeNames: { "#id": "Id" },
 			ExpressionAttributeValues: undefined,
 		});
-		expect(result).toEqual({
-			type: "function",
-			name: "attribute_exists",
-			args: [
-				{
-					type: "PathExpression",
-					segments: [expect.objectContaining({ type: "Alias", name: "#id" })],
-				},
-			],
-			attrType: null,
-		});
+		expect(result).toEqual(
+			expect.objectContaining({
+				type: "ConditionExpression",
+				expression: expect.objectContaining({
+					type: "ConditionFunction",
+					name: "attribute_exists",
+					args: [
+						expect.objectContaining({
+							type: "PathExpression",
+							segments: [
+								expect.objectContaining({ type: "Alias", name: "#id" }),
+							],
+						}),
+					],
+				}),
+			}),
+		);
 	});
 
 	it("should parse a complex expression with AND, OR, NOT", () => {
@@ -113,71 +149,69 @@ describe("parseCondition", () => {
 				},
 			},
 		);
-		expect(result).toEqual({
-			type: "and",
-			args: [
-				{
-					type: "function",
-					name: "begins_with",
-					args: [
-						{
-							type: "PathExpression",
-							segments: [
-								expect.objectContaining({ type: "Alias", name: "#s" }),
-							],
-						},
-						expect.objectContaining({
-							type: "AttributeValue",
-							name: ":prefix",
+		expect(result).toEqual(
+			expect.objectContaining({
+				type: "ConditionExpression",
+				expression: expect.objectContaining({
+					type: "LogicalOperator",
+					operator: "AND",
+					left: expect.objectContaining({
+						type: "ConditionFunction",
+						name: "begins_with",
+						args: [
+							expect.objectContaining({
+								type: "PathExpression",
+								segments: [
+									expect.objectContaining({ type: "Alias", name: "#s" }),
+								],
+							}),
+							expect.objectContaining({
+								type: "AttributeValue",
+								name: ":prefix",
+							}),
+						],
+					}),
+					right: expect.objectContaining({
+						type: "LogicalOperator",
+						operator: "OR",
+						left: expect.objectContaining({
+							type: "ComparisonOperator",
+							operator: ">",
+							left: expect.objectContaining({
+								type: "PathExpression",
+								segments: [
+									expect.objectContaining({ type: "Alias", name: "#p" }),
+								],
+							}),
+							right: expect.objectContaining({
+								type: "AttributeValue",
+								name: ":val",
+							}),
 						}),
-					],
-					attrType: "BOOL",
-				},
-				{
-					type: "or",
-					args: [
-						{
-							type: ">",
-							args: [
-								{
+						right: expect.objectContaining({
+							type: "NotOperator",
+							operand: expect.objectContaining({
+								type: "ComparisonOperator",
+								operator: "=",
+								left: expect.objectContaining({
 									type: "PathExpression",
 									segments: [
-										expect.objectContaining({ type: "Alias", name: "#p" }),
-									],
-								},
-								expect.objectContaining({
-									type: "AttributeValue",
-									name: ":val",
-								}),
-							],
-						},
-						{
-							type: "not",
-							args: [
-								{
-									type: "=",
-									args: [
-										{
-											type: "PathExpression",
-											segments: [
-												expect.objectContaining({
-													type: "Alias",
-													name: "#cat",
-												}),
-											],
-										},
 										expect.objectContaining({
-											type: "AttributeValue",
-											name: ":c",
+											type: "Alias",
+											name: "#cat",
 										}),
 									],
-								},
-							],
-						},
-					],
-				},
-			],
-		});
+								}),
+								right: expect.objectContaining({
+									type: "AttributeValue",
+									name: ":c",
+								}),
+							}),
+						}),
+					}),
+				}),
+			}),
+		);
 	});
 
 	it("should return an error for a condition with a reserved word", () => {
@@ -304,7 +338,7 @@ describe("parseCondition", () => {
 			ExpressionAttributeValues: { ":v": { S: "someValue" } },
 		});
 		expect(result).toBe(
-			"Operator or function requires a document path; operator or function: attribute_exists",
+			"Invalid UpdateExpression: Operator or function requires a document path; operator or function: attribute_exists",
 		);
 	});
 
