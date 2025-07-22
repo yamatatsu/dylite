@@ -1,3 +1,4 @@
+import { DistinctOperandsError } from "./AstError";
 import type { ConditionNode, ConditionOperand } from "./ConditionExpression";
 import type { IAstNode } from "./interfaces";
 
@@ -14,5 +15,16 @@ export class ComparisonOperator implements IAstNode {
 		visitor(this);
 		this.left.traverse(visitor);
 		this.right.traverse(visitor);
+	}
+
+	validateDistinctOperands(): void {
+		if (
+			this.left.type === "PathExpression" &&
+			this.right.type === "PathExpression"
+		) {
+			if (this.left.toString() === this.right.toString()) {
+				throw new DistinctOperandsError(this.operator, this.left.toString());
+			}
+		}
 	}
 }

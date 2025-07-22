@@ -1,3 +1,4 @@
+import { BetweenBoundsError, BetweenOperandTypeError } from "./AstError";
 import type { ConditionNode, ConditionOperand } from "./ConditionExpression";
 import type { IAstNode } from "./interfaces";
 
@@ -15,5 +16,23 @@ export class BetweenOperator implements IAstNode {
 		this.operand.traverse(visitor);
 		this.lowerBound.traverse(visitor);
 		this.upperBound.traverse(visitor);
+	}
+
+	validateBounds(): void {
+		if (
+			this.lowerBound.type === "AttributeValue" &&
+			this.upperBound.type === "AttributeValue"
+		) {
+			const lower = this.lowerBound.value();
+			const upper = this.upperBound.value();
+			if (lower && upper) {
+				if (lower.type !== upper.type) {
+					throw new BetweenOperandTypeError(lower, upper);
+				}
+				if (lower.gt(upper)) {
+					throw new BetweenBoundsError(lower, upper);
+				}
+			}
+		}
 	}
 }

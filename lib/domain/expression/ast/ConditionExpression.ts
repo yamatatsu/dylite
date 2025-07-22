@@ -1,15 +1,4 @@
-import {
-	BetweenBoundsError,
-	BetweenOperandTypeError,
-	DistinctOperandsError,
-	DocumentPathRequiredError,
-	IncorrectOperandTypeError,
-	InvalidAttributeTypeError,
-	MisusedFunctionError,
-	NumberOfOperandsError,
-	RedundantParensError,
-	UnknownFunctionError,
-} from "./AstError";
+import { MisusedFunctionError, RedundantParensError } from "./AstError";
 import type { AttributeValue } from "./AttributeValue";
 import type { BetweenOperator } from "./BetweenOperator";
 import type { ComparisonOperator } from "./ComparisonOperator";
@@ -75,36 +64,29 @@ export class ConditionExpression implements IAstNode {
 	private validateUnknownFunctions(): void {
 		this.traverse((node) => {
 			if (node.type === "ConditionFunction") {
-				const functions: Record<string, number> = {
-					attribute_exists: 1,
-					attribute_not_exists: 1,
-					attribute_type: 2,
-					begins_with: 2,
-					contains: 2,
-					size: 1,
-				};
-				if (functions[node.name] === undefined) {
-					throw new UnknownFunctionError(node.name);
-				}
+				node.validateFunctionName();
 			}
 		});
 	}
 
 	private validateMisusedFunctions(): void {
 		this.traverse((node) => {
-			let operands: (ConditionNode | ConditionOperand)[] = [];
 			if (node.type === "ComparisonOperator") {
-				operands = [node.left, node.right];
-			} else if (node.type === "BetweenOperator") {
-				operands = [node.operand, node.lowerBound, node.upperBound];
-			} else if (node.type === "InOperator") {
-				operands = [node.left, ...node.right];
-			}
-
-			for (const op of operands) {
-				if (op.type === "ConditionFunction" && op.name !== "size") {
-					throw new MisusedFunctionError(op.name);
+				const operands = [node.left, node.right];
+				for (const op of operands) {
+					if (op.type === "ConditionFunction") {
+						op.validateAsMisused();
+					}
 				}
+			} else if (node.type === "BetweenOperator") {
+				const operands = [node.operand, node.lowerBound, node.upperBound];
+				for (const op of operands) {
+					if (op.type === "ConditionFunction") {
+						op.validateAsMisused();
+					}
+				}
+			} else if (node.type === "InOperator") {
+				node.validateMisusedFunctions();
 			}
 		});
 	}
@@ -131,18 +113,7 @@ export class ConditionExpression implements IAstNode {
 	private validateNumberOfOperands(): void {
 		this.traverse((node) => {
 			if (node.type === "ConditionFunction") {
-				const functions: Record<string, number> = {
-					attribute_exists: 1,
-					attribute_not_exists: 1,
-					attribute_type: 2,
-					begins_with: 2,
-					contains: 2,
-					size: 1,
-				};
-				const numOperands = functions[node.name];
-				if (numOperands !== undefined && numOperands !== node.args.length) {
-					throw new NumberOfOperandsError(node.name, node.args.length);
-				}
+				node.validateNumberOfOperands();
 			}
 		});
 	}
@@ -150,17 +121,7 @@ export class ConditionExpression implements IAstNode {
 	private validateDistinctOperands(): void {
 		this.traverse((node) => {
 			if (node.type === "ComparisonOperator") {
-				if (
-					node.left.type === "PathExpression" &&
-					node.right.type === "PathExpression"
-				) {
-					if (node.left.toString() === node.right.toString()) {
-						throw new DistinctOperandsError(
-							node.operator,
-							node.left.toString(),
-						);
-					}
-				}
+				node.validateDistinctOperands();
 			}
 		});
 	}
@@ -168,73 +129,7 @@ export class ConditionExpression implements IAstNode {
 	private validateFunctionArgumentTypes(): void {
 		this.traverse((node) => {
 			if (node.type === "ConditionFunction") {
-				const getOperandType = (operand: ConditionOperand): string | null => {
-					if (operand.type === "AttributeValue") {
-						return operand.value()?.type ?? null;
-					}
-					if (operand.type === "ConditionFunction" && operand.name === "size") {
-						return "N";
-					}
-					return null;
-				};
-
-				switch (node.name) {
-					case "attribute_exists":
-					case "attribute_not_exists":
-						if (node.args[0].type !== "PathExpression") {
-							throw new DocumentPathRequiredError(node.name);
-						}
-						break;
-					case "begins_with":
-						for (const arg of node.args) {
-							const type = getOperandType(arg);
-							if (type && type !== "S" && type !== "B") {
-								throw new IncorrectOperandTypeError(node.name, type);
-							}
-						}
-						break;
-					case "attribute_type": {
-						const type = getOperandType(node.args[1]);
-						if (type !== "S") {
-							throw new IncorrectOperandTypeError(
-								node.name,
-								type || "{NS,SS,L,BS,N,M,B,BOOL,NULL,S}",
-							);
-						}
-						if (node.args[1].type === "AttributeValue") {
-							const val = node.args[1].value();
-							if (val?.type === "S") {
-								const typeValue = val.value as string;
-								if (
-									![
-										"S",
-										"N",
-										"B",
-										"NULL",
-										"SS",
-										"BOOL",
-										"L",
-										"BS",
-										"NS",
-										"M",
-									].includes(typeValue)
-								) {
-									throw new InvalidAttributeTypeError(typeValue);
-								}
-							}
-						}
-						break;
-					}
-					case "size": {
-						const type = getOperandType(node.args[0]);
-						if (node.args[0].type === "PathExpression") {
-							// We can't determine the type of a path at validation time.
-						} else if (type && ["N", "BOOL", "NULL"].includes(type)) {
-							throw new IncorrectOperandTypeError(node.name, type);
-						}
-						break;
-					}
-				}
+				node.validateArgumentTypes();
 			}
 		});
 	}
@@ -242,22 +137,7 @@ export class ConditionExpression implements IAstNode {
 	private validateBetweenBounds(): void {
 		this.traverse((node) => {
 			if (node.type === "BetweenOperator") {
-				const { lowerBound, upperBound } = node;
-				if (
-					lowerBound.type === "AttributeValue" &&
-					upperBound.type === "AttributeValue"
-				) {
-					const lower = lowerBound.value();
-					const upper = upperBound.value();
-					if (lower && upper) {
-						if (lower.type !== upper.type) {
-							throw new BetweenOperandTypeError(lower, upper);
-						}
-						if (lower.gt(upper)) {
-							throw new BetweenBoundsError(lower, upper);
-						}
-					}
-				}
+				node.validateBounds();
 			}
 		});
 	}

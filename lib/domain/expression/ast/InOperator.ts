@@ -1,3 +1,4 @@
+import { MisusedFunctionError } from "./AstError";
 import type { ConditionNode, ConditionOperand } from "./ConditionExpression";
 import type { IAstNode } from "./interfaces";
 
@@ -14,6 +15,15 @@ export class InOperator implements IAstNode {
 		this.left.traverse(visitor);
 		for (const item of this.right) {
 			item.traverse(visitor);
+		}
+	}
+
+	validateMisusedFunctions(): void {
+		const operands = [this.left, ...this.right];
+		for (const op of operands) {
+			if (op.type === "ConditionFunction" && op.name !== "size") {
+				throw new MisusedFunctionError(op.name);
+			}
 		}
 	}
 }
