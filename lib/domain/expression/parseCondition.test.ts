@@ -286,6 +286,19 @@ describe("parseCondition", () => {
 		);
 	});
 
+	it("should return an error for different data types in BETWEEN", () => {
+		const result = parseCondition("Attr1 BETWEEN :lo AND :hi", {
+			ExpressionAttributeNames: undefined,
+			ExpressionAttributeValues: {
+				":lo": { N: "2" },
+				":hi": { N: "1" },
+			},
+		});
+		expect(result).toBe(
+			"The BETWEEN operator requires upper bound to be greater than or equal to lower bound; lower bound operand: AttributeValue: {N:2}, upper bound operand: AttributeValue: {N:1}",
+		);
+	});
+
 	it("should return an error for a comparison between the same path", () => {
 		const result = parseCondition("MyAttr = MyAttr", {
 			ExpressionAttributeNames: undefined,
