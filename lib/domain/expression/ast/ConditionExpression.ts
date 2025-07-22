@@ -71,21 +71,11 @@ export class ConditionExpression implements IAstNode {
 
 	private validateMisusedFunctions(): void {
 		this.traverse((node) => {
-			if (node.type === "ComparisonOperator") {
-				const operands = [node.left, node.right];
-				for (const op of operands) {
-					if (op.type === "ConditionFunction") {
-						op.validateAsMisused();
-					}
-				}
-			} else if (node.type === "BetweenOperator") {
-				const operands = [node.operand, node.lowerBound, node.upperBound];
-				for (const op of operands) {
-					if (op.type === "ConditionFunction") {
-						op.validateAsMisused();
-					}
-				}
-			} else if (node.type === "InOperator") {
+			if (
+				node.type === "ComparisonOperator" ||
+				node.type === "BetweenOperator" ||
+				node.type === "InOperator"
+			) {
 				node.validateMisusedFunctions();
 			}
 		});

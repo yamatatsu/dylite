@@ -27,4 +27,13 @@ export class ComparisonOperator implements IAstNode {
 			}
 		}
 	}
+
+	validateMisusedFunctions(): void {
+		const operands = [this.left, this.right];
+		for (const op of operands) {
+			if (op.type === "ConditionFunction") {
+				op.validateAsMisused();
+			}
+		}
+	}
 }

@@ -35,4 +35,13 @@ export class BetweenOperator implements IAstNode {
 			}
 		}
 	}
+
+	validateMisusedFunctions(): void {
+		const operands = [this.operand, this.lowerBound, this.upperBound];
+		for (const op of operands) {
+			if (op.type === "ConditionFunction") {
+				op.validateAsMisused();
+			}
+		}
+	}
 }
