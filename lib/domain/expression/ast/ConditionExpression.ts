@@ -36,53 +36,6 @@ export type ConditionNode =
 	| ConditionFunction
 	| RedundantParens;
 
-// Helper type guards
-function isRedundantParens(
-	node: ConditionNode | ConditionOperand,
-): node is RedundantParens {
-	return node.type === "RedundantParens";
-}
-function isConditionFunction(
-	node: ConditionNode | ConditionOperand,
-): node is ConditionFunction {
-	return node.type === "ConditionFunction";
-}
-function isPathExpression(
-	node: ConditionNode | ConditionOperand,
-): node is PathExpression {
-	return node.type === "PathExpression";
-}
-function isAttributeValue(
-	node: ConditionNode | ConditionOperand,
-): node is AttributeValue {
-	return node.type === "AttributeValue";
-}
-function isComparisonOperator(
-	node: ConditionNode | ConditionOperand,
-): node is ComparisonOperator {
-	return node.type === "ComparisonOperator";
-}
-function isBetweenOperator(
-	node: ConditionNode | ConditionOperand,
-): node is BetweenOperator {
-	return node.type === "BetweenOperator";
-}
-function isLogicalOperator(
-	node: ConditionNode | ConditionOperand,
-): node is LogicalOperator {
-	return node.type === "LogicalOperator";
-}
-function isNotOperator(
-	node: ConditionNode | ConditionOperand,
-): node is NotOperator {
-	return node.type === "NotOperator";
-}
-function isInOperator(
-	node: ConditionNode | ConditionOperand,
-): node is InOperator {
-	return node.type === "InOperator";
-}
-
 export class ConditionExpression implements IAstNode {
 	readonly type = "ConditionExpression";
 
@@ -104,7 +57,7 @@ export class ConditionExpression implements IAstNode {
 		this.validateBetweenBounds();
 
 		if (
-			isConditionFunction(this.expression) &&
+			this.expression.type === "ConditionFunction" &&
 			this.expression.name === "size"
 		) {
 			throw new MisusedFunctionError("size");
@@ -121,7 +74,7 @@ export class ConditionExpression implements IAstNode {
 
 	private validateUnknownFunctions(): void {
 		this.traverse((node) => {
-			if (isConditionFunction(node)) {
+			if (node.type === "ConditionFunction") {
 				const functions: Record<string, number> = {
 					attribute_exists: 1,
 					attribute_not_exists: 1,
@@ -140,16 +93,16 @@ export class ConditionExpression implements IAstNode {
 	private validateMisusedFunctions(): void {
 		this.traverse((node) => {
 			let operands: (ConditionNode | ConditionOperand)[] = [];
-			if (isComparisonOperator(node)) {
+			if (node.type === "ComparisonOperator") {
 				operands = [node.left, node.right];
-			} else if (isBetweenOperator(node)) {
+			} else if (node.type === "BetweenOperator") {
 				operands = [node.operand, node.lowerBound, node.upperBound];
-			} else if (isInOperator(node)) {
+			} else if (node.type === "InOperator") {
 				operands = [node.left, ...node.right];
 			}
 
 			for (const op of operands) {
-				if (isConditionFunction(op) && op.name !== "size") {
+				if (op.type === "ConditionFunction" && op.name !== "size") {
 					throw new MisusedFunctionError(op.name);
 				}
 			}
@@ -158,7 +111,7 @@ export class ConditionExpression implements IAstNode {
 
 	private validateReservedKeywords(): void {
 		this.traverse((node) => {
-			if (isPathExpression(node)) {
+			if (node.type === "PathExpression") {
 				node.validateReservedKeyword();
 			}
 		});
@@ -166,10 +119,10 @@ export class ConditionExpression implements IAstNode {
 
 	private validateAttributeNamesAndValues(): void {
 		this.traverse((node) => {
-			if (isPathExpression(node)) {
+			if (node.type === "PathExpression") {
 				node.validateResolvability();
 			}
-			if (isAttributeValue(node)) {
+			if (node.type === "AttributeValue") {
 				node.validateResolvability();
 			}
 		});
@@ -177,7 +130,7 @@ export class ConditionExpression implements IAstNode {
 
 	private validateNumberOfOperands(): void {
 		this.traverse((node) => {
-			if (isConditionFunction(node)) {
+			if (node.type === "ConditionFunction") {
 				const functions: Record<string, number> = {
 					attribute_exists: 1,
 					attribute_not_exists: 1,
@@ -196,8 +149,11 @@ export class ConditionExpression implements IAstNode {
 
 	private validateDistinctOperands(): void {
 		this.traverse((node) => {
-			if (isComparisonOperator(node)) {
-				if (isPathExpression(node.left) && isPathExpression(node.right)) {
+			if (node.type === "ComparisonOperator") {
+				if (
+					node.left.type === "PathExpression" &&
+					node.right.type === "PathExpression"
+				) {
 					if (node.left.toString() === node.right.toString()) {
 						throw new DistinctOperandsError(
 							node.operator,
@@ -211,12 +167,12 @@ export class ConditionExpression implements IAstNode {
 
 	private validateFunctionArgumentTypes(): void {
 		this.traverse((node) => {
-			if (isConditionFunction(node)) {
+			if (node.type === "ConditionFunction") {
 				const getOperandType = (operand: ConditionOperand): string | null => {
-					if (isAttributeValue(operand)) {
+					if (operand.type === "AttributeValue") {
 						return operand.value()?.type ?? null;
 					}
-					if (isConditionFunction(operand) && operand.name === "size") {
+					if (operand.type === "ConditionFunction" && operand.name === "size") {
 						return "N";
 					}
 					return null;
@@ -225,7 +181,7 @@ export class ConditionExpression implements IAstNode {
 				switch (node.name) {
 					case "attribute_exists":
 					case "attribute_not_exists":
-						if (!isPathExpression(node.args[0])) {
+						if (node.args[0].type !== "PathExpression") {
 							throw new DocumentPathRequiredError(node.name);
 						}
 						break;
@@ -245,7 +201,7 @@ export class ConditionExpression implements IAstNode {
 								type || "{NS,SS,L,BS,N,M,B,BOOL,NULL,S}",
 							);
 						}
-						if (isAttributeValue(node.args[1])) {
+						if (node.args[1].type === "AttributeValue") {
 							const val = node.args[1].value();
 							if (val?.type === "S") {
 								const typeValue = val.value as string;
@@ -271,7 +227,7 @@ export class ConditionExpression implements IAstNode {
 					}
 					case "size": {
 						const type = getOperandType(node.args[0]);
-						if (isPathExpression(node.args[0])) {
+						if (node.args[0].type === "PathExpression") {
 							// We can't determine the type of a path at validation time.
 						} else if (type && ["N", "BOOL", "NULL"].includes(type)) {
 							throw new IncorrectOperandTypeError(node.name, type);
@@ -285,9 +241,12 @@ export class ConditionExpression implements IAstNode {
 
 	private validateBetweenBounds(): void {
 		this.traverse((node) => {
-			if (isBetweenOperator(node)) {
+			if (node.type === "BetweenOperator") {
 				const { lowerBound, upperBound } = node;
-				if (isAttributeValue(lowerBound) && isAttributeValue(upperBound)) {
+				if (
+					lowerBound.type === "AttributeValue" &&
+					upperBound.type === "AttributeValue"
+				) {
 					const lower = lowerBound.value();
 					const upper = upperBound.value();
 					if (lower && upper) {
