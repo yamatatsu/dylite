@@ -19,7 +19,7 @@ describe("parseUpdate", () => {
 							expect.objectContaining({
 								type: "SetAction",
 								path: expect.objectContaining({
-									type: "PathExpression",
+									type: "DocumentPath",
 									segments: [
 										expect.objectContaining({ type: "Alias", name: "#p" }),
 									],
@@ -32,7 +32,7 @@ describe("parseUpdate", () => {
 							expect.objectContaining({
 								type: "SetAction",
 								path: expect.objectContaining({
-									type: "PathExpression",
+									type: "DocumentPath",
 									segments: [
 										expect.objectContaining({ type: "Alias", name: "#c" }),
 									],
@@ -64,7 +64,7 @@ describe("parseUpdate", () => {
 							expect.objectContaining({
 								type: "SetAction",
 								path: expect.objectContaining({
-									type: "PathExpression",
+									type: "DocumentPath",
 									segments: [
 										expect.objectContaining({ type: "Alias", name: "#p" }),
 									],
@@ -74,7 +74,7 @@ describe("parseUpdate", () => {
 									name: "if_not_exists",
 									args: [
 										expect.objectContaining({
-											type: "PathExpression",
+											type: "DocumentPath",
 											segments: [
 												expect.objectContaining({ type: "Alias", name: "#p" }),
 											],
@@ -108,7 +108,7 @@ describe("parseUpdate", () => {
 							expect.objectContaining({
 								type: "RemoveAction",
 								path: expect.objectContaining({
-									type: "PathExpression",
+									type: "DocumentPath",
 									segments: [
 										expect.objectContaining({ type: "Alias", name: "#s" }),
 									],
@@ -117,7 +117,7 @@ describe("parseUpdate", () => {
 							expect.objectContaining({
 								type: "RemoveAction",
 								path: expect.objectContaining({
-									type: "PathExpression",
+									type: "DocumentPath",
 									segments: [
 										expect.objectContaining({ type: "Alias", name: "#d" }),
 									],
@@ -145,7 +145,7 @@ describe("parseUpdate", () => {
 							expect.objectContaining({
 								type: "AddAction",
 								path: expect.objectContaining({
-									type: "PathExpression",
+									type: "DocumentPath",
 									segments: [
 										expect.objectContaining({ type: "Alias", name: "#q" }),
 									],
@@ -177,7 +177,7 @@ describe("parseUpdate", () => {
 							expect.objectContaining({
 								type: "DeleteAction",
 								path: expect.objectContaining({
-									type: "PathExpression",
+									type: "DocumentPath",
 									segments: [
 										expect.objectContaining({ type: "Alias", name: "#c" }),
 									],
@@ -209,7 +209,7 @@ describe("parseUpdate", () => {
 							expect.objectContaining({
 								type: "SetAction",
 								path: expect.objectContaining({
-									type: "PathExpression",
+									type: "DocumentPath",
 									segments: [
 										expect.objectContaining({ type: "Alias", name: "#p" }),
 									],
@@ -227,7 +227,7 @@ describe("parseUpdate", () => {
 							expect.objectContaining({
 								type: "RemoveAction",
 								path: expect.objectContaining({
-									type: "PathExpression",
+									type: "DocumentPath",
 									segments: [
 										expect.objectContaining({
 											type: "Identifier",
@@ -244,7 +244,7 @@ describe("parseUpdate", () => {
 							expect.objectContaining({
 								type: "AddAction",
 								path: expect.objectContaining({
-									type: "PathExpression",
+									type: "DocumentPath",
 									segments: [
 										expect.objectContaining({ type: "Alias", name: "#q" }),
 									],

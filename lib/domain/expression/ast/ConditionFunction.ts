@@ -67,7 +67,7 @@ export class ConditionFunction implements IAstNode {
 		switch (this.name) {
 			case "attribute_exists":
 			case "attribute_not_exists":
-				if (this.args[0].type !== "PathExpression") {
+				if (this.args[0].type !== "DocumentPath") {
 					throw new DocumentPathRequiredError(this.name);
 				}
 				break;
@@ -113,7 +113,7 @@ export class ConditionFunction implements IAstNode {
 			}
 			case "size": {
 				const type = getOperandType(this.args[0]);
-				if (this.args[0].type === "PathExpression") {
+				if (this.args[0].type === "DocumentPath") {
 					// We can't determine the type of a path at validation time.
 				} else if (type && ["N", "BOOL", "NULL"].includes(type)) {
 					throw new IncorrectOperandTypeError(this.name, type);

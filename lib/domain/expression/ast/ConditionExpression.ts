@@ -3,17 +3,17 @@ import type { AttributeValue } from "./AttributeValue";
 import type { BetweenOperator } from "./BetweenOperator";
 import type { ComparisonOperator } from "./ComparisonOperator";
 import type { ConditionFunction } from "./ConditionFunction";
+import type { DocumentPath } from "./DocumentPath";
 import type { InOperator } from "./InOperator";
 import type { LogicalOperator } from "./LogicalOperator";
 import type { NotOperator } from "./NotOperator";
-import type { PathExpression } from "./PathExpression";
 import type { RedundantParens } from "./RedundantParens";
 import type { IAstNode } from "./interfaces";
 
 export type ConditionOperand =
 	| ConditionFunction
 	| AttributeValue
-	| PathExpression
+	| DocumentPath
 	| RedundantParens;
 
 export type ConditionNode =
@@ -83,7 +83,7 @@ export class ConditionExpression implements IAstNode {
 
 	private validateReservedKeywords(): void {
 		this.traverse((node) => {
-			if (node.type === "PathExpression") {
+			if (node.type === "DocumentPath") {
 				node.validateReservedKeyword();
 			}
 		});
@@ -91,7 +91,7 @@ export class ConditionExpression implements IAstNode {
 
 	private validateAttributeNamesAndValues(): void {
 		this.traverse((node) => {
-			if (node.type === "PathExpression") {
+			if (node.type === "DocumentPath") {
 				node.validateResolvability();
 			}
 			if (node.type === "AttributeValue") {

@@ -9,8 +9,8 @@ import {
 import type { AttributeValue } from "./AttributeValue";
 import type { DeleteAction } from "./DeleteAction";
 import type { DeleteSection } from "./DeleteSection";
+import type { DocumentPath } from "./DocumentPath";
 import type { FunctionForUpdate } from "./FunctionForUpdate";
-import type { PathExpression } from "./PathExpression";
 import type { RemoveAction } from "./RemoveAction";
 import type { RemoveSection } from "./RemoveSection";
 import type { SetAction } from "./SetAction";
@@ -35,7 +35,7 @@ export class UpdateExpression implements IAstNode {
 				| AddAction
 				| DeleteSection
 				| DeleteAction
-				| PathExpression
+				| DocumentPath
 				| AttributeValue
 				| FunctionForUpdate
 				| ArithmeticExpression,
@@ -70,7 +70,7 @@ export class UpdateExpression implements IAstNode {
 	}
 
 	private validateOverlappedPath(): void {
-		const paths: PathExpression[] = [];
+		const paths: DocumentPath[] = [];
 
 		for (const section of this.sections) {
 			for (const expr of section.expressions) {
@@ -91,10 +91,10 @@ export class UpdateExpression implements IAstNode {
 	}
 
 	private validatePathConflict(): void {
-		const paths: PathExpression[] = [];
+		const paths: DocumentPath[] = [];
 
 		this.traverse((node) => {
-			if (node.type === "PathExpression") {
+			if (node.type === "DocumentPath") {
 				const currentPath = node;
 
 				for (const existingPath of paths) {
@@ -113,7 +113,7 @@ export class UpdateExpression implements IAstNode {
 
 	private validateReservedKeywords(): void {
 		this.traverse((node) => {
-			if (node.type === "PathExpression") {
+			if (node.type === "DocumentPath") {
 				node.validateReservedKeyword();
 			}
 		});
@@ -129,7 +129,7 @@ export class UpdateExpression implements IAstNode {
 
 	private validatePathResolvability(): void {
 		this.traverse((node) => {
-			if (node.type === "PathExpression") {
+			if (node.type === "DocumentPath") {
 				node.validateResolvability();
 			}
 		});

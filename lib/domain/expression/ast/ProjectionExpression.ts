@@ -4,15 +4,15 @@ import {
 	ReservedKeywordError,
 	UnresolvableAttributeNameError,
 } from "./AstError";
-import type { PathExpression } from "./PathExpression";
+import type { DocumentPath } from "./DocumentPath";
 import type { IAstNode } from "./interfaces";
 
 export class ProjectionExpression implements IAstNode {
 	readonly type = "ProjectionExpression";
 
-	constructor(public readonly paths: PathExpression[]) {}
+	constructor(public readonly paths: DocumentPath[]) {}
 
-	traverse(visitor: (node: PathExpression) => void): void {
+	traverse(visitor: (node: DocumentPath) => void): void {
 		for (const path of this.paths) {
 			path.traverse(visitor);
 		}

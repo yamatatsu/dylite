@@ -1,7 +1,7 @@
 import type { ArithmeticExpression } from "./ArithmeticExpression";
 import type { AttributeValue } from "./AttributeValue";
+import type { DocumentPath } from "./DocumentPath";
 import type { FunctionForUpdate } from "./FunctionForUpdate";
-import type { PathExpression } from "./PathExpression";
 import type { SetAction } from "./SetAction";
 import type { IAstNode } from "./interfaces.js";
 
@@ -15,7 +15,7 @@ export class SetSection implements IAstNode {
 			node:
 				| this
 				| SetAction
-				| PathExpression
+				| DocumentPath
 				| AttributeValue
 				| FunctionForUpdate
 				| ArithmeticExpression,

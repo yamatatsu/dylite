@@ -1,11 +1,11 @@
 import type { ArithmeticExpression } from "./ArithmeticExpression";
 import type { AttributeValue } from "./AttributeValue";
+import type { DocumentPath } from "./DocumentPath";
 import type { FunctionForUpdate } from "./FunctionForUpdate";
-import type { PathExpression } from "./PathExpression";
 import type { IAstNode } from "./interfaces";
 
 export type Operand =
-	| PathExpression
+	| DocumentPath
 	| AttributeValue
 	| FunctionForUpdate
 	| ArithmeticExpression;
@@ -14,7 +14,7 @@ export class SetAction implements IAstNode {
 	readonly type = "SetAction";
 
 	constructor(
-		public readonly path: PathExpression,
+		public readonly path: DocumentPath,
 		public readonly value: Operand,
 	) {}
 

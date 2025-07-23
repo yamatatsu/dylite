@@ -19,8 +19,8 @@ export class ComparisonOperator implements IAstNode {
 
 	validateDistinctOperands(): void {
 		if (
-			this.left.type === "PathExpression" &&
-			this.right.type === "PathExpression"
+			this.left.type === "DocumentPath" &&
+			this.right.type === "DocumentPath"
 		) {
 			if (this.left.toString() === this.right.toString()) {
 				throw new DistinctOperandsError(this.operator, this.left.toString());

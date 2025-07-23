@@ -1,18 +1,18 @@
 import { IncorrectActionOperandTypeError } from "./AstError";
 import type { AttributeValue } from "./AttributeValue";
-import type { PathExpression } from "./PathExpression";
+import type { DocumentPath } from "./DocumentPath";
 import type { IAstNode } from "./interfaces";
 
 export class AddAction implements IAstNode {
 	readonly type = "AddAction";
 
 	constructor(
-		public readonly path: PathExpression,
+		public readonly path: DocumentPath,
 		public readonly value: AttributeValue,
 	) {}
 
 	traverse(
-		visitor: (node: this | PathExpression | AttributeValue) => void,
+		visitor: (node: this | DocumentPath | AttributeValue) => void,
 	): void {
 		visitor(this);
 		this.path.traverse(visitor);

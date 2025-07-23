@@ -13,7 +13,7 @@ describe("parseCondition", () => {
 					type: "ComparisonOperator",
 					operator: ">",
 					left: expect.objectContaining({
-						type: "PathExpression",
+						type: "DocumentPath",
 						segments: [
 							expect.objectContaining({ type: "Identifier", name: "Attr1" }),
 						],
@@ -39,7 +39,7 @@ describe("parseCondition", () => {
 					type: "ComparisonOperator",
 					operator: ">",
 					left: expect.objectContaining({
-						type: "PathExpression",
+						type: "DocumentPath",
 						segments: [expect.objectContaining({ type: "Alias", name: "#p" })],
 					}),
 					right: expect.objectContaining({
@@ -65,7 +65,7 @@ describe("parseCondition", () => {
 				expression: expect.objectContaining({
 					type: "BetweenOperator",
 					operand: expect.objectContaining({
-						type: "PathExpression",
+						type: "DocumentPath",
 						segments: [expect.objectContaining({ type: "Alias", name: "#p" })],
 					}),
 					lowerBound: expect.objectContaining({
@@ -95,7 +95,7 @@ describe("parseCondition", () => {
 				expression: expect.objectContaining({
 					type: "InOperator",
 					left: expect.objectContaining({
-						type: "PathExpression",
+						type: "DocumentPath",
 						segments: [
 							expect.objectContaining({ type: "Alias", name: "#cat" }),
 						],
@@ -122,7 +122,7 @@ describe("parseCondition", () => {
 					name: "attribute_exists",
 					args: [
 						expect.objectContaining({
-							type: "PathExpression",
+							type: "DocumentPath",
 							segments: [
 								expect.objectContaining({ type: "Alias", name: "#id" }),
 							],
@@ -160,7 +160,7 @@ describe("parseCondition", () => {
 						name: "begins_with",
 						args: [
 							expect.objectContaining({
-								type: "PathExpression",
+								type: "DocumentPath",
 								segments: [
 									expect.objectContaining({ type: "Alias", name: "#s" }),
 								],
@@ -178,7 +178,7 @@ describe("parseCondition", () => {
 							type: "ComparisonOperator",
 							operator: ">",
 							left: expect.objectContaining({
-								type: "PathExpression",
+								type: "DocumentPath",
 								segments: [
 									expect.objectContaining({ type: "Alias", name: "#p" }),
 								],
@@ -194,7 +194,7 @@ describe("parseCondition", () => {
 								type: "ComparisonOperator",
 								operator: "=",
 								left: expect.objectContaining({
-									type: "PathExpression",
+									type: "DocumentPath",
 									segments: [
 										expect.objectContaining({
 											type: "Alias",

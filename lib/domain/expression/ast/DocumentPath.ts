@@ -9,8 +9,8 @@ import type {
 } from "./PathSegment";
 import type { IAstNode } from "./interfaces";
 
-export class PathExpression implements IAstNode {
-	public readonly type = "PathExpression";
+export class DocumentPath implements IAstNode {
+	public readonly type = "DocumentPath";
 
 	constructor(private readonly segments: PathSegment[]) {}
 
@@ -69,7 +69,7 @@ export class PathExpression implements IAstNode {
 	 *   other: [a, b, d]
 	 *   returns false
 	 */
-	isOverlappedOf(other: PathExpression): boolean {
+	isOverlappedOf(other: DocumentPath): boolean {
 		for (let i = 0; i < this.size() && i < other.size(); i++) {
 			if (this.segments[i].value() !== other.segments[i].value()) {
 				return false;
@@ -93,7 +93,7 @@ export class PathExpression implements IAstNode {
 	 *   other: [a, 1]
 	 *   returns false
 	 */
-	isConflictWith(other: PathExpression): boolean {
+	isConflictWith(other: DocumentPath): boolean {
 		for (let i = 0; i < this.size() && i < other.size(); i++) {
 			if (this.segments[i].isArrayIndex !== other.segments[i].isArrayIndex) {
 				return true;

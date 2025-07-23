@@ -5,7 +5,7 @@ import {
 	UnknownFunctionError,
 } from "./AstError";
 import type { AttributeValue } from "./AttributeValue";
-import type { PathExpression } from "./PathExpression";
+import type { DocumentPath } from "./DocumentPath";
 import type { IAstNode } from "./interfaces";
 
 export class FunctionForUpdate implements IAstNode {
@@ -13,16 +13,12 @@ export class FunctionForUpdate implements IAstNode {
 
 	constructor(
 		public readonly name: string,
-		public readonly args: (
-			| FunctionForUpdate
-			| AttributeValue
-			| PathExpression
-		)[],
+		public readonly args: (FunctionForUpdate | AttributeValue | DocumentPath)[],
 	) {}
 
 	traverse(
 		visitor: (
-			node: this | FunctionForUpdate | AttributeValue | PathExpression,
+			node: this | FunctionForUpdate | AttributeValue | DocumentPath,
 		) => void,
 	): void {
 		visitor(this);
@@ -56,15 +52,12 @@ export class FunctionForUpdate implements IAstNode {
 		if (this.args.length < 2) {
 			throw new NumberOfOperandsError(this.name, this.args.length);
 		}
-		if (
-			this.name === "if_not_exists" &&
-			this.args[0].type !== "PathExpression"
-		) {
+		if (this.name === "if_not_exists" && this.args[0].type !== "DocumentPath") {
 			throw new DocumentPathRequiredError(this.name);
 		}
 		if (this.name === "list_append") {
 			for (const arg of this.args) {
-				const type = arg.type !== "PathExpression" && arg.valueType();
+				const type = arg.type !== "DocumentPath" && arg.valueType();
 				if (type && type !== "L") {
 					throw new IncorrectOperandTypeError(this.name, type);
 				}

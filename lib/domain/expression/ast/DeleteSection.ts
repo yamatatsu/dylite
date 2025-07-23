@@ -1,6 +1,6 @@
 import type { AttributeValue } from "./AttributeValue";
 import type { DeleteAction } from "./DeleteAction";
-import type { PathExpression } from "./PathExpression";
+import type { DocumentPath } from "./DocumentPath";
 import type { IAstNode } from "./interfaces";
 
 export class DeleteSection implements IAstNode {
@@ -10,7 +10,7 @@ export class DeleteSection implements IAstNode {
 
 	traverse(
 		visitor: (
-			node: this | DeleteAction | PathExpression | AttributeValue,
+			node: this | DeleteAction | DocumentPath | AttributeValue,
 		) => void,
 	): void {
 		visitor(this);

@@ -9,13 +9,13 @@ describe("parseProjection", () => {
 			type: "ProjectionExpression",
 			paths: [
 				{
-					type: "PathExpression",
+					type: "DocumentPath",
 					segments: [
 						expect.objectContaining({ type: "Identifier", name: "Attr1" }),
 					],
 				},
 				{
-					type: "PathExpression",
+					type: "DocumentPath",
 					segments: [
 						expect.objectContaining({ type: "Identifier", name: "Attr2" }),
 					],
@@ -35,11 +35,11 @@ describe("parseProjection", () => {
 			type: "ProjectionExpression",
 			paths: [
 				{
-					type: "PathExpression",
+					type: "DocumentPath",
 					segments: [expect.objectContaining({ type: "Alias", name: "#n" })],
 				},
 				{
-					type: "PathExpression",
+					type: "DocumentPath",
 					segments: [expect.objectContaining({ type: "Alias", name: "#a" })],
 				},
 			],
@@ -56,14 +56,14 @@ describe("parseProjection", () => {
 			type: "ProjectionExpression",
 			paths: [
 				{
-					type: "PathExpression",
+					type: "DocumentPath",
 					segments: [
 						expect.objectContaining({ type: "Identifier", name: "Product" }),
 						expect.objectContaining({ type: "Identifier", name: "Price" }),
 					],
 				},
 				{
-					type: "PathExpression",
+					type: "DocumentPath",
 					segments: [expect.objectContaining({ type: "Alias", name: "#b" })],
 				},
 			],
@@ -81,14 +81,14 @@ describe("parseProjection", () => {
 			type: "ProjectionExpression",
 			paths: [
 				{
-					type: "PathExpression",
+					type: "DocumentPath",
 					segments: [
 						expect.objectContaining({ type: "Alias", name: "#i" }),
 						expect.objectContaining({ type: "ArrayIndex", index: 0 }),
 					],
 				},
 				{
-					type: "PathExpression",
+					type: "DocumentPath",
 					segments: [
 						expect.objectContaining({ type: "Alias", name: "#i" }),
 						expect.objectContaining({ type: "ArrayIndex", index: 1 }),
@@ -110,24 +110,24 @@ describe("parseProjection", () => {
 			type: "ProjectionExpression",
 			paths: [
 				{
-					type: "PathExpression",
+					type: "DocumentPath",
 					segments: [
 						expect.objectContaining({ type: "Identifier", name: "Id" }),
 					],
 				},
 				{
-					type: "PathExpression",
+					type: "DocumentPath",
 					segments: [expect.objectContaining({ type: "Alias", name: "#n" })],
 				},
 				{
-					type: "PathExpression",
+					type: "DocumentPath",
 					segments: [
 						expect.objectContaining({ type: "Identifier", name: "Product" }),
 						expect.objectContaining({ type: "Identifier", name: "Price" }),
 					],
 				},
 				{
-					type: "PathExpression",
+					type: "DocumentPath",
 					segments: [
 						expect.objectContaining({ type: "Alias", name: "#i" }),
 						expect.objectContaining({ type: "ArrayIndex", index: 0 }),

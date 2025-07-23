@@ -7,7 +7,7 @@ export * from "./DeleteAction";
 export * from "./DeleteSection";
 export * from "./FunctionForUpdate";
 export * from "./interfaces";
-export * from "./PathExpression";
+export * from "./DocumentPath";
 export * from "./PathSegment";
 export * from "./ProjectionExpression";
 export * from "./RemoveAction";

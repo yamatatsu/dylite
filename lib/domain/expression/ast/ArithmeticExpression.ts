@@ -1,7 +1,7 @@
 import { IncorrectOperandTypeError } from "./AstError";
 import type { AttributeValue } from "./AttributeValue";
+import type { DocumentPath } from "./DocumentPath";
 import type { FunctionForUpdate } from "./FunctionForUpdate";
-import type { PathExpression } from "./PathExpression";
 import type { IAstNode } from "./interfaces";
 
 export class ArithmeticExpression implements IAstNode {
@@ -9,13 +9,13 @@ export class ArithmeticExpression implements IAstNode {
 
 	constructor(
 		public readonly operator: "+" | "-",
-		public readonly left: FunctionForUpdate | AttributeValue | PathExpression,
-		public readonly right: FunctionForUpdate | AttributeValue | PathExpression,
+		public readonly left: FunctionForUpdate | AttributeValue | DocumentPath,
+		public readonly right: FunctionForUpdate | AttributeValue | DocumentPath,
 	) {}
 
 	traverse(
 		visitor: (
-			node: this | FunctionForUpdate | AttributeValue | PathExpression,
+			node: this | FunctionForUpdate | AttributeValue | DocumentPath,
 		) => void,
 	): void {
 		visitor(this);
@@ -45,8 +45,8 @@ export class ArithmeticExpression implements IAstNode {
 			if (valueType && valueType !== "N") {
 				return this.left;
 			}
-		} else if (this.left.type === "PathExpression") {
-			// PathExpression type cannot be determined at parse time
+		} else if (this.left.type === "DocumentPath") {
+			// DocumentPath type cannot be determined at parse time
 			return undefined;
 		}
 
@@ -61,8 +61,8 @@ export class ArithmeticExpression implements IAstNode {
 			if (valueType && valueType !== "N") {
 				return this.right;
 			}
-		} else if (this.right.type === "PathExpression") {
-			// PathExpression type cannot be determined at parse time
+		} else if (this.right.type === "DocumentPath") {
+			// DocumentPath type cannot be determined at parse time
 			return undefined;
 		}
 
