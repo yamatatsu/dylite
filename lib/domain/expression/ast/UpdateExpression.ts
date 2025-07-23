@@ -1,6 +1,6 @@
 import type { AddAction } from "./AddAction";
 import type { AddSection } from "./AddSection";
-import type { ArithmeticExpression } from "./ArithmeticExpression";
+import type { ArithmeticOperator } from "./ArithmeticOperator";
 import {
 	DuplicateSectionError,
 	OverlappedPathError,
@@ -38,7 +38,7 @@ export class UpdateExpression implements IAstNode {
 				| DocumentPath
 				| AttributeValue
 				| FunctionForUpdate
-				| ArithmeticExpression,
+				| ArithmeticOperator,
 		) => void,
 	): void {
 		for (const section of this.sections) {
@@ -153,7 +153,7 @@ export class UpdateExpression implements IAstNode {
 
 	private validateArithmeticExpressionUsage(): void {
 		this.traverse((node) => {
-			if (node.type === "ArithmeticExpression") {
+			if (node.type === "ArithmeticOperator") {
 				node.validateUsage();
 			}
 		});

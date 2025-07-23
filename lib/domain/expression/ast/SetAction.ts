@@ -1,4 +1,4 @@
-import type { ArithmeticExpression } from "./ArithmeticExpression";
+import type { ArithmeticOperator } from "./ArithmeticOperator";
 import type { AttributeValue } from "./AttributeValue";
 import type { DocumentPath } from "./DocumentPath";
 import type { FunctionForUpdate } from "./FunctionForUpdate";
@@ -8,7 +8,7 @@ export type Operand =
 	| DocumentPath
 	| AttributeValue
 	| FunctionForUpdate
-	| ArithmeticExpression;
+	| ArithmeticOperator;
 
 export class SetAction implements IAstNode {
 	readonly type = "SetAction";

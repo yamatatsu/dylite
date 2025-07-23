@@ -4,8 +4,8 @@ import type { DocumentPath } from "./DocumentPath";
 import type { FunctionForUpdate } from "./FunctionForUpdate";
 import type { IAstNode } from "./interfaces";
 
-export class ArithmeticExpression implements IAstNode {
-	public readonly type = "ArithmeticExpression" as const;
+export class ArithmeticOperator implements IAstNode {
+	public readonly type = "ArithmeticOperator" as const;
 
 	constructor(
 		public readonly operator: "+" | "-",

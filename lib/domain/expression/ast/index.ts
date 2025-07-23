@@ -1,6 +1,6 @@
 export * from "./AddAction";
 export * from "./AddSection";
-export * from "./ArithmeticExpression";
+export * from "./ArithmeticOperator";
 export * from "./AstError";
 export * from "./AttributeValue";
 export * from "./DeleteAction";
