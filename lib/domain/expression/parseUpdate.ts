@@ -1,4 +1,4 @@
-import type { Value } from "../types";
+import type { PlainValue } from "../Value";
 import { AstError } from "./ast/AstError";
 import type { UpdateExpression } from "./ast/UpdateExpression";
 import type { Context } from "./context";
@@ -8,7 +8,7 @@ export function parseUpdate(
 	expression: string,
 	options: {
 		ExpressionAttributeNames: Record<string, string> | undefined;
-		ExpressionAttributeValues: Record<string, Value> | undefined;
+		ExpressionAttributeValues: Record<string, PlainValue.Value> | undefined;
 	},
 ) {
 	const context: Context = {

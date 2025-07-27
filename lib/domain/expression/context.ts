@@ -1,6 +1,6 @@
-import type { Value } from "../types";
+import type { PlainValue } from "../Value";
 
 export type Context = {
 	attrNameMap: Record<string, string>;
-	attrValMap: Record<string, Value>;
+	attrValMap: Record<string, PlainValue.Value>;
 };
