@@ -60,6 +60,8 @@ export type Value =
 	| SValue
 	| SSValue;
 
+export type KeyValue = BValue | NValue | SValue;
+
 export function plainToValue(value: PlainValue.Value): Value {
 	if (value.S !== undefined) return new SValue(value);
 	if (value.N !== undefined) return new NValue(value);
