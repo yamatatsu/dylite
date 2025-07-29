@@ -44,6 +44,44 @@ test("create table with PK and SK", async () => {
 	);
 });
 
+test("create table with duplicate attribute names", async () => {
+	const tableName = `test-table-${randomUUID()}`;
+	const promise = ddb.createTable({
+		TableName: tableName,
+		AttributeDefinitions: [
+			{ AttributeName: "pk", AttributeType: "N" },
+			{ AttributeName: "pk", AttributeType: "N" }, // same name as previous
+		],
+		KeySchema: [
+			{ AttributeName: "pk", KeyType: "HASH" },
+			{ AttributeName: "sk", KeyType: "RANGE" },
+		],
+		BillingMode: "PAY_PER_REQUEST",
+	});
+	await expect(promise).rejects.toThrow(
+		"Cannot have two attributes with the same name",
+	);
+});
+
+test.each`
+	KeySchema                                                                                 | errorMessage
+	${[{ AttributeName: "sk", KeyType: "RANGE" }, { AttributeName: "pk", KeyType: "HASH" }]}  | ${"Invalid key order. Hash Key must be specified first in key schema, Range Key must be specifed second"}
+	${[{ AttributeName: "pk", KeyType: "HASH" }, { AttributeName: "sk", KeyType: "HASH" }]}   | ${"Too many hash keys specified.  All Dynamo DB tables must have exactly one hash key"}
+	${[{ AttributeName: "pk", KeyType: "RANGE" }, { AttributeName: "sk", KeyType: "RANGE" }]} | ${"No Hash Key specified in schema.  All Dynamo DB tables must have exactly one hash key"}
+`("$errorMessage", async ({ KeySchema, errorMessage }) => {
+	const tableName = `test-table-${randomUUID()}`;
+	const promise = ddb.createTable({
+		TableName: tableName,
+		AttributeDefinitions: [
+			{ AttributeName: "pk", AttributeType: "N" },
+			{ AttributeName: "sk", AttributeType: "B" },
+		],
+		KeySchema: KeySchema,
+		BillingMode: "PAY_PER_REQUEST",
+	});
+	await expect(promise).rejects.toThrow(errorMessage);
+});
+
 ////////////////////////////////////////////////////////////
 // test helpers
 
