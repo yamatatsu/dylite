@@ -1,5 +1,4 @@
 import * as v from "valibot";
-import { compare } from "../../db/compare";
 import { validationException } from "../../domain/errors";
 import { attributeValueSchema } from "../../validations/attributeValueSchema";
 
@@ -106,19 +105,19 @@ export function validateAttributeConditions(data: {
 						"One or more parameter values were invalid: AttributeValues inside AttributeValueList must be of same type",
 					);
 				}
-				if (
-					condition.ComparisonOperator === "BETWEEN" &&
-					compare(
-						"GT",
-						// @ts-expect-error: will refactor with rich attribute type
-						condition.AttributeValueList[0],
-						condition.AttributeValueList[1],
-					)
-				) {
-					throw validationException(
-						"The BETWEEN condition was provided a range where the lower bound is greater than the upper bound",
-					);
-				}
+				// if (
+				// 	condition.ComparisonOperator === "BETWEEN" &&
+				// 	compare(
+				// 		"GT",
+				// 		// @ts-expect-error: will refactor with rich attribute type
+				// 		condition.AttributeValueList[0],
+				// 		condition.AttributeValueList[1],
+				// 	)
+				// ) {
+				// 	throw validationException(
+				// 		"The BETWEEN condition was provided a range where the lower bound is greater than the upper bound",
+				// 	);
+				// }
 			}
 		} else if ("AttributeValueList" in condition) {
 			throw validationException(
