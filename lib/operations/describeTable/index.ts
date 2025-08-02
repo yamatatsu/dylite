@@ -1,13 +1,18 @@
 import * as v from "valibot";
-import type { Store } from "../../db/types";
-import { action } from "./action";
-import { schema } from "./schema";
+import type { TableMap } from "../../db/TableMap";
+import { tableNameSchema } from "../../domain/TableDescription";
 
-export async function execute(json: unknown, store: Store) {
+const schema = v.object({
+	TableName: tableNameSchema,
+});
+
+export async function execute(json: unknown, tableMap: TableMap) {
 	const res = v.safeParse(schema, json, { abortEarly: true });
 	if (!res.success) {
 		throw new Error(res.issues[0].message);
 	}
 
-	return action(store, res.output);
+	const table = tableMap.getTable(res.output.TableName);
+
+	return { Table: table?.description.toPlainObject() ?? null };
 }

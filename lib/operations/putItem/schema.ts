@@ -29,7 +29,7 @@ const schema = v.object({
 });
 type PutItemInput = v.InferOutput<typeof schema>;
 
-export const validateInput = (data: unknown, store: Store): PutItemInput => {
+export const validateInput = (data: unknown): PutItemInput => {
 	const result = v.safeParse(schema, data);
 	if (!result.success) {
 		throw validationException(result.issues[0].message);
@@ -45,10 +45,11 @@ export const validateInput = (data: unknown, store: Store): PutItemInput => {
 	)
 		throw validationException("Return values set to invalid value");
 
-	if (itemSize(validInput.Item) > store.options.maxItemSize)
-		throw validationException(
-			"Item size has exceeded the maximum allowed size",
-		);
+	// TODO: implement item size validation
+	// if (itemSize(validInput.Item) > store.options.maxItemSize)
+	// 	throw validationException(
+	// 		"Item size has exceeded the maximum allowed size",
+	// 	);
 
 	validateAttributeConditions(validInput);
 

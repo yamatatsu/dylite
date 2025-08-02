@@ -1,42 +1,8 @@
 import * as v from "valibot";
+import type { PlainValue } from "../domain/Value";
 import { unique } from "./util-validations";
 
-export type AttributeValueKey =
-	| "S"
-	| "N"
-	| "B"
-	| "SS"
-	| "NS"
-	| "BS"
-	| "M"
-	| "L"
-	| "NULL"
-	| "BOOL";
-
-export type AttributeValue =
-	| BMember
-	| BOOLMember
-	| BSMember
-	| LMember
-	| MMember
-	| NMember
-	| NSMember
-	| NULLMember
-	| SMember
-	| SSMember;
-export type KeyAttributeValue = BMember | NMember | SMember;
-type SMember = { S: string };
-type NMember = { N: string };
-type BMember = { B: string };
-type SSMember = { SS: string[] };
-type NSMember = { NS: string[] };
-type BSMember = { BS: string[] };
-type MMember = { M: Record<string, AttributeValue> };
-type LMember = { L: AttributeValue[] };
-type NULLMember = { NULL: boolean };
-type BOOLMember = { BOOL: boolean };
-
-export const attributeValueSchema: v.GenericSchema<AttributeValue> = v.lazy(
+export const attributeValueSchema: v.GenericSchema<PlainValue.Value> = v.lazy(
 	() =>
 		v.union([
 			sMemberSchema,

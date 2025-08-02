@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { vValidator } from "@hono/valibot-validator";
 import { Hono } from "hono";
+import { MemoryLevel } from "memory-level";
 import * as v from "valibot";
-import { createStore } from "./db";
+import { TableMap } from "./db/TableMap";
 import { baseLogger } from "./logger";
 import * as createTable from "./operations/createTable";
 import * as deleteItem from "./operations/deleteItem";
@@ -83,7 +84,8 @@ export default function createApp() {
 	const logger = baseLogger.extend("server");
 	const errorLogger = baseLogger.extend("error");
 
-	const store = createStore();
+	const db = new MemoryLevel();
+	const tableMap = new TableMap(db);
 
 	return new Hono().post(
 		"/",
@@ -108,12 +110,11 @@ export default function createApp() {
 			} = c.req.valid("header");
 			const json = await c.req.json();
 
-			const operation = operations[operationName];
-
 			c.res.headers.set("x-amzn-RequestId", randomUUID());
 
 			try {
-				const result = await operation.execute(json, store);
+				const result = await operations[operationName].execute(json, tableMap);
+
 				logger("response", { result });
 				return typeof result === "string" ? c.text(result) : c.json(result);
 			} catch (err) {

@@ -10,13 +10,16 @@ const attributeDefinitionsSchema = v.array(
 );
 
 export type AttributeType = v.InferOutput<typeof attributeTypeSchema>;
+type Plain = v.InferOutput<typeof attributeDefinitionsSchema>;
 
 export class AttributeDefinitions {
 	private readonly definitions: Map<string, AttributeType>;
 
 	constructor(input: unknown) {
 		this.definitions = new Map<string, AttributeType>();
-		const parsed = v.parse(attributeDefinitionsSchema, input);
+		const parsed = v.parse(attributeDefinitionsSchema, input, {
+			abortEarly: true,
+		});
 		for (const { AttributeName, AttributeType } of parsed) {
 			if (this.definitions.has(AttributeName)) {
 				throw validationException(
@@ -39,5 +42,14 @@ export class AttributeDefinitions {
 
 	public keys(): string[] {
 		return Array.from(this.definitions.keys());
+	}
+
+	public toPlainObject(): Plain {
+		return Array.from(this.definitions.entries()).map(
+			([AttributeName, AttributeType]) => ({
+				AttributeName,
+				AttributeType,
+			}),
+		);
 	}
 }

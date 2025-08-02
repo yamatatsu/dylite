@@ -1,31 +1,26 @@
-import { createKey } from "../../db/createKey";
-import { validationException } from "../../db/errors";
-import type { Store } from "../../db/types";
-import { updateIndexes } from "../../db/updateIndexes";
+import type { TableMap } from "../../db/TableMap";
+import { Item } from "../../domain/Item";
+import { validationException } from "../../domain/errors";
 import { getMetadata } from "../common";
 import { validateInput } from "./schema";
 
-export async function execute(json: unknown, store: Store) {
+export async function execute(json: unknown, tableMap: TableMap) {
 	const input = validateInput(json);
-	const tableStore = store.tableStore;
 
-	const table = await tableStore.get(input.TableName);
+	const table = tableMap.getTable(input.TableName);
 	if (!table) {
 		throw validationException("Cannot do operations on a non-existent table");
 	}
-	const itemDb = store.getItemDb(input.TableName);
-	const key = createKey(input.Key, table.AttributeDefinitions, table.KeySchema);
-	const oldItem = await itemDb.get(key);
 
-	if (!oldItem) {
+	const keyAttributes = new Item(input.Key);
+	const item = await table.deleteItem(keyAttributes);
+
+	if (!item) {
 		return { $metadata: getMetadata() };
 	}
 
-	await itemDb.del(key);
-	await updateIndexes(store, table, oldItem, null);
-
 	if (input.ReturnValues === "ALL_OLD") {
-		return { Attributes: oldItem, $metadata: getMetadata() };
+		return { Attributes: item.toPlain(), $metadata: getMetadata() };
 	}
 
 	return { $metadata: getMetadata() };

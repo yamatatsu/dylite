@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { Big } from "big.js";
 
 export namespace PlainValue {
@@ -62,6 +63,15 @@ export type Value =
 
 export type KeyValue = BValue | NValue | SValue;
 
+export interface IKeyValue {
+	hashStr(): string;
+	sortableStr(): string;
+}
+
+export function isKeyValue(value: Value): value is KeyValue {
+	return value.type === "S" || value.type === "N" || value.type === "B";
+}
+
 export function plainToValue(value: PlainValue.Value): Value {
 	if (value.S !== undefined) return new SValue(value);
 	if (value.N !== undefined) return new NValue(value);
@@ -95,6 +105,8 @@ export interface IValue {
 	gt(other: Value): boolean;
 	le(other: Value): boolean;
 	ge(other: Value): boolean;
+
+	toPlain(): PlainValue.Value;
 }
 export abstract class ValueBase implements IValue {
 	public abstract type: ValueType;
@@ -132,9 +144,11 @@ export abstract class ValueBase implements IValue {
 
 	protected abstract _lt(other: typeof this): boolean;
 	protected abstract _gt(other: typeof this): boolean;
+
+	abstract toPlain(): PlainValue.Value;
 }
 
-export class SValue extends ValueBase {
+export class SValue extends ValueBase implements IKeyValue {
 	public readonly type = "S" as const;
 	public readonly value: string;
 	constructor(value: PlainValue.SValue) {
@@ -146,6 +160,18 @@ export class SValue extends ValueBase {
 		if (this.type !== other.type) return false;
 		return this.value === other.value;
 	}
+
+	hashStr(): string {
+		return toHex(Buffer.from(this.value, "utf8"));
+	}
+	sortableStr(): string {
+		return Buffer.from(this.value, "utf8").toString("hex");
+	}
+
+	toPlain(): PlainValue.Value {
+		return { S: this.value };
+	}
+
 	protected _lt(other: typeof this): boolean {
 		return this.value < other.value;
 	}
@@ -153,12 +179,94 @@ export class SValue extends ValueBase {
 		return this.value > other.value;
 	}
 }
-export class NValue extends ValueBase {
+export class NValue extends ValueBase implements IKeyValue {
 	public readonly type = "N" as const;
 	public readonly value: Big;
 	constructor(value: PlainValue.NValue) {
 		super();
 		this.value = new Big(value.N);
+	}
+
+	// TODO: refactor
+	hashStr(): string {
+		const num = this.value;
+
+		if (+num === 0) return toHex(Buffer.from([-128]));
+
+		const bigNum = new Big(num);
+		const scale = bigNum.s;
+		const mantissa = bigNum.c;
+		const exponent = bigNum.e + 1;
+		const appendZero = exponent % 2 ? 1 : 0;
+		const byteArrayLengthWithoutExponent = Math.floor(
+			(mantissa.length + appendZero + 1) / 2,
+		);
+		let byteArray: number[];
+		let appendedZero = false;
+
+		if (byteArrayLengthWithoutExponent < 20 && scale === -1) {
+			byteArray = new Array(byteArrayLengthWithoutExponent + 2);
+			byteArray[byteArrayLengthWithoutExponent + 1] = 102;
+		} else {
+			byteArray = new Array(byteArrayLengthWithoutExponent + 1);
+		}
+
+		byteArray[0] = Math.floor((exponent + appendZero) / 2) - 64;
+		if (scale === -1) {
+			byteArray[0] ^= 0xffffffff;
+		}
+
+		for (
+			let mantissaIndex = 0;
+			mantissaIndex < mantissa.length;
+			mantissaIndex++
+		) {
+			const byteArrayIndex = Math.floor((mantissaIndex + appendZero) / 2) + 1;
+			if (appendZero && !mantissaIndex && !appendedZero) {
+				byteArray[byteArrayIndex] = 0;
+				appendedZero = true;
+				mantissaIndex--;
+			} else if ((mantissaIndex + appendZero) % 2 === 0) {
+				byteArray[byteArrayIndex] = mantissa[mantissaIndex] * 10;
+			} else {
+				byteArray[byteArrayIndex] += mantissa[mantissaIndex];
+			}
+			if (
+				(mantissaIndex + appendZero) % 2 ||
+				mantissaIndex === mantissa.length - 1
+			) {
+				if (scale === -1) {
+					byteArray[byteArrayIndex] = 101 - byteArray[byteArrayIndex];
+				} else {
+					byteArray[byteArrayIndex]++;
+				}
+			}
+		}
+
+		return toHex(Buffer.from(byteArray));
+	}
+
+	sortableStr(): string {
+		const bigNum = this.value;
+		let digits: string;
+		const exp = !bigNum.c[0]
+			? 0
+			: bigNum.s === -1
+				? 125 - bigNum.e
+				: 130 + bigNum.e;
+
+		if (bigNum.s === -1) {
+			bigNum.e = 0;
+			digits = new Big(10).plus(bigNum).toFixed().replace(/\./, "");
+		} else {
+			digits = bigNum.c.join("");
+		}
+
+		return `${bigNum.s === -1 ? "0" : "1"}${(`0${exp.toString(16)}`).slice(-2)}${digits}`;
+	}
+
+	toPlain(): PlainValue.Value {
+		return { N: this.value.toString() };
 	}
 
 	eq(other: Value): boolean {
@@ -173,12 +281,24 @@ export class NValue extends ValueBase {
 		return this.value.gt(other.value);
 	}
 }
-export class BValue extends ValueBase {
+export class BValue extends ValueBase implements IKeyValue {
 	public readonly type = "B" as const;
 	public readonly value: Buffer;
 	constructor(value: PlainValue.BValue) {
 		super();
 		this.value = Buffer.from(value.B, "base64");
+	}
+
+	hashStr(): string {
+		return toHex(this.value);
+	}
+
+	sortableStr(): string {
+		return this.value.toString("hex");
+	}
+
+	toPlain(): PlainValue.Value {
+		return { B: this.value.toString("base64") };
 	}
 
 	eq(other: Value): boolean {
@@ -203,6 +323,10 @@ export class SSValue extends ValueBase {
 		this.value = value.SS;
 	}
 
+	toPlain(): PlainValue.Value {
+		return { SS: this.value };
+	}
+
 	eq(other: Value): boolean {
 		return (
 			this.type === other.type &&
@@ -223,6 +347,10 @@ export class NSValue extends ValueBase {
 	constructor(value: PlainValue.NSValue) {
 		super();
 		this.value = value.NS.map((n) => new Big(n));
+	}
+
+	toPlain(): PlainValue.Value {
+		return { NS: this.value.map((n) => n.toString()) };
 	}
 
 	eq(other: Value): boolean {
@@ -246,6 +374,10 @@ export class BSValue extends ValueBase {
 	constructor(value: PlainValue.BSValue) {
 		super();
 		this.value = value.BS.map((b) => Buffer.from(b, "base64"));
+	}
+
+	toPlain(): PlainValue.Value {
+		return { BS: this.value.map((b) => b.toString("base64")) };
 	}
 
 	eq(other: Value): boolean {
@@ -274,6 +406,14 @@ export class MValue extends ValueBase {
 		}
 	}
 
+	toPlain(): PlainValue.Value {
+		const plainValue: Record<string, PlainValue.Value> = {};
+		for (const key in this.value) {
+			plainValue[key] = this.value[key].toPlain();
+		}
+		return { M: plainValue };
+	}
+
 	eq(other: Value): boolean {
 		if (this.type !== other.type) return false;
 		for (const key in this.value) {
@@ -299,6 +439,10 @@ export class LValue extends ValueBase {
 		this.value = value.L.map(plainToValue);
 	}
 
+	toPlain(): PlainValue.Value {
+		return { L: this.value.map((v) => v.toPlain()) };
+	}
+
 	eq(other: Value): boolean {
 		return (
 			this.type === other.type &&
@@ -322,6 +466,10 @@ export class NULLValue extends ValueBase {
 		this.value = null;
 	}
 
+	toPlain(): PlainValue.Value {
+		return { NULL: true };
+	}
+
 	eq(other: Value): boolean {
 		return this.type === other.type;
 	}
@@ -341,6 +489,10 @@ export class BOOLValue extends ValueBase {
 		this.value = value.BOOL;
 	}
 
+	toPlain(): PlainValue.Value {
+		return { BOOL: this.value };
+	}
+
 	eq(other: Value): boolean {
 		if (this.type !== other.type) return false;
 		return this.value === other.value;
@@ -352,4 +504,13 @@ export class BOOLValue extends ValueBase {
 	protected _gt(other: typeof this): boolean {
 		return this.value > other.value;
 	}
+}
+
+function toHex(buffer: Buffer): string {
+	return crypto
+		.createHash("md5")
+		.update("Outliers")
+		.update(buffer)
+		.digest("hex")
+		.slice(0, 6);
 }
