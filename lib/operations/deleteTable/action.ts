@@ -1,5 +1,5 @@
-import { validationException } from "../../db/errors";
 import type { Store } from "../../db/types";
+import { validationException } from "../../domain/errors";
 import type { Schema } from "./schema";
 
 export async function action(store: Store, data: Schema) {

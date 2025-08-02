@@ -1,5 +1,5 @@
 import * as v from "valibot";
-import { validationException } from "../db/errors";
+import { validationException } from "../domain/errors";
 import { attributeValueSchema } from "./attributeValueSchema";
 
 export function validateExpressions(data: Record<string, unknown>): void {

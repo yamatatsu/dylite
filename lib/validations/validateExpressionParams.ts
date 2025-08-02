@@ -1,4 +1,4 @@
-import { validationException } from "../db/errors";
+import { validationException } from "../domain/errors";
 
 export function validateExpressionParams(
 	data: Record<string, unknown>,

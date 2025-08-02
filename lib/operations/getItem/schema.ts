@@ -1,5 +1,5 @@
 import * as v from "valibot";
-import { validationException } from "../../db/errors";
+import { validationException } from "../../domain/errors";
 import { attributeValueSchema } from "../../validations/attributeValueSchema";
 import { atLeastOneItem, unique } from "../../validations/util-validations";
 import { validateExpressionParams } from "../../validations/validateExpressionParams";
