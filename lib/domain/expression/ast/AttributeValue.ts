@@ -1,4 +1,4 @@
-import { type PlainValue, type Value, plainToValue } from "../../Value";
+import { type PlainValue, type Value, createValue } from "../../Value";
 import { UnresolvableAttributeValueError } from "./AstError";
 import type { IAstNode } from "./interfaces";
 
@@ -13,7 +13,7 @@ export class AttributeValue implements IAstNode {
 		this.attrValMap = Object.fromEntries(
 			Object.entries(attrValMap).map(([key, value]) => [
 				key,
-				plainToValue(value),
+				createValue(value),
 			]),
 		);
 	}

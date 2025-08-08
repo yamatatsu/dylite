@@ -72,17 +72,32 @@ export function isKeyValue(value: Value): value is KeyValue {
 	return value.type === "S" || value.type === "N" || value.type === "B";
 }
 
-export function plainToValue(value: PlainValue.Value): Value {
-	if (value.S !== undefined) return new SValue(value);
-	if (value.N !== undefined) return new NValue(value);
-	if (value.B !== undefined) return new BValue(value);
-	if (value.SS !== undefined) return new SSValue(value);
-	if (value.NS !== undefined) return new NSValue(value);
-	if (value.BS !== undefined) return new BSValue(value);
-	if (value.M !== undefined) return new MValue(value);
-	if (value.L !== undefined) return new LValue(value);
-	if (value.NULL !== undefined) return new NULLValue(value);
-	if (value.BOOL !== undefined) return new BOOLValue(value);
+/**
+ * Factory function for creating concrete Value instances from plain DynamoDB values.
+ *
+ * This function serves as the central factory for all Value creation, ensuring that
+ * consumers don't need to directly depend on concrete Value classes (SValue, NValue, etc.).
+ * It abstracts the creation logic and provides a single entry point for Value instantiation.
+ *
+ * @param plainValue - Plain DynamoDB attribute value from API/storage
+ * @returns Appropriate concrete Value instance
+ * @throws Error if value type is unknown
+ *
+ * @example
+ * const stringValue = createValue({ S: "hello" }); // returns SValue instance
+ * const numberValue = createValue({ N: "123" });   // returns NValue instance
+ */
+export function createValue(plainValue: PlainValue.Value): Value {
+	if (plainValue.S !== undefined) return new SValue(plainValue);
+	if (plainValue.N !== undefined) return new NValue(plainValue);
+	if (plainValue.B !== undefined) return new BValue(plainValue);
+	if (plainValue.SS !== undefined) return new SSValue(plainValue);
+	if (plainValue.NS !== undefined) return new NSValue(plainValue);
+	if (plainValue.BS !== undefined) return new BSValue(plainValue);
+	if (plainValue.M !== undefined) return new MValue(plainValue);
+	if (plainValue.L !== undefined) return new LValue(plainValue);
+	if (plainValue.NULL !== undefined) return new NULLValue(plainValue);
+	if (plainValue.BOOL !== undefined) return new BOOLValue(plainValue);
 	throw new Error("Unknown value type");
 }
 
@@ -402,7 +417,7 @@ export class MValue extends ValueBase {
 		super();
 		this.value = {};
 		for (const key in value.M) {
-			this.value[key] = plainToValue(value.M[key]);
+			this.value[key] = createValue(value.M[key]);
 		}
 	}
 
@@ -436,7 +451,7 @@ export class LValue extends ValueBase {
 	public readonly value: Value[];
 	constructor(value: PlainValue.LValue) {
 		super();
-		this.value = value.L.map(plainToValue);
+		this.value = value.L.map(createValue);
 	}
 
 	toPlain(): PlainValue.Value {

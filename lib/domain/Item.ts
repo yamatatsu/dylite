@@ -1,4 +1,4 @@
-import { type PlainValue, type Value, plainToValue } from "./Value";
+import { type PlainValue, type Value, createValue } from "./Value";
 
 export type PlainItem = Record<string, PlainValue.Value>;
 
@@ -7,7 +7,7 @@ export class Item {
 
 	constructor(attributes: PlainItem) {
 		for (const key in attributes) {
-			this.attributes[key] = plainToValue(attributes[key]);
+			this.attributes[key] = createValue(attributes[key]);
 		}
 	}
 

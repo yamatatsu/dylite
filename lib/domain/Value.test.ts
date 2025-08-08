@@ -9,7 +9,7 @@ import {
 	NValue,
 	SSValue,
 	SValue,
-	plainToValue,
+	createValue,
 } from "./Value";
 
 describe("Value comparison operators", () => {
@@ -41,8 +41,8 @@ describe("Value comparison operators", () => {
 			${{ M: { key1: { S: "val1" }, key2: { N: "2" } } }} | ${{ M: { key1: { S: "val1" }, key2: { N: "2" } } }} | ${true}
 			${{ M: { key1: { S: "val1" }, key2: { N: "2" } } }} | ${{ M: { key1: { S: "val2" }, key2: { N: "2" } } }} | ${false}
 		`("$val1 eq $val2 = $expected", ({ val1, val2, expected }) => {
-			const value1 = plainToValue(val1);
-			const value2 = plainToValue(val2);
+			const value1 = createValue(val1);
+			const value2 = createValue(val2);
 			expect(value1.eq(value2)).toBe(expected);
 		});
 	});
@@ -57,8 +57,8 @@ describe("Value comparison operators", () => {
 			${{ N: "0" }}   | ${{ N: "1" }}    | ${true}
 			${{ N: "0" }}   | ${{ S: "0" }}    | ${true}
 		`("$val1 ne $val2 = $expected", ({ val1, val2, expected }) => {
-			const value1 = plainToValue(val1);
-			const value2 = plainToValue(val2);
+			const value1 = createValue(val1);
+			const value2 = createValue(val2);
 			expect(value1.ne(value2)).toBe(expected);
 		});
 	});
@@ -80,8 +80,8 @@ describe("Value comparison operators", () => {
 			${{ BOOL: false }} | ${{ BOOL: true }}  | ${true}
 			${{ BOOL: true }}  | ${{ BOOL: false }} | ${false}
 		`("$val1 lt $val2 = $expected", ({ val1, val2, expected }) => {
-			const value1 = plainToValue(val1);
-			const value2 = plainToValue(val2);
+			const value1 = createValue(val1);
+			const value2 = createValue(val2);
 			expect(value1.lt(value2)).toBe(expected);
 		});
 	});
@@ -100,8 +100,8 @@ describe("Value comparison operators", () => {
 			${{ B: "YQ==" }} | ${{ B: "YQ==" }} | ${true}
 			${{ B: "Yg==" }} | ${{ B: "YQ==" }} | ${false}
 		`("$val1 le $val2 = $expected", ({ val1, val2, expected }) => {
-			const value1 = plainToValue(val1);
-			const value2 = plainToValue(val2);
+			const value1 = createValue(val1);
+			const value2 = createValue(val2);
 			expect(value1.le(value2)).toBe(expected);
 		});
 	});
@@ -122,8 +122,8 @@ describe("Value comparison operators", () => {
 			${{ BOOL: true }}  | ${{ BOOL: false }} | ${true}
 			${{ BOOL: false }} | ${{ BOOL: true }}  | ${false}
 		`("$val1 gt $val2 = $expected", ({ val1, val2, expected }) => {
-			const value1 = plainToValue(val1);
-			const value2 = plainToValue(val2);
+			const value1 = createValue(val1);
+			const value2 = createValue(val2);
 			expect(value1.gt(value2)).toBe(expected);
 		});
 	});
@@ -142,8 +142,8 @@ describe("Value comparison operators", () => {
 			${{ B: "YQ==" }} | ${{ B: "YQ==" }} | ${true}
 			${{ B: "YQ==" }} | ${{ B: "Yg==" }} | ${false}
 		`("$val1 ge $val2 = $expected", ({ val1, val2, expected }) => {
-			const value1 = plainToValue(val1);
-			const value2 = plainToValue(val2);
+			const value1 = createValue(val1);
+			const value2 = createValue(val2);
 			expect(value1.ge(value2)).toBe(expected);
 		});
 	});
@@ -162,8 +162,8 @@ describe("Value comparison operators", () => {
 			${{ M: { k: { S: "v" } } }} | ${{ M: { k: { S: "v" } } }} | ${"gt"}
 			${{ L: [{ S: "a" }] }}      | ${{ L: [{ S: "a" }] }}      | ${"gt"}
 		`("$val1.$method($val2) throws", ({ val1, val2, method }) => {
-			const value1 = plainToValue(val1);
-			const value2 = plainToValue(val2);
+			const value1 = createValue(val1);
+			const value2 = createValue(val2);
 			// @ts-expect-error ignore for test
 			expect(() => value1[method](value2)).toThrow();
 		});
@@ -175,8 +175,8 @@ describe("Value comparison operators", () => {
 			${"lt"}
 			${"gt"}
 		`("NULL.$method(NULL) throws", ({ method }) => {
-			const value1 = plainToValue({ NULL: true });
-			const value2 = plainToValue({ NULL: true });
+			const value1 = createValue({ NULL: true });
+			const value2 = createValue({ NULL: true });
 			// @ts-expect-error ignore for test
 			expect(() => value1[method](value2)).toThrow(
 				"Cannot compare NULL values",
@@ -186,19 +186,19 @@ describe("Value comparison operators", () => {
 
 	describe("complex value comparisons", () => {
 		test("nested map equality", () => {
-			const val1 = plainToValue({
+			const val1 = createValue({
 				M: {
 					key1: { S: "val1" },
 					key2: { M: { nested: { N: "123" } } },
 				},
 			});
-			const val2 = plainToValue({
+			const val2 = createValue({
 				M: {
 					key1: { S: "val1" },
 					key2: { M: { nested: { N: "123" } } },
 				},
 			});
-			const val3 = plainToValue({
+			const val3 = createValue({
 				M: {
 					key1: { S: "val1" },
 					key2: { M: { nested: { N: "456" } } },
@@ -210,7 +210,7 @@ describe("Value comparison operators", () => {
 		});
 
 		test("list with mixed types equality", () => {
-			const val1 = plainToValue({
+			const val1 = createValue({
 				L: [
 					{ S: "string" },
 					{ N: "123" },
@@ -218,7 +218,7 @@ describe("Value comparison operators", () => {
 					{ L: [{ S: "nested" }] },
 				],
 			});
-			const val2 = plainToValue({
+			const val2 = createValue({
 				L: [
 					{ S: "string" },
 					{ N: "123" },
@@ -226,7 +226,7 @@ describe("Value comparison operators", () => {
 					{ L: [{ S: "nested" }] },
 				],
 			});
-			const val3 = plainToValue({
+			const val3 = createValue({
 				L: [
 					{ S: "string" },
 					{ N: "123" },
