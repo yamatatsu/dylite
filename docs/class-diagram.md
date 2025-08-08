@@ -68,6 +68,11 @@ classDiagram
         +toPlain(): PlainValue.Value
     }
 
+    class ValueFactory {
+        <<utility>>
+        +createValue(plainValue: PlainValue.Value): Value
+    }
+
     class IKeySchema {
         <<interface>>
         +getKeyStr(item: Item): string
@@ -98,7 +103,8 @@ classDiagram
     TableDescription --> IKeySchema : contains
     TableDescription --> Item : processes for key generation
 
-    Item --> Value : contains multiple
+    Item --> ValueFactory : uses for creation
+    ValueFactory --> Value : creates
 
     IKeySchema <|.. SimpleKeySchema : implements
     IKeySchema <|.. CompositeKeySchema : implements
@@ -122,13 +128,21 @@ classDiagram
 
 - **Value** (`lib/domain/Value.ts:111`): Abstract base class for DynamoDB attribute values. Provides comparison operations and serialization.
 
-- **SValue/NValue/BValue** (`lib/domain/Value.ts:151`, `lib/domain/Value.ts:182`, `lib/domain/Value.ts:284`): Concrete implementations for String, Number, and Binary values respectively. Key values can generate hash and sortable strings.
+- **ValueFactory** (`lib/domain/Value.ts:90`): Factory function `createValue()` that creates appropriate concrete Value instances from plain DynamoDB values. Provides abstraction layer preventing direct dependencies on concrete Value classes (SValue, NValue, BValue, etc.).
 
 ### Schema Management
 
 - **AttributeDefinitions** (`lib/domain/TableDescription/AttributeDefinitions.ts:15`): Manages table attribute definitions, ensuring uniqueness and providing type lookups.
 
 - **IKeySchema/SimpleKeySchema/CompositeKeySchema** (`lib/domain/TableDescription/KeySchema.ts:37`, `lib/domain/TableDescription/KeySchema.ts:59`, `lib/domain/TableDescription/KeySchema.ts:97`): Handle table key structure for both simple (partition key only) and composite (partition + sort key) tables.
+
+## Design Patterns
+
+### Factory Pattern
+- **ValueFactory.createValue()** implements the Factory pattern to create appropriate concrete Value instances (SValue, NValue, BValue, etc.) from plain DynamoDB attribute values
+- This pattern prevents direct dependencies on concrete Value classes throughout the codebase
+- Consumers use the factory function instead of directly instantiating specific Value types
+- Provides a single entry point for Value creation, making the code more maintainable and extensible
 
 ## Dependencies
 
