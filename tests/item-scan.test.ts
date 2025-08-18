@@ -92,12 +92,14 @@ describe("scan (API spec)", () => {
 		});
 	});
 
-	test.skip("returns error if table does not exist", async () => {
+	test("returns error if table does not exist", async () => {
 		// WHEN
 		const promise = ddb.scan({ TableName: "not-exist" });
 
 		// THEN
-		await expect(promise).rejects.toThrow();
+		await expect(promise).rejects.toThrow(
+			"Cannot do operations on a non-existent table",
+		);
 	});
 
 	// TODO: impl ProjectionExpression
