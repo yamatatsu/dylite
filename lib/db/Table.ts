@@ -59,12 +59,32 @@ export class Table {
 		return plainItem ? new Item(plainItem) : null;
 	}
 
-	async scanItems(): Promise<Item[]> {
+	/**
+	 * Scan items from the table with optional limit.
+	 * Returns items and information about the next item for pagination.
+	 * @param limit - Maximum number of items to return (optional)
+	 * @returns Object containing:
+	 *   - items: Array of items found (up to limit)
+	 *   - nextItem: The next item that would be returned if continuing scan (undefined if no more items)
+	 */
+	async scanItems(
+		limit?: number | null,
+	): Promise<{ items: Item[]; nextItem: Item | undefined }> {
 		const items: Item[] = [];
+		let nextItem: Item | undefined;
+
 		for await (const [key, plainItem] of this.mainIndex.iterator()) {
-			items.push(new Item(plainItem));
+			const item = new Item(plainItem);
+
+			if (limit && items.length >= limit) {
+				nextItem = item;
+				break;
+			}
+
+			items.push(item);
 		}
-		return items;
+
+		return { items, nextItem };
 	}
 
 	private addIndex(name: string): void {

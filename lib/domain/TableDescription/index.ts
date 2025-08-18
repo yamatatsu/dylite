@@ -37,10 +37,22 @@ export class TableDescription {
 		);
 	}
 
+	/**
+	 * Generate a string representation of the key for the given item.
+	 * This is used for internal storage and lookup operations.
+	 * @param item - The item containing key attributes
+	 * @returns A string representation of the key
+	 */
 	getKeyStr(item: Item): string {
 		return this.keySchema.getKeyStr(item);
 	}
 
+	/**
+	 * Extract only the key attributes from the given item.
+	 * This is useful for operations like pagination where only key attributes are needed.
+	 * @param item - The item to extract key attributes from
+	 * @returns A new Item containing only the key attributes
+	 */
 	getKeyAttributes(item: Item): Item {
 		const keyNames = this.getKeyAttributeNames();
 		const keyAttributes: PlainItem = {};
@@ -51,11 +63,6 @@ export class TableDescription {
 			}
 		}
 		return new Item(keyAttributes);
-	}
-
-	private getKeyAttributeNames(): string[] {
-		const plainSchema = this.keySchema.toPlainObject();
-		return plainSchema.map((element) => element.AttributeName);
 	}
 
 	toPlainObject() {
@@ -84,5 +91,14 @@ export class TableDescription {
 				TableThroughputMode: "PAY_PER_REQUEST",
 			},
 		};
+	}
+
+	/**
+	 * Get the names of all key attributes (hash key and range key if present).
+	 * @returns Array of key attribute names
+	 */
+	private getKeyAttributeNames(): string[] {
+		const plainSchema = this.keySchema.toPlainObject();
+		return plainSchema.map((element) => element.AttributeName);
 	}
 }

@@ -11,14 +11,12 @@ export async function execute(json: unknown, tableMap: TableMap) {
 		throw validationException("Cannot do operations on a non-existent table");
 	}
 
-	const items = await table.scanItems();
-	const limit = input.Limit;
+	const scanResult = await table.scanItems(input.Limit);
 
-	let resultItems = items;
+	const resultItems = scanResult.items;
 	let lastEvaluatedKey = undefined;
 
-	if (limit && items.length > limit) {
-		resultItems = items.slice(0, limit);
+	if (scanResult.nextItem) {
 		// Generate LastEvaluatedKey from the last returned item
 		const lastItem = resultItems[resultItems.length - 1];
 		lastEvaluatedKey = table.description.getKeyAttributes(lastItem).toPlain();
