@@ -31,7 +31,7 @@ describe("scan (API spec)", () => {
 		expect(res.$metadata.httpStatusCode).toBe(200);
 	});
 
-	test.skip("returns empty result for empty table", async () => {
+	test("returns empty result for empty table", async () => {
 		// GIVEN
 		const emptyTable = await Table.createPkTable();
 
