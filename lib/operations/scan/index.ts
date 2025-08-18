@@ -12,19 +12,15 @@ export async function execute(json: unknown, tableMap: TableMap) {
 		throw validationException("Cannot do operations on a non-existent table");
 	}
 
-	const exclusiveStartKey = input.ExclusiveStartKey 
-		? new Item(input.ExclusiveStartKey) 
+	const exclusiveStartKey = input.ExclusiveStartKey
+		? new Item(input.ExclusiveStartKey)
 		: undefined;
 	const scanResult = await table.scanItems(input.Limit, exclusiveStartKey);
 
 	const resultItems = scanResult.items;
-	let lastEvaluatedKey = undefined;
-
-	if (scanResult.nextItem) {
-		// Generate LastEvaluatedKey from the last returned item
-		const lastItem = resultItems[resultItems.length - 1];
-		lastEvaluatedKey = table.description.getKeyAttributes(lastItem).toPlain();
-	}
+	const lastEvaluatedItem = scanResult.existsMore
+		? resultItems[resultItems.length - 1]
+		: undefined;
 
 	const plainItems = resultItems.map((item) => item.toPlain());
 
@@ -41,8 +37,10 @@ export async function execute(json: unknown, tableMap: TableMap) {
 		$metadata: getMetadata(),
 	};
 
-	if (lastEvaluatedKey) {
-		result.LastEvaluatedKey = lastEvaluatedKey;
+	if (lastEvaluatedItem) {
+		result.LastEvaluatedKey = table.description
+			.getKeyAttributes(lastEvaluatedItem)
+			.toPlain();
 	}
 
 	return result;

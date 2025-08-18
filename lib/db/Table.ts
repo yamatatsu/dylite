@@ -61,52 +61,34 @@ export class Table {
 
 	/**
 	 * Scan items from the table with optional limit and starting point.
-	 * Returns items and information about the next item for pagination.
+	 * Returns items and information about whether more items exist for pagination.
 	 * @param limit - Maximum number of items to return (optional)
 	 * @param exclusiveStartKey - Item to start scanning after (for pagination)
 	 * @returns Object containing:
 	 *   - items: Array of items found (up to limit)
-	 *   - nextItem: The next item that would be returned if continuing scan (undefined if no more items)
+	 *   - existsMore: Whether more items exist beyond the returned set
 	 */
 	async scanItems(
 		limit?: number | null,
 		exclusiveStartKey?: Item,
-	): Promise<{ items: Item[]; nextItem: Item | undefined }> {
+	): Promise<{ items: Item[]; existsMore: boolean }> {
 		const items: Item[] = [];
-		let nextItem: Item | undefined;
-		let startKeyStr: string | undefined;
-		let foundStartPosition = false;
 
-		if (exclusiveStartKey) {
-			startKeyStr = this.description.getKeyStr(exclusiveStartKey);
-			// If we have a start key, we need to find it first
-			foundStartPosition = false;
-		} else {
-			// No start key, start from beginning
-			foundStartPosition = true;
-		}
+		const option = exclusiveStartKey
+			? { gt: this.description.getKeyStr(exclusiveStartKey) }
+			: {};
 
-		for await (const [key, plainItem] of this.mainIndex.iterator()) {
+		for await (const plainItem of this.mainIndex.values(option)) {
 			const item = new Item(plainItem);
-			const currentKeyStr = this.description.getKeyStr(item);
-
-			// Skip items until we pass the exclusive start key
-			if (!foundStartPosition) {
-				if (currentKeyStr === startKeyStr) {
-					foundStartPosition = true;
-				}
-				continue;
-			}
-
-			if (limit && items.length >= limit) {
-				nextItem = item;
-				break;
-			}
 
 			items.push(item);
+
+			if (limit && items.length >= limit) {
+				return { items, existsMore: true };
+			}
 		}
 
-		return { items, nextItem };
+		return { items, existsMore: false };
 	}
 
 	private addIndex(name: string): void {

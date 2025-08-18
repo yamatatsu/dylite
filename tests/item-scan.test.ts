@@ -6,13 +6,14 @@ describe("scan (API spec)", () => {
 	let items: Record<string, AttributeValue>[];
 
 	beforeAll(async () => {
-		const table = await Table.createPkTable();
+		const table = await Table.createPkSkTable();
 		tableName = table.tableName;
 
+		const pk = Faker.s("pk");
 		items = [
-			{ pk: Faker.s(), data: Faker.s() },
-			{ pk: Faker.s(), data: Faker.s() },
-			{ pk: Faker.s(), data: Faker.s() },
+			{ pk, sk: Faker.s("sk1"), data: Faker.s("data1") },
+			{ pk, sk: Faker.s("sk2"), data: Faker.s("data2") },
+			{ pk, sk: Faker.s("sk3"), data: Faker.s("data3") },
 		];
 		for (const item of items) {
 			await ddb.putItem({ TableName: tableName, Item: item });
@@ -24,8 +25,7 @@ describe("scan (API spec)", () => {
 		const res = await ddb.scan({ TableName: tableName });
 
 		// THEN
-		expect(res.Items).toHaveLength(3);
-		expect(res.Items).toEqual(expect.arrayContaining(items));
+		expect(res.Items).toEqual(items);
 		expect(res.Count).toBe(3);
 		expect(res.ScannedCount).toBe(3);
 		expect(res.$metadata.httpStatusCode).toBe(200);
@@ -53,10 +53,10 @@ describe("scan (API spec)", () => {
 		});
 
 		// THEN
-		expect(res.Items).toHaveLength(2);
+		expect(res.Items).toEqual([items[0], items[1]]);
 		expect(res.Count).toBe(2);
 		expect(res.ScannedCount).toBe(2);
-		expect(res.LastEvaluatedKey).toBeDefined();
+		expect(res.LastEvaluatedKey).toEqual({ pk: items[1].pk, sk: items[1].sk });
 	});
 
 	test("supports pagination with ExclusiveStartKey", async () => {
@@ -73,9 +73,7 @@ describe("scan (API spec)", () => {
 		});
 
 		// THEN
-		expect(firstPage.Items).toHaveLength(2);
-		expect(secondPage.Items).toHaveLength(1);
-		expect(firstPage.LastEvaluatedKey).toBeDefined();
+		expect(secondPage.Items).toEqual([items[2]]);
 		expect(secondPage.LastEvaluatedKey).toBeUndefined();
 	});
 
