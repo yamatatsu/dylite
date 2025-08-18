@@ -19,7 +19,7 @@ describe("scan (API spec)", () => {
 		}
 	});
 
-	test.skip("scans all items in table", async () => {
+	test("scans all items in table", async () => {
 		// WHEN
 		const res = await ddb.scan({ TableName: tableName });
 

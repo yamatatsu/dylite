@@ -59,6 +59,14 @@ export class Table {
 		return plainItem ? new Item(plainItem) : null;
 	}
 
+	async scanItems(): Promise<Item[]> {
+		const items: Item[] = [];
+		for await (const [key, plainItem] of this.mainIndex.iterator()) {
+			items.push(new Item(plainItem));
+		}
+		return items;
+	}
+
 	private addIndex(name: string): void {
 		if (this.indices.has(name)) {
 			throw new Error(`Index ${name} already exists`);

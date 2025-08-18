@@ -12,6 +12,7 @@ import * as describeTable from "./operations/describeTable";
 import * as getItem from "./operations/getItem";
 import * as listTable from "./operations/listTable";
 import * as putItem from "./operations/putItem";
+import * as scan from "./operations/scan";
 
 const validApis = ["DynamoDB_20111205", "DynamoDB_20120810"] as const;
 const validOperations = [
@@ -26,7 +27,7 @@ const validOperations = [
 	// "UpdateItem",
 	"DeleteItem",
 	// "Query",
-	// "Scan",
+	"Scan",
 	// "BatchGetItem",
 	// "BatchWriteItem",
 
@@ -47,7 +48,7 @@ const operations = {
 	// UpdateItem: {},
 	DeleteItem: deleteItem,
 	// Query: {},
-	// Scan: {},
+	Scan: scan,
 	// BatchGetItem: {},
 	// BatchWriteItem: {},
 
