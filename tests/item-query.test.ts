@@ -1,6 +1,6 @@
 import { Faker, Table, ddb, expectUuid } from "./_test-helper";
 
-describe.skip("query (API spec)", () => {
+describe("query (API spec)", () => {
 	let tableName: string;
 	beforeAll(async () => {
 		const table = await Table.createPkSkTable();
@@ -29,7 +29,7 @@ describe.skip("query (API spec)", () => {
 			}
 		});
 
-		test("queries items by partition key", async () => {
+		test.skip("queries items by partition key", async () => {
 			// WHEN
 			const res = await ddb.query({
 				TableName: tableName,
@@ -46,11 +46,11 @@ describe.skip("query (API spec)", () => {
 				ScannedCount: 3,
 				$metadata: expect.any(Object),
 			});
-			expect(res.Items).toHaveLength(3);
+			expect(res.Items).toEqual([items[0], items[1], items[2]]);
 			expect(res.$metadata.httpStatusCode).toBe(200);
 		});
 
-		test("queries items by partition key and sort key condition", async () => {
+		test.skip("queries items by partition key and sort key condition", async () => {
 			// WHEN
 			const res = await ddb.query({
 				TableName: tableName,
@@ -68,10 +68,10 @@ describe.skip("query (API spec)", () => {
 				ScannedCount: 2,
 				$metadata: expect.any(Object),
 			});
-			expect(res.Items).toHaveLength(2);
+			expect(res.Items).toEqual([items[1], items[2]]);
 		});
 
-		test("queries items with exact sort key match", async () => {
+		test.skip("queries items with exact sort key match", async () => {
 			// WHEN
 			const res = await ddb.query({
 				TableName: tableName,
@@ -84,19 +84,14 @@ describe.skip("query (API spec)", () => {
 
 			// THEN
 			expect(res).toEqual({
-				Items: [
-					expect.objectContaining({
-						pk: pk1,
-						sk: pk1sk1,
-					}),
-				],
+				Items: [items[0]],
 				Count: 1,
 				ScannedCount: 1,
 				$metadata: expect.any(Object),
 			});
 		});
 
-		test("returns empty result when no items match", async () => {
+		test.skip("returns empty result when no items match", async () => {
 			// WHEN
 			const res = await ddb.query({
 				TableName: tableName,
@@ -115,7 +110,7 @@ describe.skip("query (API spec)", () => {
 			});
 		});
 
-		test("queries with limit parameter", async () => {
+		test.skip("queries with limit parameter", async () => {
 			// WHEN
 			const res = await ddb.query({
 				TableName: tableName,
@@ -134,10 +129,10 @@ describe.skip("query (API spec)", () => {
 				LastEvaluatedKey: expect.any(Object),
 				$metadata: expect.any(Object),
 			});
-			expect(res.Items).toHaveLength(2);
+			expect(res.Items).toEqual([items[0], items[1]]);
 		});
 
-		test("queries in descending order", async () => {
+		test.skip("queries in descending order", async () => {
 			// WHEN
 			const res = await ddb.query({
 				TableName: tableName,
@@ -150,18 +145,14 @@ describe.skip("query (API spec)", () => {
 
 			// THEN
 			expect(res).toEqual({
-				Items: [
-					expect.objectContaining({ pk: pk1, sk: pk1sk3 }),
-					expect.objectContaining({ pk: pk1, sk: pk1sk2 }),
-					expect.objectContaining({ pk: pk1, sk: pk1sk1 }),
-				],
+				Items: [items[2], items[1], items[0]],
 				Count: 3,
 				ScannedCount: 3,
 				$metadata: expect.any(Object),
 			});
 		});
 
-		test("returns $metadata", async () => {
+		test.skip("returns $metadata", async () => {
 			// WHEN
 			const res = await ddb.query({
 				TableName: tableName,
@@ -211,7 +202,7 @@ describe.skip("query (API spec)", () => {
 			}
 		});
 
-		test("queries with greater than condition", async () => {
+		test.skip("queries with greater than condition", async () => {
 			// WHEN
 			const res = await ddb.query({
 				TableName: tableName,
@@ -223,11 +214,11 @@ describe.skip("query (API spec)", () => {
 			});
 
 			// THEN
-			expect(res.Items).toHaveLength(3);
+			expect(res.Items).toEqual([items[2], items[3], items[4]]);
 			expect(res.Count).toBe(3);
 		});
 
-		test("queries with greater than or equal condition", async () => {
+		test.skip("queries with greater than or equal condition", async () => {
 			// WHEN
 			const res = await ddb.query({
 				TableName: tableName,
@@ -239,11 +230,11 @@ describe.skip("query (API spec)", () => {
 			});
 
 			// THEN
-			expect(res.Items).toHaveLength(4);
+			expect(res.Items).toEqual([items[1], items[2], items[3], items[4]]);
 			expect(res.Count).toBe(4);
 		});
 
-		test("queries with less than condition", async () => {
+		test.skip("queries with less than condition", async () => {
 			// WHEN
 			const res = await ddb.query({
 				TableName: tableName,
@@ -255,11 +246,11 @@ describe.skip("query (API spec)", () => {
 			});
 
 			// THEN
-			expect(res.Items).toHaveLength(3);
+			expect(res.Items).toEqual([items[0], items[1], items[2]]);
 			expect(res.Count).toBe(3);
 		});
 
-		test("queries with less than or equal condition", async () => {
+		test.skip("queries with less than or equal condition", async () => {
 			// WHEN
 			const res = await ddb.query({
 				TableName: tableName,
@@ -271,11 +262,11 @@ describe.skip("query (API spec)", () => {
 			});
 
 			// THEN
-			expect(res.Items).toHaveLength(4);
+			expect(res.Items).toEqual([items[0], items[1], items[2], items[3]]);
 			expect(res.Count).toBe(4);
 		});
 
-		test("queries with between condition", async () => {
+		test.skip("queries with between condition", async () => {
 			// WHEN
 			const res = await ddb.query({
 				TableName: tableName,
@@ -288,7 +279,7 @@ describe.skip("query (API spec)", () => {
 			});
 
 			// THEN
-			expect(res.Items).toHaveLength(3);
+			expect(res.Items).toEqual([items[1], items[2], items[3]]);
 			expect(res.Count).toBe(3);
 		});
 	});
@@ -302,38 +293,38 @@ describe.skip("query (API spec)", () => {
 		const active = Faker.s("active");
 		const inactive = Faker.s("inactive");
 
+		const items = [
+			{
+				pk: userId1,
+				sk: profile,
+				gsi1pk: active,
+				gsi1sk: userId1,
+				status: active,
+			},
+			{
+				pk: userId2,
+				sk: profile,
+				gsi1pk: active,
+				gsi1sk: userId2,
+				status: active,
+			},
+			{
+				pk: userId3,
+				sk: profile,
+				gsi1pk: inactive,
+				gsi1sk: userId3,
+				status: inactive,
+			},
+		];
+
 		beforeAll(async () => {
 			// Insert test data
-			const items = [
-				{
-					pk: userId1,
-					sk: profile,
-					gsi1pk: active,
-					gsi1sk: userId1,
-					status: active,
-				},
-				{
-					pk: userId2,
-					sk: profile,
-					gsi1pk: active,
-					gsi1sk: userId2,
-					status: active,
-				},
-				{
-					pk: userId3,
-					sk: profile,
-					gsi1pk: inactive,
-					gsi1sk: userId3,
-					status: inactive,
-				},
-			];
-
 			for (const item of items) {
 				await ddb.putItem({ TableName: tableName, Item: item });
 			}
 		});
 
-		test("queries GSI by index", async () => {
+		test.skip("queries GSI by index", async () => {
 			// WHEN
 			const res = await ddb.query({
 				TableName: tableName,
@@ -345,7 +336,7 @@ describe.skip("query (API spec)", () => {
 			});
 
 			// THEN
-			expect(res.Items).toHaveLength(2);
+			expect(res.Items).toEqual([items[0], items[1]]);
 			expect(res.Count).toBe(2);
 		});
 	});
@@ -356,35 +347,35 @@ describe.skip("query (API spec)", () => {
 		const pk1sk2 = Faker.s();
 		const pk1sk3 = Faker.s();
 
+		const items = [
+			{
+				pk: pk1,
+				sk: pk1sk1,
+				price: Faker.n(100),
+				category: { S: "electronics" },
+			},
+			{
+				pk: pk1,
+				sk: pk1sk2,
+				price: Faker.n(200),
+				category: { S: "electronics" },
+			},
+			{
+				pk: pk1,
+				sk: pk1sk3,
+				price: Faker.n(50),
+				category: { S: "books" },
+			},
+		];
+
 		beforeAll(async () => {
 			// Insert test data
-			const items = [
-				{
-					pk: pk1,
-					sk: pk1sk1,
-					price: Faker.n(100),
-					category: { S: "electronics" },
-				},
-				{
-					pk: pk1,
-					sk: pk1sk2,
-					price: Faker.n(200),
-					category: { S: "electronics" },
-				},
-				{
-					pk: pk1,
-					sk: pk1sk3,
-					price: Faker.n(50),
-					category: { S: "books" },
-				},
-			];
-
 			for (const item of items) {
 				await ddb.putItem({ TableName: tableName, Item: item });
 			}
 		});
 
-		test("queries with filter expression", async () => {
+		test.skip("queries with filter expression", async () => {
 			// WHEN
 			const res = await ddb.query({
 				TableName: tableName,
@@ -397,7 +388,7 @@ describe.skip("query (API spec)", () => {
 			});
 
 			// THEN
-			expect(res.Items).toHaveLength(2);
+			expect(res.Items).toEqual([items[0], items[1]]);
 			expect(res.Count).toBe(2);
 			expect(res.ScannedCount).toBe(3); // All items were scanned, but only 2 matched filter
 		});
@@ -405,17 +396,14 @@ describe.skip("query (API spec)", () => {
 
 	describe.skip("projection expressions", () => {
 		const pk = Faker.s();
-		const sk = Faker.s();
-		const name = Faker.s("name");
+		const item = { pk, sk: Faker.s(), name: Faker.s("name") };
 
 		beforeAll(async () => {
 			// Insert test data
-			const item = { pk, sk, name };
-
 			await ddb.putItem({ TableName: tableName, Item: item });
 		});
 
-		test("queries with projection expression", async () => {
+		test.skip("queries with projection expression", async () => {
 			// WHEN
 			const res = await ddb.query({
 				TableName: tableName,
@@ -431,16 +419,12 @@ describe.skip("query (API spec)", () => {
 
 			// THEN
 			expect(res.Items).toHaveLength(1);
-			expect(res.Items?.[0]).toEqual({
-				pk,
-				sk,
-				name,
-			});
+			expect(res.Items?.[0]).toEqual(item);
 		});
 	});
 
 	describe("error cases", () => {
-		test("returns error if table does not exist", async () => {
+		test.skip("returns error if table does not exist", async () => {
 			// WHEN
 			const promise = ddb.query({
 				TableName: "not-exist",
@@ -456,7 +440,7 @@ describe.skip("query (API spec)", () => {
 			);
 		});
 
-		test("returns error if KeyConditionExpression is missing", async () => {
+		test.skip("returns error if KeyConditionExpression is missing", async () => {
 			// WHEN
 			const promise = ddb.query({
 				TableName: tableName,
@@ -471,7 +455,7 @@ describe.skip("query (API spec)", () => {
 			);
 		});
 
-		test("returns error if partition key is not provided", async () => {
+		test.skip("returns error if partition key is not provided", async () => {
 			// WHEN
 			const promise = ddb.query({
 				TableName: tableName,
@@ -487,7 +471,7 @@ describe.skip("query (API spec)", () => {
 			);
 		});
 
-		test("returns error for invalid attribute value reference", async () => {
+		test.skip("returns error for invalid attribute value reference", async () => {
 			// WHEN
 			const promise = ddb.query({
 				TableName: tableName,
@@ -503,7 +487,7 @@ describe.skip("query (API spec)", () => {
 			);
 		});
 
-		test("returns error for invalid limit value", async () => {
+		test.skip("returns error for invalid limit value", async () => {
 			// WHEN
 			const promise = ddb.query({
 				TableName: tableName,
@@ -522,7 +506,7 @@ describe.skip("query (API spec)", () => {
 	});
 
 	describe("custom validation tests", () => {
-		test("accepts valid KeyConditionExpression with partition key only", async () => {
+		test.skip("accepts valid KeyConditionExpression with partition key only", async () => {
 			// WHEN
 			const res = await ddb.query({
 				TableName: tableName,
@@ -541,7 +525,7 @@ describe.skip("query (API spec)", () => {
 			});
 		});
 
-		test("accepts valid Limit parameter", async () => {
+		test.skip("accepts valid Limit parameter", async () => {
 			// WHEN
 			const res = await ddb.query({
 				TableName: tableName,
@@ -561,7 +545,7 @@ describe.skip("query (API spec)", () => {
 			});
 		});
 
-		test("accepts ScanIndexForward parameter", async () => {
+		test.skip("accepts ScanIndexForward parameter", async () => {
 			// WHEN
 			const res = await ddb.query({
 				TableName: tableName,
@@ -581,7 +565,7 @@ describe.skip("query (API spec)", () => {
 			});
 		});
 
-		test("accepts ConsistentRead parameter", async () => {
+		test.skip("accepts ConsistentRead parameter", async () => {
 			// WHEN
 			const res = await ddb.query({
 				TableName: tableName,
