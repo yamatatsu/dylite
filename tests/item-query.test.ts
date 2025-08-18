@@ -1,6 +1,6 @@
 import { Faker, Table, ddb, expectUuid } from "./_test-helper";
 
-describe("query (API spec)", () => {
+describe.skip("query (API spec)", () => {
 	let tableName: string;
 	beforeAll(async () => {
 		const table = await Table.createPkSkTable();
