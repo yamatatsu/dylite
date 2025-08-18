@@ -149,23 +149,23 @@ class CompositeKeySchema implements IKeySchema {
 			);
 		}
 
-		const skValue = item.get(this.partitionKey.name);
+		const skValue = item.get(this.sortKey.name);
 		if (!skValue) {
 			throw validationException(
 				// TODO: fix message
-				`Partition key value for ${this.partitionKey.name} is missing`,
+				`Partition key value for ${this.sortKey.name} is missing`,
 			);
 		}
 		if (!isKeyValue(skValue)) {
 			throw validationException(
 				// TODO: fix message
-				`Partition key value for ${this.partitionKey.name} is not a valid key value`,
+				`Partition key value for ${this.sortKey.name} is not a valid key value`,
 			);
 		}
-		if (skValue.type !== this.partitionKey.valueType) {
+		if (skValue.type !== this.sortKey.valueType) {
 			throw validationException(
 				// TODO: fix message
-				`Partition key value for ${this.partitionKey.name} is not of type ${this.partitionKey.valueType}`,
+				`Partition key value for ${this.sortKey.name} is not of type ${this.sortKey.valueType}`,
 			);
 		}
 
