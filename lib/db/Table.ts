@@ -60,21 +60,43 @@ export class Table {
 	}
 
 	/**
-	 * Scan items from the table with optional limit.
+	 * Scan items from the table with optional limit and starting point.
 	 * Returns items and information about the next item for pagination.
 	 * @param limit - Maximum number of items to return (optional)
+	 * @param exclusiveStartKey - Item to start scanning after (for pagination)
 	 * @returns Object containing:
 	 *   - items: Array of items found (up to limit)
 	 *   - nextItem: The next item that would be returned if continuing scan (undefined if no more items)
 	 */
 	async scanItems(
 		limit?: number | null,
+		exclusiveStartKey?: Item,
 	): Promise<{ items: Item[]; nextItem: Item | undefined }> {
 		const items: Item[] = [];
 		let nextItem: Item | undefined;
+		let startKeyStr: string | undefined;
+		let foundStartPosition = false;
+
+		if (exclusiveStartKey) {
+			startKeyStr = this.description.getKeyStr(exclusiveStartKey);
+			// If we have a start key, we need to find it first
+			foundStartPosition = false;
+		} else {
+			// No start key, start from beginning
+			foundStartPosition = true;
+		}
 
 		for await (const [key, plainItem] of this.mainIndex.iterator()) {
 			const item = new Item(plainItem);
+			const currentKeyStr = this.description.getKeyStr(item);
+
+			// Skip items until we pass the exclusive start key
+			if (!foundStartPosition) {
+				if (currentKeyStr === startKeyStr) {
+					foundStartPosition = true;
+				}
+				continue;
+			}
 
 			if (limit && items.length >= limit) {
 				nextItem = item;

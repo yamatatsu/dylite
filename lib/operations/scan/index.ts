@@ -1,4 +1,5 @@
 import type { TableMap } from "../../db/TableMap";
+import { Item } from "../../domain/Item";
 import { validationException } from "../../domain/errors";
 import { getMetadata } from "../common";
 import { validateInput } from "./schema";
@@ -11,7 +12,10 @@ export async function execute(json: unknown, tableMap: TableMap) {
 		throw validationException("Cannot do operations on a non-existent table");
 	}
 
-	const scanResult = await table.scanItems(input.Limit);
+	const exclusiveStartKey = input.ExclusiveStartKey 
+		? new Item(input.ExclusiveStartKey) 
+		: undefined;
+	const scanResult = await table.scanItems(input.Limit, exclusiveStartKey);
 
 	const resultItems = scanResult.items;
 	let lastEvaluatedKey = undefined;

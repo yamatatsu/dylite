@@ -59,7 +59,7 @@ describe("scan (API spec)", () => {
 		expect(res.LastEvaluatedKey).toBeDefined();
 	});
 
-	test.skip("supports pagination with ExclusiveStartKey", async () => {
+	test("supports pagination with ExclusiveStartKey", async () => {
 		// WHEN - First page
 		const firstPage = await ddb.scan({
 			TableName: tableName,
