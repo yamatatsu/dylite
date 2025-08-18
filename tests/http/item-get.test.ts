@@ -1,16 +1,20 @@
-import { PkTable, ddb, expectUuid } from "./_test-helper";
+import { Faker, PkTable, ddb, expectUuid } from "./_test-helper";
 
 describe("get-item (API spec)", () => {
 	let tableName: string;
-	const item = PkTable.getItem1();
 
 	beforeAll(async () => {
 		const table = await PkTable.create();
 		tableName = table.tableName;
-		await ddb.putItem({ TableName: tableName, Item: item });
 	});
 
 	test("retrieves an inserted item by key", async () => {
+		// GIVEN
+		const item = {
+			pk: Faker.s(),
+		};
+		await ddb.putItem({ TableName: tableName, Item: item });
+
 		// WHEN
 		const res = await ddb.getItem({
 			TableName: tableName,
@@ -42,6 +46,13 @@ describe("get-item (API spec)", () => {
 
 	// TODO: impl ProjectionExpression
 	test.skip("retrieves only specified attributes with ProjectionExpression", async () => {
+		// GIVEN
+		const item = {
+			pk: Faker.s(),
+			key_S: Faker.s(),
+		};
+		await ddb.putItem({ TableName: tableName, Item: item });
+
 		// WHEN
 		const res = await ddb.getItem({
 			TableName: tableName,
@@ -59,6 +70,13 @@ describe("get-item (API spec)", () => {
 
 	// TODO: impl ProjectionExpression
 	test.skip("supports ExpressionAttributeNames in ProjectionExpression", async () => {
+		// GIVEN
+		const item = {
+			pk: Faker.s(),
+			key_N: Faker.n(),
+		};
+		await ddb.putItem({ TableName: tableName, Item: item });
+
 		// WHEN
 		const res = await ddb.getItem({
 			TableName: tableName,
@@ -76,6 +94,13 @@ describe("get-item (API spec)", () => {
 	});
 
 	test("returns $metadata", async () => {
+		// GIVEN
+		const item = {
+			pk: Faker.s(),
+			key_S: Faker.s(),
+		};
+		await ddb.putItem({ TableName: tableName, Item: item });
+
 		// WHEN
 		const res = await ddb.getItem({
 			TableName: tableName,
@@ -105,6 +130,13 @@ describe("get-item (API spec)", () => {
 	});
 
 	test("returns error if table does not exist", async () => {
+		// GIVEN
+		const item = {
+			pk: Faker.s(),
+			key_S: Faker.s(),
+		};
+		await ddb.putItem({ TableName: tableName, Item: item });
+
 		// WHEN
 		const promise = ddb.getItem({
 			TableName: "not-exist",
@@ -117,6 +149,13 @@ describe("get-item (API spec)", () => {
 
 	describe("custom validation tests", () => {
 		test("returns error for duplicate AttributesToGet", async () => {
+			// GIVEN
+			const item = {
+				pk: Faker.s(),
+				key1: Faker.s(),
+			};
+			await ddb.putItem({ TableName: tableName, Item: item });
+
 			// WHEN
 			const promise = ddb.getItem({
 				TableName: tableName,
@@ -129,6 +168,13 @@ describe("get-item (API spec)", () => {
 		});
 
 		test("returns error for AttributesToGet with ProjectionExpression", async () => {
+			// GIVEN
+			const item = {
+				pk: Faker.s(),
+				key1: Faker.s(),
+			};
+			await ddb.putItem({ TableName: tableName, Item: item });
+
 			// WHEN
 			const promise = ddb.getItem({
 				TableName: tableName,
@@ -142,6 +188,13 @@ describe("get-item (API spec)", () => {
 		});
 
 		test("returns error for empty AttributesToGet item", async () => {
+			// GIVEN
+			const item = {
+				pk: Faker.s(),
+				key1: Faker.s(),
+			};
+			await ddb.putItem({ TableName: tableName, Item: item });
+
 			// WHEN
 			const promise = ddb.getItem({
 				TableName: tableName,
@@ -154,6 +207,13 @@ describe("get-item (API spec)", () => {
 		});
 
 		test.skip("returns error for too long AttributesToGet item", async () => {
+			// GIVEN
+			const item = {
+				pk: Faker.s(),
+				key1: Faker.s(),
+			};
+			await ddb.putItem({ TableName: tableName, Item: item });
+
 			// WHEN
 			const longAttributeName = "a".repeat(256); // exceed 255 char limit
 			const promise = ddb.getItem({
@@ -168,6 +228,13 @@ describe("get-item (API spec)", () => {
 		});
 
 		test("returns error for invalid ExpressionAttributeNames format", async () => {
+			// GIVEN
+			const item = {
+				pk: Faker.s(),
+				key1: Faker.s(),
+			};
+			await ddb.putItem({ TableName: tableName, Item: item });
+
 			// WHEN
 			const promise = ddb.getItem({
 				TableName: tableName,
@@ -181,6 +248,13 @@ describe("get-item (API spec)", () => {
 		});
 
 		test("returns error for empty ExpressionAttributeNames", async () => {
+			// GIVEN
+			const item = {
+				pk: Faker.s(),
+				key1: Faker.s(),
+			};
+			await ddb.putItem({ TableName: tableName, Item: item });
+
 			// WHEN
 			const promise = ddb.getItem({
 				TableName: tableName,
@@ -194,6 +268,13 @@ describe("get-item (API spec)", () => {
 		});
 
 		test("accepts valid AttributesToGet", async () => {
+			// GIVEN
+			const item = {
+				pk: Faker.s(),
+				key1: Faker.s(),
+			};
+			await ddb.putItem({ TableName: tableName, Item: item });
+
 			// WHEN
 			const res = await ddb.getItem({
 				TableName: tableName,
@@ -209,6 +290,13 @@ describe("get-item (API spec)", () => {
 		});
 
 		test.skip("accepts valid ExpressionAttributeNames", async () => {
+			// GIVEN
+			const item = {
+				pk: Faker.s(),
+				key1: Faker.s(),
+			};
+			await ddb.putItem({ TableName: tableName, Item: item });
+
 			// WHEN
 			const res = await ddb.getItem({
 				TableName: tableName,
@@ -226,6 +314,13 @@ describe("get-item (API spec)", () => {
 		});
 
 		test("accepts ConsistentRead parameter", async () => {
+			// GIVEN
+			const item = {
+				pk: Faker.s(),
+				key1: Faker.s(),
+			};
+			await ddb.putItem({ TableName: tableName, Item: item });
+
 			// WHEN
 			const res = await ddb.getItem({
 				TableName: tableName,

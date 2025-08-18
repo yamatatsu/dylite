@@ -1,8 +1,11 @@
-import { PkTable, ddb, expectUuid } from "./_test-helper";
+import { Faker, PkTable, ddb, expectUuid } from "./_test-helper";
 
 describe("delete-item (API spec)", () => {
 	let tableName: string;
-	const item = PkTable.getItem1();
+	const item = {
+		pk: Faker.s("item1"),
+		key_S: Faker.s(),
+	};
 
 	beforeAll(async () => {
 		const table = await PkTable.create();

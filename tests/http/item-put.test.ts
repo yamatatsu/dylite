@@ -1,4 +1,4 @@
-import { PkTable, ddb, expectUuid } from "./_test-helper";
+import { Faker, PkTable, ddb, expectUuid } from "./_test-helper";
 
 describe("put-item (API spec)", () => {
 	let tableName: string;
@@ -10,7 +10,10 @@ describe("put-item (API spec)", () => {
 
 	test("puts a new item", async () => {
 		// GIVEN
-		const item1 = PkTable.getItem1();
+		const item1 = {
+			pk: Faker.s(),
+			key1: Faker.s(),
+		};
 
 		// WHEN
 		const res = await ddb.putItem({ TableName: tableName, Item: item1 });
@@ -24,20 +27,21 @@ describe("put-item (API spec)", () => {
 
 	test("overwrites and returns ALL_OLD", async () => {
 		// GIVEN
-		const item1 = PkTable.getItem1();
-		const item2 = { ...item1, key1: { S: "bar" } };
-		await ddb.putItem({ TableName: tableName, Item: item1 });
+		const pk = Faker.s();
+		const itemOld = { pk, key1: Faker.s() };
+		const itemNew = { pk, key1: Faker.s() };
+		await ddb.putItem({ TableName: tableName, Item: itemOld });
 
 		// WHEN
 		const res = await ddb.putItem({
 			TableName: tableName,
-			Item: item2,
+			Item: itemNew,
 			ReturnValues: "ALL_OLD",
 		});
 
 		// THEN
 		expect(res).toEqual({
-			Attributes: item1,
+			Attributes: itemOld,
 			$metadata: expect.any(Object),
 		});
 		expect(res.$metadata.httpStatusCode).toBe(200);
@@ -45,14 +49,15 @@ describe("put-item (API spec)", () => {
 
 	test("returns nothing with ReturnValues NONE", async () => {
 		// GIVEN
-		const item1 = PkTable.getItem1();
-		const item2 = { ...item1, key1: { S: "bar" } };
-		await ddb.putItem({ TableName: tableName, Item: item1 });
+		const pk = Faker.s();
+		const itemOld = { pk, key1: Faker.s() };
+		const itemNew = { pk, key1: Faker.s() };
+		await ddb.putItem({ TableName: tableName, Item: itemOld });
 
 		// WHEN
 		const res = await ddb.putItem({
 			TableName: tableName,
-			Item: item2,
+			Item: itemNew,
 			ReturnValues: "NONE",
 		});
 
@@ -65,7 +70,7 @@ describe("put-item (API spec)", () => {
 
 	test("returns $metadata", async () => {
 		// GIVEN
-		const item1 = PkTable.getItem1();
+		const item1 = { pk: Faker.s(), key1: Faker.s() };
 
 		// WHEN
 		const res = await ddb.putItem({ TableName: tableName, Item: item1 });
@@ -86,14 +91,15 @@ describe("put-item (API spec)", () => {
 	// TODO: impl conditional put
 	test.skip("conditional put fails with error", async () => {
 		// GIVEN
-		const item1 = PkTable.getItem1();
-		const item2 = { ...item1, key1: { S: "bar" } };
-		await ddb.putItem({ TableName: tableName, Item: item1 });
+		const pk = Faker.s();
+		const itemOld = { pk, key1: Faker.s() };
+		const itemNew = { pk, key1: Faker.s() };
+		await ddb.putItem({ TableName: tableName, Item: itemOld });
 
 		// WHEN
 		const promise = ddb.putItem({
 			TableName: tableName,
-			Item: item2,
+			Item: itemNew,
 			ConditionExpression: "attribute_not_exists(pk)",
 		});
 
@@ -102,9 +108,6 @@ describe("put-item (API spec)", () => {
 	});
 
 	test("returns error if key is missing", async () => {
-		// GIVEN
-		const item1 = PkTable.getItem1();
-
 		// WHEN
 		const promise = ddb.putItem({ TableName: tableName, Item: {} });
 
@@ -116,7 +119,7 @@ describe("put-item (API spec)", () => {
 
 	test("returns error if table does not exist", async () => {
 		// GIVEN
-		const item1 = PkTable.getItem1();
+		const item1 = { pk: Faker.s(), key1: Faker.s() };
 
 		// WHEN
 		const promise = ddb.putItem({ TableName: "not-exist", Item: item1 });
@@ -130,7 +133,7 @@ describe("put-item (API spec)", () => {
 	describe("custom validation tests", () => {
 		test("returns error for invalid ReturnValues", async () => {
 			// GIVEN
-			const item1 = PkTable.getItem1();
+			const item1 = { pk: Faker.s(), key1: Faker.s() };
 
 			// WHEN
 			const promise = ddb.putItem({
@@ -147,7 +150,7 @@ describe("put-item (API spec)", () => {
 
 		test("returns error for invalid ReturnValues UPDATED_OLD", async () => {
 			// GIVEN
-			const item1 = PkTable.getItem1();
+			const item1 = { pk: Faker.s(), key1: Faker.s() };
 
 			// WHEN
 			const promise = ddb.putItem({
@@ -164,7 +167,7 @@ describe("put-item (API spec)", () => {
 
 		test("returns error for invalid ReturnValues UPDATED_NEW", async () => {
 			// GIVEN
-			const item1 = PkTable.getItem1();
+			const item1 = { pk: Faker.s(), key1: Faker.s() };
 
 			// WHEN
 			const promise = ddb.putItem({
@@ -183,7 +186,7 @@ describe("put-item (API spec)", () => {
 			// GIVEN
 			const largeString = "a".repeat(400001); // Exceed 400KB limit
 			const largeItem = {
-				pk: { S: "test" },
+				pk: Faker.s(),
 				data: { S: largeString },
 			};
 
@@ -202,7 +205,7 @@ describe("put-item (API spec)", () => {
 
 		test("returns error for invalid expression parameters", async () => {
 			// GIVEN
-			const item1 = PkTable.getItem1();
+			const item1 = { pk: Faker.s(), key1: Faker.s() };
 
 			// WHEN - ConditionExpression with Expected (conflicting parameters)
 			const promise = ddb.putItem({
@@ -215,62 +218,9 @@ describe("put-item (API spec)", () => {
 			});
 
 			// THEN
-			await expect(promise).rejects.toThrow();
-		});
-
-		test("accepts valid ReturnValues ALL_OLD", async () => {
-			// GIVEN
-			const item1 = PkTable.getItem1();
-			await ddb.putItem({ TableName: tableName, Item: item1 });
-
-			// WHEN
-			const res = await ddb.putItem({
-				TableName: tableName,
-				Item: { ...item1, key1: { S: "updated" } },
-				ReturnValues: "ALL_OLD",
-			});
-
-			// THEN
-			expect(res).toEqual({
-				Attributes: item1,
-				$metadata: expect.any(Object),
-			});
-		});
-
-		test("accepts valid ReturnValues NONE", async () => {
-			// GIVEN
-			const item1 = PkTable.getItem1();
-
-			// WHEN
-			const res = await ddb.putItem({
-				TableName: tableName,
-				Item: item1,
-				ReturnValues: "NONE",
-			});
-
-			// THEN
-			expect(res).toEqual({
-				$metadata: expect.any(Object),
-			});
-		});
-
-		test("accepts item within size limit", async () => {
-			// GIVEN
-			const normalItem = {
-				pk: { S: "test" },
-				data: { S: "normal data" },
-			};
-
-			// WHEN
-			const res = await ddb.putItem({
-				TableName: tableName,
-				Item: normalItem,
-			});
-
-			// THEN
-			expect(res).toEqual({
-				$metadata: expect.any(Object),
-			});
+			await expect(promise).rejects.toThrow(
+				"Can not use both expression and non-expression parameters in the same request: Non-expression parameters: {Expected} Expression parameters: {ConditionExpression}",
+			);
 		});
 	});
 });
