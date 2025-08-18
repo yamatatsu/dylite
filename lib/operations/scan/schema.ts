@@ -19,7 +19,13 @@ const schema = v.object({
 	ExclusiveStartKey: v.nullish(v.record(v.string(), attributeValueSchema)),
 	FilterExpression: v.nullish(v.string()),
 	ProjectionExpression: v.nullish(v.string()),
-	Limit: v.nullish(v.pipe(v.number(), v.integer(), v.minValue(1))),
+	Limit: v.nullish(
+		v.pipe(
+			v.number(),
+			v.integer(),
+			v.minValue(1, "Limit must be greater than or equal to 1"),
+		),
+	),
 	Select: v.nullish(
 		v.picklist([
 			"ALL_ATTRIBUTES",

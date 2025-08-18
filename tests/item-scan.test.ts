@@ -148,8 +148,8 @@ describe("scan (API spec)", () => {
 		expect(res.ScannedCount).toBe(3);
 	});
 
-	describe.skip("custom validation tests", () => {
-		test("returns error for duplicate AttributesToGet", async () => {
+	describe("custom validation tests", () => {
+		test.skip("returns error for duplicate AttributesToGet", async () => {
 			// GIVEN
 			const item = {
 				pk: Faker.s(),
@@ -167,7 +167,7 @@ describe("scan (API spec)", () => {
 			await expect(promise).rejects.toThrow();
 		});
 
-		test("returns error for AttributesToGet with ProjectionExpression", async () => {
+		test.skip("returns error for AttributesToGet with ProjectionExpression", async () => {
 			// GIVEN
 			const item = {
 				pk: Faker.s(),
@@ -186,7 +186,7 @@ describe("scan (API spec)", () => {
 			await expect(promise).rejects.toThrow();
 		});
 
-		test("returns error for empty AttributesToGet item", async () => {
+		test.skip("returns error for empty AttributesToGet item", async () => {
 			// GIVEN
 			const item = {
 				pk: Faker.s(),
@@ -204,7 +204,7 @@ describe("scan (API spec)", () => {
 			await expect(promise).rejects.toThrow();
 		});
 
-		test("accepts valid AttributesToGet", async () => {
+		test.skip("accepts valid AttributesToGet", async () => {
 			// GIVEN - use dedicated table for this test
 			const attrTable = await Table.createPkTable();
 			const item = {
@@ -225,7 +225,7 @@ describe("scan (API spec)", () => {
 			]);
 		});
 
-		test("accepts ConsistentRead parameter", async () => {
+		test.skip("accepts ConsistentRead parameter", async () => {
 			// GIVEN - use dedicated table for this test
 			const consistentTable = await Table.createPkTable();
 			const item = {
@@ -245,7 +245,7 @@ describe("scan (API spec)", () => {
 			expect(res.$metadata.httpStatusCode).toBe(200);
 		});
 
-		test("accepts Select parameter", async () => {
+		test.skip("accepts Select parameter", async () => {
 			// GIVEN - use dedicated table for this test
 			const selectTable = await Table.createPkTable();
 			const item = {
@@ -274,7 +274,9 @@ describe("scan (API spec)", () => {
 			});
 
 			// THEN
-			await expect(promise).rejects.toThrow();
+			await expect(promise).rejects.toThrow(
+				"Limit must be greater than or equal to 1",
+			);
 		});
 
 		test("returns error for negative Limit value", async () => {
@@ -285,7 +287,9 @@ describe("scan (API spec)", () => {
 			});
 
 			// THEN
-			await expect(promise).rejects.toThrow();
+			await expect(promise).rejects.toThrow(
+				"Limit must be greater than or equal to 1",
+			);
 		});
 	});
 });
