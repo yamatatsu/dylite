@@ -27,8 +27,8 @@ To run the tests, use the following command:
 pnpm test:unit
 
 pnpm test:dylite
-pnpm test:dylite -- ./tests/http/item-put.test.ts
+pnpm test:dylite -- ./tests/item-put.test.ts
 
 pnpm test:ddblocal
-pnpm test:ddblocal -- ./tests/http/item-put.test.ts
+pnpm test:ddblocal -- ./tests/item-put.test.ts
 ```

@@ -10,7 +10,7 @@ module.exports = {
 		{
 			displayName: "ddblocal",
 			transform: { "^.+.tsx?$": ["ts-jest", {}] },
-			testMatch: ["<rootDir>/tests/http/**/*.test.ts"],
+			testMatch: ["<rootDir>/tests/**/*.test.ts"],
 			preset: "@shelf/jest-dynamodb",
 			globals: {
 				__TEST__: { ddbEndpoint: "http://localhost:8000" },
@@ -19,7 +19,7 @@ module.exports = {
 		{
 			displayName: "dylite",
 			transform: { "^.+.tsx?$": ["ts-jest", {}] },
-			testMatch: ["<rootDir>/tests/http/**/*.test.ts"],
+			testMatch: ["<rootDir>/tests/**/*.test.ts"],
 			preset: "./jest-dylite/preset.ts",
 		},
 	],
