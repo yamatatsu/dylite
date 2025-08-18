@@ -1,5 +1,5 @@
 import * as v from "valibot";
-import type { Item } from "../Item";
+import { Item } from "../Item";
 import { AttributeDefinitions } from "./AttributeDefinitions";
 import { type IKeySchema, createKeySchema } from "./KeySchema";
 
@@ -39,6 +39,23 @@ export class TableDescription {
 
 	getKeyStr(item: Item): string {
 		return this.keySchema.getKeyStr(item);
+	}
+
+	getKeyAttributes(item: Item): Item {
+		const keyNames = this.getKeyAttributeNames();
+		const keyAttributes: Record<string, any> = {};
+		for (const keyName of keyNames) {
+			const value = item.get(keyName);
+			if (value) {
+				keyAttributes[keyName] = value.toPlain();
+			}
+		}
+		return new Item(keyAttributes);
+	}
+
+	private getKeyAttributeNames(): string[] {
+		const plainSchema = this.keySchema.toPlainObject();
+		return plainSchema.map(element => element.AttributeName);
 	}
 
 	toPlainObject() {

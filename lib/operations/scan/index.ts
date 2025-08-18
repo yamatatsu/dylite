@@ -12,12 +12,30 @@ export async function execute(json: unknown, tableMap: TableMap) {
 	}
 
 	const items = await table.scanItems();
-	const plainItems = items.map((item) => item.toPlain());
+	const limit = input.Limit;
+	
+	let resultItems = items;
+	let lastEvaluatedKey = undefined;
+	
+	if (limit && items.length > limit) {
+		resultItems = items.slice(0, limit);
+		// Generate LastEvaluatedKey from the last returned item
+		const lastItem = resultItems[resultItems.length - 1];
+		lastEvaluatedKey = table.description.getKeyAttributes(lastItem).toPlain();
+	}
+	
+	const plainItems = resultItems.map((item) => item.toPlain());
 
-	return {
+	const result: any = {
 		Items: plainItems,
 		Count: plainItems.length,
 		ScannedCount: plainItems.length,
 		$metadata: getMetadata(),
 	};
+	
+	if (lastEvaluatedKey) {
+		result.LastEvaluatedKey = lastEvaluatedKey;
+	}
+	
+	return result;
 }

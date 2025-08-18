@@ -45,7 +45,7 @@ describe("scan (API spec)", () => {
 		expect(res.$metadata.httpStatusCode).toBe(200);
 	});
 
-	test.skip("respects Limit parameter", async () => {
+	test("respects Limit parameter", async () => {
 		// WHEN
 		const res = await ddb.scan({
 			TableName: tableName,
