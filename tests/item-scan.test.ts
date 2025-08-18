@@ -77,11 +77,7 @@ describe("scan (API spec)", () => {
 		expect(secondPage.LastEvaluatedKey).toBeUndefined();
 	});
 
-	test.skip("returns $metadata", async () => {
-		// GIVEN
-		const item = { pk: Faker.s(), data: Faker.s() };
-		await ddb.putItem({ TableName: tableName, Item: item });
-
+	test("returns $metadata", async () => {
 		// WHEN
 		const res = await ddb.scan({ TableName: tableName });
 
