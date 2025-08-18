@@ -24,24 +24,21 @@ export async function execute(json: unknown, tableMap: TableMap) {
 
 	const plainItems = resultItems.map((item) => item.toPlain());
 
-	const result: {
-		Items: unknown[];
-		Count: number;
-		ScannedCount: number;
-		$metadata: unknown;
-		LastEvaluatedKey?: unknown;
-	} = {
+	const result = {
 		Items: plainItems,
 		Count: plainItems.length,
 		ScannedCount: plainItems.length,
 		$metadata: getMetadata(),
 	};
 
-	if (lastEvaluatedItem) {
-		result.LastEvaluatedKey = table.description
-			.getKeyAttributes(lastEvaluatedItem)
-			.toPlain();
+	if (!lastEvaluatedItem) {
+		return result;
 	}
 
-	return result;
+	return {
+		...result,
+		LastEvaluatedKey: table.description
+			.getKeyAttributes(lastEvaluatedItem)
+			.toPlain(),
+	};
 }
