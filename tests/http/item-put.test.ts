@@ -1,10 +1,10 @@
-import { Faker, PkTable, ddb, expectUuid } from "./_test-helper";
+import { Faker, Table, ddb, expectUuid } from "./_test-helper";
 
 describe("put-item (API spec)", () => {
 	let tableName: string;
 
 	beforeAll(async () => {
-		const table = await PkTable.create();
+		const table = await Table.createPkTable();
 		tableName = table.tableName;
 	});
 

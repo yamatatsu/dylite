@@ -1,6 +1,5 @@
 export { ddb } from "./ddb";
-export * as PkTable from "./pk-table";
-export * as PkSkTable from "./pk-sk-table";
+export * as Table from "./table";
 export * from "./utils";
 export { Faker } from "./faker";
 

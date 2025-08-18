@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { PkTable, ddb, toUint8Array } from "./_test-helper";
+import { Table, ddb, toUint8Array } from "./_test-helper";
 
 describe.skip("Update Expressions", () => {
 	let tableName: string;
@@ -18,7 +18,7 @@ describe.skip("Update Expressions", () => {
 	};
 
 	beforeEach(async () => {
-		const table = await PkTable.create();
+		const table = await Table.createPkTable();
 		tableName = table.tableName;
 		await ddb.putItem({
 			TableName: tableName,
